@@ -167,8 +167,10 @@ Resources:
       Threshold: 20
       ComparisonOperator: GreaterThanThreshold
       Dimensions:
-        - Name: ApiName
+        - Name: ApiId
           Value: !Ref ServerlessRestApi
+        - Name: Stage
+          Value: Prod
       AlarmActions:
         - !Ref AlertTopic
 
@@ -186,8 +188,10 @@ Resources:
       Threshold: 1
       ComparisonOperator: GreaterThanThreshold
       Dimensions:
-        - Name: ApiName
+        - Name: ApiId
           Value: !Ref ServerlessRestApi
+        - Name: Stage
+          Value: Prod
       AlarmActions:
         - !Ref AlertTopic
 
