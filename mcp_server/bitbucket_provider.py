@@ -1,5 +1,6 @@
 import requests
 import json
+import os
 from .auth import Auth
 
 class BitbucketProvider:
@@ -17,15 +18,19 @@ class BitbucketProvider:
     
     async def search(self, query: str) -> dict:
         try:
-            headers = self.auth.get_auth_headers()
-            # Bitbucket Cloud API for personal accounts
-            url = "https://api.bitbucket.org/2.0/repositories"
-            
-            # Use username from auth for Bitbucket Cloud
-            username = self.auth.username.split('@')[0]
-            url = f"https://api.bitbucket.org/2.0/repositories/{username}"
+            # Get Bitbucket workspace - try username from env or extract from email
+            workspace = os.getenv('BITBUCKET_WORKSPACE', self.auth.username.split('@')[0])
+            url = f"https://api.bitbucket.org/2.0/repositories/{workspace}"
             
             response = requests.get(url, auth=(self.auth.username, self.auth.api_token))
+            
+            if response.status_code == 401:
+                return {
+                    'error': 'Bitbucket authentication failed',
+                    'note': 'Set BITBUCKET_WORKSPACE to your Bitbucket workspace name',
+                    'results': []
+                }
+            
             response.raise_for_status()
             
             repos = response.json().get('values', [])
@@ -46,8 +51,8 @@ class BitbucketProvider:
     
     async def _get_repositories(self) -> str:
         try:
-            username = self.auth.username.split('@')[0]
-            url = f"https://api.bitbucket.org/2.0/repositories/{username}"
+            workspace = os.getenv('BITBUCKET_WORKSPACE', self.auth.username.split('@')[0])
+            url = f"https://api.bitbucket.org/2.0/repositories/{workspace}"
             
             response = requests.get(url, auth=(self.auth.username, self.auth.api_token), params={'pagelen': 25})
             response.raise_for_status()
@@ -59,8 +64,8 @@ class BitbucketProvider:
     
     async def _get_pull_requests(self, repo: str) -> str:
         try:
-            username = self.auth.username.split('@')[0]
-            url = f"https://api.bitbucket.org/2.0/repositories/{username}/{repo}/pullrequests"
+            workspace = os.getenv('BITBUCKET_WORKSPACE', self.auth.username.split('@')[0])
+            url = f"https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/pullrequests"
             
             response = requests.get(url, auth=(self.auth.username, self.auth.api_token), params={'pagelen': 25})
             response.raise_for_status()

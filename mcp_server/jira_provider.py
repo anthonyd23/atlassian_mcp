@@ -18,7 +18,8 @@ class JiraProvider:
     async def search(self, jql: str) -> dict:
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/3/search"
+            # Try v2 first for free accounts
+            url = f"{self.auth.get_base_url()}/rest/api/2/search"
             
             payload = {
                 'jql': jql,
@@ -27,6 +28,12 @@ class JiraProvider:
             }
             
             response = requests.post(url, headers=headers, json=payload)
+            
+            # If v2 fails, try v3
+            if response.status_code == 410:
+                url = f"{self.auth.get_base_url()}/rest/api/3/search"
+                response = requests.post(url, headers=headers, json=payload)
+            
             response.raise_for_status()
             
             data = response.json()
@@ -54,7 +61,7 @@ class JiraProvider:
     async def _get_projects(self) -> str:
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/3/project"
+            url = f"{self.auth.get_base_url()}/rest/api/2/project"
             
             response = requests.get(url, headers=headers)
             response.raise_for_status()
@@ -67,7 +74,7 @@ class JiraProvider:
     async def _get_issues(self, project_key: str) -> str:
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/3/search"
+            url = f"{self.auth.get_base_url()}/rest/api/2/search"
             
             payload = {
                 'jql': f'project = {project_key}',

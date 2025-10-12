@@ -8,7 +8,7 @@ Parameters:
     Description: Base URL for your Atlassian instance
   AtlassianUsername:
     Type: String
-    Description: Atlassian username
+    Description: Atlassian username/email
   AtlassianApiToken:
     Type: String
     NoEcho: true

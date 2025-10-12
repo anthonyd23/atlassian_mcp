@@ -1,5 +1,5 @@
 import os
-from typing import Optional
+import base64
 
 class Auth:
     def __init__(self):
@@ -11,7 +11,6 @@ class Auth:
         if not self.api_token or not self.username:
             raise ValueError("Missing Atlassian credentials")
         
-        import base64
         credentials = f"{self.username}:{self.api_token}"
         encoded_credentials = base64.b64encode(credentials.encode()).decode()
         
