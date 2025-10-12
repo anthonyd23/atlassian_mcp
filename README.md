@@ -23,16 +23,24 @@ A Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and
 ## Features
 
 - **46 MCP Tools**: Complete integration with Jira (14 tools), Confluence (12 tools), and Bitbucket (20 tools)
+- **Dual Platform Support**: Works with both Atlassian Cloud and Data Center/Server deployments
 - **Jira Integration**: Search, create, update, delete issues, manage comments, transitions, and more
 - **Confluence Integration**: Search, create, update pages, manage spaces, comments, and attachments
 - **Bitbucket Integration**: Repository management, pull requests, commits, branches, file operations
 - **AWS Deployment**: Serverless deployment using Lambda and API Gateway
-- **Comprehensive Testing**: Full test suite for all 46 tools
+- **Comprehensive Testing**: Full test suite for all 46 tools on both platforms
 
 ## Prerequisites
 
+### For Atlassian Cloud:
 1. **Atlassian API Token**: Generate from https://id.atlassian.com/manage-profile/security/api-tokens
-2. **Bitbucket API Token**: Generate from https://bitbucket.org/account/settings/app-passwords/ (if using Bitbucket)
+2. **Bitbucket API Token**: Generate from https://bitbucket.org/account/settings/app-passwords/ (if using Bitbucket Cloud)
+
+### For Atlassian Data Center/Server:
+1. **Personal Access Token (PAT)**: Generate from your Atlassian instance (Profile → Personal Access Tokens)
+2. **Bitbucket Server Access**: Personal Access Token from Bitbucket Server
+
+### For AWS Deployment:
 3. **AWS CLI**: Configured with appropriate permissions
 4. **SAM CLI**: For deployment to AWS
 
@@ -44,8 +52,10 @@ A Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and
    ```
 
 2. **Set environment variables**:
+   
+   **For Atlassian Cloud:**
    ```bash
-   # Required for Jira and Confluence
+   # Required for Jira and Confluence Cloud
    export ATLASSIAN_BASE_URL="https://yourcompany.atlassian.net"
    export ATLASSIAN_USERNAME="your-email@company.com"
    export ATLASSIAN_API_TOKEN="your-api-token"
@@ -54,16 +64,39 @@ A Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and
    export BITBUCKET_WORKSPACE="your-workspace-name"  # Found in your Bitbucket URL
    export BITBUCKET_API_TOKEN="your-bitbucket-token"  # From https://bitbucket.org/account/settings/app-passwords/
    ```
+   
+   **For Atlassian Data Center/Server:**
+   ```bash
+   # Required for Jira and Confluence Data Center
+   export ATLASSIAN_BASE_URL="https://jira.yourcompany.com"
+   export ATLASSIAN_PAT_TOKEN="your-personal-access-token"
+   
+   # Required for Bitbucket Server
+   export BITBUCKET_PROJECT="YOUR_PROJECT_KEY"  # Your Bitbucket project key
+   ```
 
 3. **Test locally**:
+   
+   **For Cloud:**
    ```bash
-   # Test all 46 tools
-   python tests/test_all_tools.py
+   # Test all 46 Cloud tools
+   python tests/cloud/test_all_tools.py
    
    # Or test individual services
-   python tests/test_jira_tools.py
-   python tests/test_confluence_tools.py
-   python tests/test_bitbucket_tools.py
+   python tests/cloud/test_jira_tools.py
+   python tests/cloud/test_confluence_tools.py
+   python tests/cloud/test_bitbucket_tools.py
+   ```
+   
+   **For Data Center:**
+   ```bash
+   # Test all 46 Data Center tools
+   python tests/datacenter/test_all_dc_tools.py
+   
+   # Or test individual services
+   python tests/datacenter/test_jira_dc_tools.py
+   python tests/datacenter/test_confluence_dc_tools.py
+   python tests/datacenter/test_bitbucket_dc_tools.py
    ```
 
 4. **Deploy to AWS**:
@@ -150,27 +183,47 @@ A Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and
 
 ### Environment Variables
 
-**Required:**
-- `ATLASSIAN_BASE_URL` - Your Atlassian instance URL (e.g., https://yourcompany.atlassian.net)
+**For Atlassian Cloud:**
+- `ATLASSIAN_BASE_URL` - Your Atlassian Cloud URL (e.g., https://yourcompany.atlassian.net)
 - `ATLASSIAN_USERNAME` - Your Atlassian email address
-- `ATLASSIAN_API_TOKEN` - Your Atlassian API token (for Jira & Confluence)
-
-**Optional (for Bitbucket Cloud):**
+- `ATLASSIAN_API_TOKEN` - Your Atlassian API token (for Jira & Confluence Cloud)
 - `BITBUCKET_WORKSPACE` - Your Bitbucket workspace name (found in URL: bitbucket.org/WORKSPACE_NAME)
-- `BITBUCKET_API_TOKEN` - Bitbucket API token (create at https://bitbucket.org/account/settings/app-passwords/ with Repositories:Read/Write permissions)
+- `BITBUCKET_API_TOKEN` - Bitbucket Cloud API token (create at https://bitbucket.org/account/settings/app-passwords/)
+
+**For Atlassian Data Center/Server:**
+- `ATLASSIAN_BASE_URL` - Your Data Center instance URL (e.g., https://jira.yourcompany.com)
+- `ATLASSIAN_PAT_TOKEN` - Personal Access Token from your Data Center instance
+- `BITBUCKET_PROJECT` - Your Bitbucket Server project key
+
+**Platform Detection:**
+The server automatically detects the platform:
+- If `ATLASSIAN_PAT_TOKEN` is set → Data Center mode
+- Otherwise → Cloud mode
 
 ## Testing
 
 Run comprehensive tests for all 46 tools:
 
+**Cloud Testing:**
 ```bash
-# Test all tools
-python tests/test_all_tools.py
+# Test all Cloud tools
+python tests/cloud/test_all_tools.py
 
-# Test individual services
-python tests/test_jira_tools.py        # 14 Jira tools
-python tests/test_confluence_tools.py  # 12 Confluence tools
-python tests/test_bitbucket_tools.py   # 20 Bitbucket tools
+# Test individual Cloud services
+python tests/cloud/test_jira_tools.py        # 14 Jira tools
+python tests/cloud/test_confluence_tools.py  # 12 Confluence tools
+python tests/cloud/test_bitbucket_tools.py   # 20 Bitbucket tools
+```
+
+**Data Center Testing:**
+```bash
+# Test all Data Center tools
+python tests/datacenter/test_all_dc_tools.py
+
+# Test individual Data Center services
+python tests/datacenter/test_jira_dc_tools.py        # 14 Jira tools
+python tests/datacenter/test_confluence_dc_tools.py  # 12 Confluence tools
+python tests/datacenter/test_bitbucket_dc_tools.py   # 20 Bitbucket Server tools
 ```
 
 ## AWS Deployment
@@ -190,7 +243,8 @@ Once deployed, you'll receive an API Gateway URL:
 
 - API tokens stored as encrypted environment variables in Lambda
 - All API calls use HTTPS
-- Basic authentication with Atlassian APIs
+- Cloud: Basic authentication with API tokens
+- Data Center: Bearer token authentication with Personal Access Tokens
 - No credentials stored in code
 
 ## Project Structure
@@ -198,19 +252,30 @@ Once deployed, you'll receive an API Gateway URL:
 ```
 atlassian_mcp/
 ├── mcp_server/
-│   ├── main.py                 # MCP server implementation
-│   ├── tools.py                # All 46 tool definitions
-│   ├── auth.py                 # Authentication handler
-│   ├── jira_provider.py        # Jira API integration
-│   ├── confluence_provider.py  # Confluence API integration
-│   ├── bitbucket_provider.py   # Bitbucket API integration
+│   ├── common/
+│   │   ├── auth.py             # Authentication (Cloud & Data Center)
+│   │   └── tools.py            # All 46 tool definitions
+│   ├── cloud/
+│   │   ├── jira_provider.py        # Jira Cloud API integration
+│   │   ├── confluence_provider.py  # Confluence Cloud API integration
+│   │   └── bitbucket_provider.py   # Bitbucket Cloud API integration
+│   ├── datacenter/
+│   │   ├── jira_dc_provider.py        # Jira Data Center API integration
+│   │   ├── confluence_dc_provider.py  # Confluence Data Center API integration
+│   │   └── bitbucket_dc_provider.py   # Bitbucket Server API integration
 │   └── requirements.txt        # MCP server dependencies
 ├── tests/
-│   ├── test_all_tools.py       # Master test suite
-│   ├── test_jira_tools.py      # Jira tools tests
-│   ├── test_confluence_tools.py # Confluence tools tests
-│   └── test_bitbucket_tools.py # Bitbucket tools tests
-├── lambda_handler.py           # AWS Lambda handler
+│   ├── cloud/
+│   │   ├── test_all_tools.py       # Cloud master test suite
+│   │   ├── test_jira_tools.py      # Jira Cloud tests
+│   │   ├── test_confluence_tools.py # Confluence Cloud tests
+│   │   └── test_bitbucket_tools.py # Bitbucket Cloud tests
+│   └── datacenter/
+│       ├── test_all_dc_tools.py       # Data Center master test suite
+│       ├── test_jira_dc_tools.py      # Jira Data Center tests
+│       ├── test_confluence_dc_tools.py # Confluence Data Center tests
+│       └── test_bitbucket_dc_tools.py # Bitbucket Server tests
+├── lambda_handler.py           # AWS Lambda handler (auto-detects platform)
 ├── template.yaml               # SAM deployment template
 ├── requirements.txt            # Lambda dependencies
 └── README.md                   # This file
@@ -218,9 +283,15 @@ atlassian_mcp/
 
 ## API Documentation
 
-- [Jira REST API](https://developer.atlassian.com/cloud/jira/platform/rest/v2/)
-- [Confluence REST API](https://developer.atlassian.com/cloud/confluence/rest/v2/)
+**Cloud APIs:**
+- [Jira Cloud REST API](https://developer.atlassian.com/cloud/jira/platform/rest/v2/)
+- [Confluence Cloud REST API](https://developer.atlassian.com/cloud/confluence/rest/v2/)
 - [Bitbucket Cloud REST API](https://developer.atlassian.com/cloud/bitbucket/rest/)
+
+**Data Center APIs:**
+- [Jira Data Center REST API](https://docs.atlassian.com/software/jira/docs/api/REST/latest/)
+- [Confluence Data Center REST API](https://docs.atlassian.com/confluence/REST/latest/)
+- [Bitbucket Server REST API](https://docs.atlassian.com/bitbucket-server/rest/latest/)
 
 ## License
 

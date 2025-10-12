@@ -1,1 +1,1 @@
-# Tests for Atlassian Data Center
+# Data Center tests

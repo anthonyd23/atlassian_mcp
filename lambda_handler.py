@@ -1,14 +1,26 @@
 import json
 import asyncio
+import os
 from mcp_server.common.tools import JIRA_TOOLS, CONFLUENCE_TOOLS, BITBUCKET_TOOLS
 from mcp_server.cloud.jira_provider import JiraProvider
 from mcp_server.cloud.confluence_provider import ConfluenceProvider
 from mcp_server.cloud.bitbucket_provider import BitbucketProvider
+from mcp_server.datacenter.jira_dc_provider import JiraDCProvider
+from mcp_server.datacenter.confluence_dc_provider import ConfluenceDCProvider
+from mcp_server.datacenter.bitbucket_dc_provider import BitbucketDCProvider
 
-# Initialize providers
-jira = JiraProvider()
-confluence = ConfluenceProvider()
-bitbucket = BitbucketProvider()
+# Detect platform: Data Center uses PAT token, Cloud uses API token
+PLATFORM = 'datacenter' if os.getenv('ATLASSIAN_PAT_TOKEN') else 'cloud'
+
+# Initialize providers based on platform
+if PLATFORM == 'datacenter':
+    jira = JiraDCProvider()
+    confluence = ConfluenceDCProvider()
+    bitbucket = BitbucketDCProvider()
+else:
+    jira = JiraProvider()
+    confluence = ConfluenceProvider()
+    bitbucket = BitbucketProvider()
 
 ALL_TOOLS = JIRA_TOOLS + CONFLUENCE_TOOLS + BITBUCKET_TOOLS
 
@@ -119,7 +131,7 @@ def lambda_handler(event, context):
         return {
             'statusCode': 200,
             'headers': {'Content-Type': 'application/json'},
-            'body': json.dumps({'status': 'healthy', 'tools': len(ALL_TOOLS)})
+            'body': json.dumps({'status': 'healthy', 'tools': len(ALL_TOOLS), 'platform': PLATFORM})
         }
     
     # Parse request
