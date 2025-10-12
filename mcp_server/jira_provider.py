@@ -18,7 +18,6 @@ class JiraProvider:
     async def search(self, jql: str) -> dict:
         try:
             headers = self.auth.get_auth_headers()
-            # Try v2 first for free accounts
             url = f"{self.auth.get_base_url()}/rest/api/2/search"
             
             payload = {
@@ -29,10 +28,8 @@ class JiraProvider:
             
             response = requests.post(url, headers=headers, json=payload)
             
-            # If v2 fails, try v3
             if response.status_code == 410:
-                url = f"{self.auth.get_base_url()}/rest/api/3/search"
-                response = requests.post(url, headers=headers, json=payload)
+                return {'error': 'Jira API not available on free tier', 'results': []}
             
             response.raise_for_status()
             

@@ -4,13 +4,15 @@ import requests
 
 # Test Bitbucket API directly
 username = os.getenv('ATLASSIAN_USERNAME')
-token = os.getenv('ATLASSIAN_API_TOKEN')
+token = os.getenv('BITBUCKET_API_TOKEN', os.getenv('ATLASSIAN_API_TOKEN'))
 workspace = os.getenv('BITBUCKET_WORKSPACE', 'anthonyd723')
 
-print(f"Testing Bitbucket API...")
+print(f"Using BITBUCKET_API_TOKEN: {'SET' if os.getenv('BITBUCKET_API_TOKEN') else 'NOT SET (using ATLASSIAN_API_TOKEN)'}")
+
+print(f"\nTesting Bitbucket API...")
 print(f"Username: {username}")
 print(f"Workspace: {workspace}")
-print(f"Token: {'*' * len(token) if token else 'NOT SET'}\n")
+print(f"Token length: {len(token) if token else 0}\n")
 
 # Test 1: Get user info
 print("1. Testing user endpoint...")
