@@ -1,6 +1,24 @@
 # Atlassian MCP Server
 
-A comprehensive Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and Bitbucket) with 46 tools deployed on AWS Lambda.
+A Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and Bitbucket) with 46 tools deployed on AWS Lambda.
+
+## Table of Contents
+
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Setup](#setup)
+- [MCP Tools (46 Total)](#mcp-tools-46-total)
+  - [Jira Tools (14)](#jira-tools-14)
+  - [Confluence Tools (12)](#confluence-tools-12)
+  - [Bitbucket Tools (20)](#bitbucket-tools-20)
+- [MCP Resources](#mcp-resources)
+- [Configuration](#configuration)
+- [Testing](#testing)
+- [AWS Deployment](#aws-deployment)
+- [Security](#security)
+- [Project Structure](#project-structure)
+- [API Documentation](#api-documentation)
+- [License](#license)
 
 ## Features
 

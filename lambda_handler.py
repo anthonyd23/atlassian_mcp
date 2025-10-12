@@ -1,9 +1,9 @@
 import json
 import asyncio
-from mcp_server.tools import JIRA_TOOLS, CONFLUENCE_TOOLS, BITBUCKET_TOOLS
-from mcp_server.jira_provider import JiraProvider
-from mcp_server.confluence_provider import ConfluenceProvider
-from mcp_server.bitbucket_provider import BitbucketProvider
+from mcp_server.common.tools import JIRA_TOOLS, CONFLUENCE_TOOLS, BITBUCKET_TOOLS
+from mcp_server.cloud.jira_provider import JiraProvider
+from mcp_server.cloud.confluence_provider import ConfluenceProvider
+from mcp_server.cloud.bitbucket_provider import BitbucketProvider
 
 # Initialize providers
 jira = JiraProvider()

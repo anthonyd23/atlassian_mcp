@@ -1,7 +1,7 @@
 import requests
 import json
 import os
-from .auth import Auth
+from ..common.auth import Auth
 
 class BitbucketProvider:
     def __init__(self):

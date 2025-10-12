@@ -1,6 +1,6 @@
 import requests
 import json
-from .auth import Auth
+from ..common.auth import Auth
 
 class ConfluenceProvider:
     def __init__(self):

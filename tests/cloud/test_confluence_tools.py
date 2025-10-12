@@ -3,8 +3,8 @@
 import asyncio
 import os
 import sys
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from mcp_server.confluence_provider import ConfluenceProvider
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+from mcp_server.cloud.confluence_provider import ConfluenceProvider
 
 async def test_confluence_tools():
     print("Testing Confluence Tools...\n")
