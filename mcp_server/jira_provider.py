@@ -18,7 +18,7 @@ class JiraProvider:
     async def search(self, jql: str) -> dict:
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/2/search"
+            url = f"{self.auth.get_base_url()}/rest/api/3/search"
             
             payload = {
                 'jql': jql,
@@ -54,7 +54,7 @@ class JiraProvider:
     async def _get_projects(self) -> str:
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/2/project"
+            url = f"{self.auth.get_base_url()}/rest/api/3/project"
             
             response = requests.get(url, headers=headers)
             response.raise_for_status()
@@ -67,7 +67,7 @@ class JiraProvider:
     async def _get_issues(self, project_key: str) -> str:
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/2/search"
+            url = f"{self.auth.get_base_url()}/rest/api/3/search"
             
             payload = {
                 'jql': f'project = {project_key}',

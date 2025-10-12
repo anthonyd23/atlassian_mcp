@@ -18,21 +18,26 @@ class BitbucketProvider:
     async def search(self, query: str) -> dict:
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/1.0/projects"
+            # Bitbucket Cloud API for personal accounts
+            url = "https://api.bitbucket.org/2.0/repositories"
             
-            response = requests.get(url, headers=headers)
+            # Use username from auth for Bitbucket Cloud
+            username = self.auth.username.split('@')[0]
+            url = f"https://api.bitbucket.org/2.0/repositories/{username}"
+            
+            response = requests.get(url, auth=(self.auth.username, self.auth.api_token))
             response.raise_for_status()
             
-            projects = response.json().get('values', [])
+            repos = response.json().get('values', [])
             results = []
             
-            for project in projects:
-                if query.lower() in project.get('name', '').lower():
+            for repo in repos:
+                if query.lower() in repo.get('name', '').lower():
                     results.append({
-                        'type': 'project',
-                        'key': project.get('key'),
-                        'name': project.get('name'),
-                        'description': project.get('description')
+                        'type': 'repository',
+                        'name': repo.get('name'),
+                        'full_name': repo.get('full_name'),
+                        'description': repo.get('description')
                     })
             
             return {'results': results}
@@ -41,10 +46,10 @@ class BitbucketProvider:
     
     async def _get_repositories(self) -> str:
         try:
-            headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/1.0/repos"
+            username = self.auth.username.split('@')[0]
+            url = f"https://api.bitbucket.org/2.0/repositories/{username}"
             
-            response = requests.get(url, headers=headers, params={'limit': 25})
+            response = requests.get(url, auth=(self.auth.username, self.auth.api_token), params={'pagelen': 25})
             response.raise_for_status()
             
             repos = response.json().get('values', [])
@@ -54,10 +59,10 @@ class BitbucketProvider:
     
     async def _get_pull_requests(self, repo: str) -> str:
         try:
-            headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/1.0/projects/{repo}/repos/{repo}/pull-requests"
+            username = self.auth.username.split('@')[0]
+            url = f"https://api.bitbucket.org/2.0/repositories/{username}/{repo}/pullrequests"
             
-            response = requests.get(url, headers=headers, params={'limit': 25})
+            response = requests.get(url, auth=(self.auth.username, self.auth.api_token), params={'pagelen': 25})
             response.raise_for_status()
             
             prs = response.json().get('values', [])
