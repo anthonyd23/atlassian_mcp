@@ -3,10 +3,10 @@ import os
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Resource, Tool, TextContent
-from .bitbucket_provider import BitbucketProvider
-from .confluence_provider import ConfluenceProvider
-from .jira_provider import JiraProvider
-from .tools import JIRA_TOOLS, CONFLUENCE_TOOLS, BITBUCKET_TOOLS
+from .cloud.bitbucket_provider import BitbucketProvider
+from .cloud.confluence_provider import ConfluenceProvider
+from .cloud.jira_provider import JiraProvider
+from .common.tools import JIRA_TOOLS, CONFLUENCE_TOOLS, BITBUCKET_TOOLS
 
 server = Server("atlassian-mcp")
 
