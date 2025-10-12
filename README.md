@@ -1,15 +1,15 @@
 # Atlassian MCP Server
 
-A comprehensive Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and Bitbucket) with 50 tools deployed on AWS Lambda.
+A comprehensive Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and Bitbucket) with 46 tools deployed on AWS Lambda.
 
 ## Features
 
-- **50 MCP Tools**: Complete integration with Jira (14 tools), Confluence (12 tools), and Bitbucket (24 tools)
+- **46 MCP Tools**: Complete integration with Jira (14 tools), Confluence (12 tools), and Bitbucket (20 tools)
 - **Jira Integration**: Search, create, update, delete issues, manage comments, transitions, and more
 - **Confluence Integration**: Search, create, update pages, manage spaces, comments, and attachments
 - **Bitbucket Integration**: Repository management, pull requests, commits, branches, file operations
 - **AWS Deployment**: Serverless deployment using Lambda and API Gateway
-- **Comprehensive Testing**: Full test suite for all 50 tools
+- **Comprehensive Testing**: Full test suite for all 46 tools
 
 ## Prerequisites
 
@@ -39,7 +39,7 @@ A comprehensive Model Context Protocol (MCP) server for Atlassian tools (Jira, C
 
 3. **Test locally**:
    ```bash
-   # Test all 50 tools
+   # Test all 46 tools
    python test_all_tools.py
    
    # Or test individual services
@@ -54,7 +54,7 @@ A comprehensive Model Context Protocol (MCP) server for Atlassian tools (Jira, C
    ./deploy.sh
    ```
 
-## MCP Tools (50 Total)
+## MCP Tools (46 Total)
 
 ### Jira Tools (14)
 
@@ -94,7 +94,7 @@ A comprehensive Model Context Protocol (MCP) server for Atlassian tools (Jira, C
 11. `add_page_comment` - Add a comment to a page
 12. `delete_page` - Permanently delete a page
 
-### Bitbucket Tools (24)
+### Bitbucket Tools (20)
 
 **Repository Operations:**
 1. `search_bitbucket` - Search repositories by name or description
@@ -122,8 +122,6 @@ A comprehensive Model Context Protocol (MCP) server for Atlassian tools (Jira, C
 19. `approve_pull_request` - Approve a pull request
 20. `merge_pull_request` - Merge an approved pull request
 
-**Note:** Tools 21-24 are covered in the operations above (some tools were consolidated)
-
 ## MCP Resources
 
 - `atlassian://bitbucket/repositories` - Access Bitbucket repositories
@@ -145,7 +143,7 @@ A comprehensive Model Context Protocol (MCP) server for Atlassian tools (Jira, C
 
 ## Testing
 
-Run comprehensive tests for all 50 tools:
+Run comprehensive tests for all 46 tools:
 
 ```bash
 # Test all tools
@@ -154,7 +152,7 @@ python test_all_tools.py
 # Test individual services
 python test_jira_tools.py        # 14 Jira tools
 python test_confluence_tools.py  # 12 Confluence tools
-python test_bitbucket_tools.py   # 24 Bitbucket tools
+python test_bitbucket_tools.py   # 20 Bitbucket tools
 ```
 
 ## AWS Deployment
@@ -182,7 +180,7 @@ Once deployed, you'll receive an API Gateway URL:
 atlassian_mcp/
 ├── mcp_server/
 │   ├── main.py                 # MCP server implementation
-│   ├── tools.py                # All 50 tool definitions
+│   ├── tools.py                # All 46 tool definitions
 │   ├── auth.py                 # Authentication handler
 │   ├── jira_provider.py        # Jira API integration
 │   ├── confluence_provider.py  # Confluence API integration

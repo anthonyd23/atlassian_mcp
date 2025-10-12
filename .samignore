@@ -1,0 +1,17 @@
+.github/
+.git/
+.aws-sam/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+test_*.py
+debug_*.py
+quick_test.py
+.gitignore
+.vscode/
+.idea/
+*.md
+LICENSE

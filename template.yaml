@@ -26,6 +26,7 @@ Resources:
     Properties:
       CodeUri: .
       Handler: lambda_handler.lambda_handler
+      Runtime: python3.11
       Environment:
         Variables:
           ATLASSIAN_BASE_URL: !Ref AtlassianBaseUrl
