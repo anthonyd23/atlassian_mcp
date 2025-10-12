@@ -1,0 +1,56 @@
+from mcp.types import Tool
+
+JIRA_TOOLS = [
+    Tool(name="search_jira", description="Search Jira issues using JQL", inputSchema={"type": "object", "properties": {"jql": {"type": "string"}}, "required": ["jql"]}),
+    Tool(name="get_issue", description="Get Jira issue by key", inputSchema={"type": "object", "properties": {"issue_key": {"type": "string"}}, "required": ["issue_key"]}),
+    Tool(name="create_issue", description="Create new Jira issue", inputSchema={"type": "object", "properties": {"project_key": {"type": "string"}, "summary": {"type": "string"}, "description": {"type": "string"}, "issue_type": {"type": "string", "default": "Task"}}, "required": ["project_key", "summary", "description"]}),
+    Tool(name="update_issue", description="Update Jira issue", inputSchema={"type": "object", "properties": {"issue_key": {"type": "string"}, "fields": {"type": "object"}}, "required": ["issue_key", "fields"]}),
+    Tool(name="add_comment", description="Add comment to Jira issue", inputSchema={"type": "object", "properties": {"issue_key": {"type": "string"}, "comment": {"type": "string"}}, "required": ["issue_key", "comment"]}),
+    Tool(name="get_issue_comments", description="Get comments on Jira issue", inputSchema={"type": "object", "properties": {"issue_key": {"type": "string"}}, "required": ["issue_key"]}),
+    Tool(name="transition_issue", description="Change Jira issue status", inputSchema={"type": "object", "properties": {"issue_key": {"type": "string"}, "transition_id": {"type": "string"}}, "required": ["issue_key", "transition_id"]}),
+    Tool(name="get_issue_transitions", description="Get available transitions for issue", inputSchema={"type": "object", "properties": {"issue_key": {"type": "string"}}, "required": ["issue_key"]}),
+    Tool(name="assign_issue", description="Assign Jira issue to user", inputSchema={"type": "object", "properties": {"issue_key": {"type": "string"}, "account_id": {"type": "string"}}, "required": ["issue_key", "account_id"]}),
+    Tool(name="delete_issue", description="Delete Jira issue", inputSchema={"type": "object", "properties": {"issue_key": {"type": "string"}}, "required": ["issue_key"]}),
+    Tool(name="list_projects", description="List all Jira projects", inputSchema={"type": "object", "properties": {}}),
+    Tool(name="get_project", description="Get Jira project details", inputSchema={"type": "object", "properties": {"project_key": {"type": "string"}}, "required": ["project_key"]}),
+    Tool(name="get_issue_attachments", description="Get attachments for Jira issue", inputSchema={"type": "object", "properties": {"issue_key": {"type": "string"}}, "required": ["issue_key"]}),
+    Tool(name="get_issue_watchers", description="Get watchers for Jira issue", inputSchema={"type": "object", "properties": {"issue_key": {"type": "string"}}, "required": ["issue_key"]}),
+]
+
+CONFLUENCE_TOOLS = [
+    Tool(name="search_confluence", description="Search Confluence pages", inputSchema={"type": "object", "properties": {"query": {"type": "string"}}, "required": ["query"]}),
+    Tool(name="get_page", description="Get Confluence page by ID", inputSchema={"type": "object", "properties": {"page_id": {"type": "string"}}, "required": ["page_id"]}),
+    Tool(name="get_page_by_title", description="Get Confluence page by title", inputSchema={"type": "object", "properties": {"space_key": {"type": "string"}, "title": {"type": "string"}}, "required": ["space_key", "title"]}),
+    Tool(name="create_page", description="Create new Confluence page", inputSchema={"type": "object", "properties": {"space_key": {"type": "string"}, "title": {"type": "string"}, "content": {"type": "string"}, "parent_id": {"type": "string"}}, "required": ["space_key", "title", "content"]}),
+    Tool(name="update_page", description="Update Confluence page", inputSchema={"type": "object", "properties": {"page_id": {"type": "string"}, "title": {"type": "string"}, "content": {"type": "string"}, "version": {"type": "integer"}}, "required": ["page_id", "title", "content", "version"]}),
+    Tool(name="delete_page", description="Delete Confluence page", inputSchema={"type": "object", "properties": {"page_id": {"type": "string"}}, "required": ["page_id"]}),
+    Tool(name="list_pages", description="List pages in Confluence space", inputSchema={"type": "object", "properties": {"space_key": {"type": "string"}}, "required": ["space_key"]}),
+    Tool(name="get_space", description="Get Confluence space details", inputSchema={"type": "object", "properties": {"space_key": {"type": "string"}}, "required": ["space_key"]}),
+    Tool(name="list_spaces", description="List all Confluence spaces", inputSchema={"type": "object", "properties": {}}),
+    Tool(name="get_page_comments", description="Get comments on Confluence page", inputSchema={"type": "object", "properties": {"page_id": {"type": "string"}}, "required": ["page_id"]}),
+    Tool(name="add_page_comment", description="Add comment to Confluence page", inputSchema={"type": "object", "properties": {"page_id": {"type": "string"}, "comment": {"type": "string"}}, "required": ["page_id", "comment"]}),
+    Tool(name="get_page_attachments", description="Get attachments on Confluence page", inputSchema={"type": "object", "properties": {"page_id": {"type": "string"}}, "required": ["page_id"]}),
+]
+
+BITBUCKET_TOOLS = [
+    Tool(name="search_bitbucket", description="Search Bitbucket repositories", inputSchema={"type": "object", "properties": {"query": {"type": "string"}}, "required": ["query"]}),
+    Tool(name="get_repository", description="Get Bitbucket repository details", inputSchema={"type": "object", "properties": {"repo_slug": {"type": "string"}}, "required": ["repo_slug"]}),
+    Tool(name="list_repositories", description="List all Bitbucket repositories", inputSchema={"type": "object", "properties": {}}),
+    Tool(name="list_pull_requests", description="List pull requests in repository", inputSchema={"type": "object", "properties": {"repo_slug": {"type": "string"}, "state": {"type": "string", "default": "OPEN"}}, "required": ["repo_slug"]}),
+    Tool(name="get_pull_request", description="Get pull request details", inputSchema={"type": "object", "properties": {"repo_slug": {"type": "string"}, "pr_id": {"type": "integer"}}, "required": ["repo_slug", "pr_id"]}),
+    Tool(name="create_pull_request", description="Create new pull request", inputSchema={"type": "object", "properties": {"repo_slug": {"type": "string"}, "title": {"type": "string"}, "source_branch": {"type": "string"}, "dest_branch": {"type": "string"}, "description": {"type": "string"}}, "required": ["repo_slug", "title", "source_branch", "dest_branch"]}),
+    Tool(name="get_file_content", description="Get file content from repository", inputSchema={"type": "object", "properties": {"repo_slug": {"type": "string"}, "file_path": {"type": "string"}, "branch": {"type": "string", "default": "main"}}, "required": ["repo_slug", "file_path"]}),
+    Tool(name="list_commits", description="List commits in repository", inputSchema={"type": "object", "properties": {"repo_slug": {"type": "string"}, "branch": {"type": "string", "default": "main"}}, "required": ["repo_slug"]}),
+    Tool(name="get_commit", description="Get commit details", inputSchema={"type": "object", "properties": {"repo_slug": {"type": "string"}, "commit_hash": {"type": "string"}}, "required": ["repo_slug", "commit_hash"]}),
+    Tool(name="list_branches", description="List branches in repository", inputSchema={"type": "object", "properties": {"repo_slug": {"type": "string"}}, "required": ["repo_slug"]}),
+    Tool(name="get_pull_request_diff", description="Get pull request diff", inputSchema={"type": "object", "properties": {"repo_slug": {"type": "string"}, "pr_id": {"type": "integer"}}, "required": ["repo_slug", "pr_id"]}),
+    Tool(name="get_pull_request_comments", description="Get pull request comments", inputSchema={"type": "object", "properties": {"repo_slug": {"type": "string"}, "pr_id": {"type": "integer"}}, "required": ["repo_slug", "pr_id"]}),
+    Tool(name="add_pr_comment", description="Add comment to pull request", inputSchema={"type": "object", "properties": {"repo_slug": {"type": "string"}, "pr_id": {"type": "integer"}, "comment": {"type": "string"}}, "required": ["repo_slug", "pr_id", "comment"]}),
+    Tool(name="approve_pull_request", description="Approve pull request", inputSchema={"type": "object", "properties": {"repo_slug": {"type": "string"}, "pr_id": {"type": "integer"}}, "required": ["repo_slug", "pr_id"]}),
+    Tool(name="merge_pull_request", description="Merge pull request", inputSchema={"type": "object", "properties": {"repo_slug": {"type": "string"}, "pr_id": {"type": "integer"}}, "required": ["repo_slug", "pr_id"]}),
+    Tool(name="get_commit_diff", description="Get commit diff", inputSchema={"type": "object", "properties": {"repo_slug": {"type": "string"}, "commit_hash": {"type": "string"}}, "required": ["repo_slug", "commit_hash"]}),
+    Tool(name="list_tags", description="List tags in repository", inputSchema={"type": "object", "properties": {"repo_slug": {"type": "string"}}, "required": ["repo_slug"]}),
+    Tool(name="list_directory", description="List files in directory", inputSchema={"type": "object", "properties": {"repo_slug": {"type": "string"}, "path": {"type": "string", "default": ""}, "branch": {"type": "string", "default": "main"}}, "required": ["repo_slug"]}),
+    Tool(name="update_pull_request", description="Update pull request", inputSchema={"type": "object", "properties": {"repo_slug": {"type": "string"}, "pr_id": {"type": "integer"}, "title": {"type": "string"}, "description": {"type": "string"}}, "required": ["repo_slug", "pr_id"]}),
+    Tool(name="compare_commits", description="Compare two commits", inputSchema={"type": "object", "properties": {"repo_slug": {"type": "string"}, "from_commit": {"type": "string"}, "to_commit": {"type": "string"}}, "required": ["repo_slug", "from_commit", "to_commit"]}),
+]
