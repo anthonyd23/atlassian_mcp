@@ -13,6 +13,10 @@ Parameters:
     Type: String
     NoEcho: true
     Description: Atlassian API token
+  AlertEmail:
+    Type: String
+    Description: Email address for CloudWatch alerts (optional)
+    Default: ""
 
 Globals:
   Function:
@@ -81,6 +85,115 @@ Resources:
       KeyType: API_KEY
       UsagePlanId: !Ref MCPUsagePlan
 
+  # SNS Topic for Alerts
+  AlertTopic:
+    Type: AWS::SNS::Topic
+    Condition: HasAlertEmail
+    Properties:
+      TopicName: AtlassianMCPAlerts
+      Subscription:
+        - Endpoint: !Ref AlertEmail
+          Protocol: email
+
+  # CloudWatch Alarms
+  ErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: HasAlertEmail
+    Properties:
+      AlarmName: AtlassianMCP-Errors
+      AlarmDescription: Alert when Lambda function has errors
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref AtlassianMCPFunction
+      AlarmActions:
+        - !Ref AlertTopic
+
+  ThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: HasAlertEmail
+    Properties:
+      AlarmName: AtlassianMCP-Throttles
+      AlarmDescription: Alert when Lambda function is throttled
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 10
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref AtlassianMCPFunction
+      AlarmActions:
+        - !Ref AlertTopic
+
+  DurationAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: HasAlertEmail
+    Properties:
+      AlarmName: AtlassianMCP-SlowResponse
+      AlarmDescription: Alert when Lambda function is slow
+      MetricName: Duration
+      Namespace: AWS/Lambda
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 25000
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref AtlassianMCPFunction
+      AlarmActions:
+        - !Ref AlertTopic
+
+  ApiGateway4xxAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: HasAlertEmail
+    Properties:
+      AlarmName: AtlassianMCP-ClientErrors
+      AlarmDescription: Alert on high rate of 4xx errors
+      MetricName: 4XXError
+      Namespace: AWS/ApiGateway
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 20
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: ApiName
+          Value: !Ref ServerlessRestApi
+      AlarmActions:
+        - !Ref AlertTopic
+
+  ApiGateway5xxAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: HasAlertEmail
+    Properties:
+      AlarmName: AtlassianMCP-ServerErrors
+      AlarmDescription: Alert on any 5xx errors
+      MetricName: 5XXError
+      Namespace: AWS/ApiGateway
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: ApiName
+          Value: !Ref ServerlessRestApi
+      AlarmActions:
+        - !Ref AlertTopic
+
+Conditions:
+  HasAlertEmail: !Not [!Equals [!Ref AlertEmail, ""]]
+
 Outputs:
   MCPApiUrl:
     Description: API Gateway endpoint URL for MCP server
@@ -93,3 +206,8 @@ Outputs:
   MCPApiKeyId:
     Description: API Key ID (use 'aws apigateway get-api-key --api-key <id> --include-value' to get the key)
     Value: !Ref MCPApiKey
+  
+  AlertTopicArn:
+    Description: SNS Topic ARN for alerts (if email provided)
+    Condition: HasAlertEmail
+    Value: !Ref AlertTopic

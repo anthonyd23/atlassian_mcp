@@ -15,6 +15,7 @@ A Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and
 - [Configuration](#configuration)
 - [Testing](#testing)
 - [AWS Deployment](#aws-deployment)
+- [Monitoring and Alerts](#monitoring-and-alerts)
 - [Amazon Q Integration](#amazon-q-integration)
 - [Security](#security)
 - [Project Structure](#project-structure)
@@ -265,6 +266,38 @@ curl -H "x-api-key: YOUR_API_KEY" \
 
 - **Rate**: 100 requests/second
 - **Burst**: 200 requests
+
+## Monitoring and Alerts
+
+CloudWatch monitoring and email alerts are automatically configured when you provide an email during deployment.
+
+### Setup Alerts
+
+```bash
+sam deploy --parameter-overrides AlertEmail=your-email@example.com
+```
+
+### Automatic Alarms
+
+- **Error Alarm**: > 5 errors in 5 minutes
+- **Throttle Alarm**: > 10 throttles in 5 minutes  
+- **Duration Alarm**: > 25 seconds average
+- **4xx Alarm**: > 20 client errors in 5 minutes
+- **5xx Alarm**: > 1 server error in 5 minutes
+
+### View Logs
+
+```bash
+# Tail logs in real-time
+aws logs tail /aws/lambda/atlassian-mcp-stack-AtlassianMCPFunction-xxx --follow
+
+# Search for errors
+aws logs filter-log-events \
+  --log-group-name /aws/lambda/atlassian-mcp-stack-AtlassianMCPFunction-xxx \
+  --filter-pattern "ERROR"
+```
+
+See [MONITORING.md](MONITORING.md) for complete monitoring guide.
 
 ## Amazon Q Integration
 
