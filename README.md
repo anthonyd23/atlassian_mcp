@@ -236,9 +236,35 @@ sam build
 sam deploy --guided
 ```
 
-Once deployed, you'll receive an API Gateway URL:
+Once deployed, you'll receive:
+- **API Gateway URL**: `https://<api-id>.execute-api.<region>.amazonaws.com/Prod/mcp`
+- **API Key ID**: Use to retrieve your API key
+
+### Retrieve Your API Key
+
+After deployment, get your API key:
+
+```bash
+# Get the API Key ID from deployment output
+aws apigateway get-api-key --api-key <API_KEY_ID> --include-value --query "value" --output text
+```
+
+### API Endpoints
+
 - `POST /mcp` - Main MCP protocol endpoint
 - `GET /mcp` - Health check
+
+**All requests require the `x-api-key` header:**
+
+```bash
+curl -H "x-api-key: YOUR_API_KEY" \
+  https://<api-id>.execute-api.<region>.amazonaws.com/Prod/mcp
+```
+
+### Rate Limits
+
+- **Rate**: 100 requests/second
+- **Burst**: 200 requests
 
 ## Amazon Q Integration
 
@@ -326,11 +352,25 @@ Once configured, test the connection in Amazon Q:
 
 ## Security
 
+### API Gateway Authentication
+
+- **API Key Required**: All Lambda endpoints require `x-api-key` header
+- **Rate Limiting**: 100 req/sec with 200 burst capacity
+- **HTTPS Only**: All traffic encrypted in transit
+
+### Credential Management
+
 - API tokens stored as encrypted environment variables in Lambda
-- All API calls use HTTPS
 - Cloud: Basic authentication with API tokens
 - Data Center: Bearer token authentication with Personal Access Tokens
 - No credentials stored in code
+
+### For Public Deployment
+
+If sharing this project:
+1. Users deploy their own Lambda stack
+2. Each user gets their own API key
+3. Set `AWS_LAMBDA_API_KEY` environment variable when using Lambda mode
 
 ## Project Structure
 

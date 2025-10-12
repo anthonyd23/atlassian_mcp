@@ -19,6 +19,9 @@ Globals:
     Timeout: 30
     MemorySize: 512
     Runtime: python3.11
+  Api:
+    Auth:
+      ApiKeyRequired: true
 
 Resources:
   AtlassianMCPFunction:
@@ -50,6 +53,34 @@ Resources:
       LogGroupName: !Sub '/aws/lambda/${AtlassianMCPFunction}'
       RetentionInDays: 14
 
+  MCPApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    DependsOn:
+      - ServerlessRestApiProdStage
+    Properties:
+      Name: AtlassianMCPApiKey
+      Enabled: true
+
+  MCPUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    DependsOn:
+      - ServerlessRestApiProdStage
+    Properties:
+      UsagePlanName: AtlassianMCPUsagePlan
+      ApiStages:
+        - ApiId: !Ref ServerlessRestApi
+          Stage: Prod
+      Throttle:
+        RateLimit: 100
+        BurstLimit: 200
+
+  MCPUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref MCPApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref MCPUsagePlan
+
 Outputs:
   MCPApiUrl:
     Description: API Gateway endpoint URL for MCP server
@@ -58,3 +89,7 @@ Outputs:
   MCPFunctionArn:
     Description: MCP Lambda Function ARN
     Value: !GetAtt AtlassianMCPFunction.Arn
+  
+  MCPApiKeyId:
+    Description: API Key ID (use 'aws apigateway get-api-key --api-key <id> --include-value' to get the key)
+    Value: !Ref MCPApiKey
