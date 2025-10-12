@@ -18,7 +18,7 @@ class JiraProvider:
     async def search(self, jql: str) -> dict:
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/2/search"
+            url = f"{self.auth.get_base_url()}/rest/api/3/search/jql"
             
             payload = {
                 'jql': jql,
@@ -27,10 +27,6 @@ class JiraProvider:
             }
             
             response = requests.post(url, headers=headers, json=payload)
-            
-            if response.status_code == 410:
-                return {'error': 'Jira API not available on free tier', 'results': []}
-            
             response.raise_for_status()
             
             data = response.json()
@@ -71,7 +67,7 @@ class JiraProvider:
     async def _get_issues(self, project_key: str) -> str:
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/2/search"
+            url = f"{self.auth.get_base_url()}/rest/api/3/search/jql"
             
             payload = {
                 'jql': f'project = {project_key}',
