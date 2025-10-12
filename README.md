@@ -253,32 +253,47 @@ Once deployed, you'll receive an API Gateway URL:
 atlassian_mcp/
 ├── mcp_server/
 │   ├── common/
+│   │   ├── __init__.py
 │   │   ├── auth.py             # Authentication (Cloud & Data Center)
 │   │   └── tools.py            # All 46 tool definitions
 │   ├── cloud/
+│   │   ├── __init__.py
 │   │   ├── jira_provider.py        # Jira Cloud API integration
 │   │   ├── confluence_provider.py  # Confluence Cloud API integration
 │   │   └── bitbucket_provider.py   # Bitbucket Cloud API integration
 │   ├── datacenter/
+│   │   ├── __init__.py
 │   │   ├── jira_dc_provider.py        # Jira Data Center API integration
 │   │   ├── confluence_dc_provider.py  # Confluence Data Center API integration
 │   │   └── bitbucket_dc_provider.py   # Bitbucket Server API integration
+│   ├── __init__.py
+│   ├── main.py                 # MCP server implementation
 │   └── requirements.txt        # MCP server dependencies
 ├── tests/
 │   ├── cloud/
+│   │   ├── __init__.py
 │   │   ├── test_all_tools.py       # Cloud master test suite
 │   │   ├── test_jira_tools.py      # Jira Cloud tests
 │   │   ├── test_confluence_tools.py # Confluence Cloud tests
 │   │   └── test_bitbucket_tools.py # Bitbucket Cloud tests
-│   └── datacenter/
-│       ├── test_all_dc_tools.py       # Data Center master test suite
-│       ├── test_jira_dc_tools.py      # Jira Data Center tests
-│       ├── test_confluence_dc_tools.py # Confluence Data Center tests
-│       └── test_bitbucket_dc_tools.py # Bitbucket Server tests
+│   ├── datacenter/
+│   │   ├── __init__.py
+│   │   ├── test_all_dc_tools.py       # Data Center master test suite
+│   │   ├── test_jira_dc_tools.py      # Jira Data Center tests
+│   │   ├── test_confluence_dc_tools.py # Confluence Data Center tests
+│   │   └── test_bitbucket_dc_tools.py # Bitbucket Server tests
+│   └── __init__.py
+├── .gitignore                  # Git ignore rules
+├── .samignore                  # SAM ignore rules
+├── DEPLOYMENT_CHECKLIST.md     # Deployment guide
 ├── lambda_handler.py           # AWS Lambda handler (auto-detects platform)
-├── template.yaml               # SAM deployment template
+├── LICENSE                     # MIT License
+├── PHASE2_SUMMARY.md           # Phase 2 implementation details
+├── PLATFORM_GUIDE.md           # Quick reference for both platforms
+├── README.md                   # This file
 ├── requirements.txt            # Lambda dependencies
-└── README.md                   # This file
+├── samconfig.toml              # SAM configuration
+└── template.yaml               # SAM deployment template
 ```
 
 ## API Documentation
