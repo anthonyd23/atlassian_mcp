@@ -3,7 +3,7 @@ import json
 import os
 from ..common.auth import DataCenterAuth
 
-class JiraDataCenterProvider:
+class JiraDCProvider:
     def __init__(self):
         self.auth = DataCenterAuth()
         self.base_url = self.auth.get_base_url()
