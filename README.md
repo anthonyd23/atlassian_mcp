@@ -269,7 +269,14 @@ curl -H "x-api-key: YOUR_API_KEY" \
 
 ## Monitoring and Alerts
 
-CloudWatch monitoring and email alerts are automatically configured when you provide an email during deployment.
+Comprehensive monitoring with structured logging, custom metrics, and CloudWatch dashboard.
+
+### Features
+
+- **Structured JSON Logging**: All logs include request ID, tool name, duration, and platform
+- **Custom Metrics**: Track tool usage and performance in CloudWatch namespace `AtlassianMCP`
+- **CloudWatch Dashboard**: Visual overview of Lambda performance, tool usage, and errors
+- **Email Alerts**: Automatic notifications for errors, throttles, and slow responses
 
 ### Setup Alerts
 
@@ -285,6 +292,24 @@ sam deploy --parameter-overrides AlertEmail=your-email@example.com
 - **4xx Alarm**: > 20 client errors in 5 minutes
 - **5xx Alarm**: > 1 server error in 5 minutes
 
+### CloudWatch Dashboard
+
+View the dashboard at: https://console.aws.amazon.com/cloudwatch/home?region=us-east-1#dashboards:name=AtlassianMCP
+
+The dashboard shows:
+- Lambda invocations, errors, and throttles
+- Response time (average, p95, p99)
+- Tool usage by name
+- Tool response times
+- API Gateway errors
+- Recent error logs
+
+### Custom Metrics
+
+Available in CloudWatch namespace `AtlassianMCP`:
+- `ToolInvocation` - Count of tool calls (dimensions: ToolName, Platform, Status)
+- `ToolDuration` - Tool execution time in milliseconds (dimensions: ToolName, Platform)
+
 ### View Logs
 
 ```bash
@@ -295,6 +320,13 @@ aws logs tail /aws/lambda/atlassian-mcp-stack-AtlassianMCPFunction-xxx --follow
 aws logs filter-log-events \
   --log-group-name /aws/lambda/atlassian-mcp-stack-AtlassianMCPFunction-xxx \
   --filter-pattern "ERROR"
+
+# Query structured logs
+aws logs start-query \
+  --log-group-name /aws/lambda/atlassian-mcp-stack-AtlassianMCPFunction-xxx \
+  --start-time $(date -u -d '1 hour ago' +%s) \
+  --end-time $(date -u +%s) \
+  --query-string 'fields @timestamp, message | filter message like /tool_name/'
 ```
 
 See [MONITORING.md](MONITORING.md) for complete monitoring guide.

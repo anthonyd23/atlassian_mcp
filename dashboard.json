@@ -1,0 +1,93 @@
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          ["AWS/Lambda", "Invocations", {"stat": "Sum", "label": "Total Invocations"}],
+          [".", "Errors", {"stat": "Sum", "label": "Errors"}],
+          [".", "Throttles", {"stat": "Sum", "label": "Throttles"}]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "Lambda Performance",
+        "period": 300,
+        "yAxis": {
+          "left": {
+            "min": 0
+          }
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          ["AWS/Lambda", "Duration", {"stat": "Average", "label": "Avg Duration"}],
+          ["...", {"stat": "p95", "label": "p95 Duration"}],
+          ["...", {"stat": "p99", "label": "p99 Duration"}]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "Response Time (ms)",
+        "period": 300,
+        "yAxis": {
+          "left": {
+            "min": 0
+          }
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          ["AtlassianMCP", "ToolInvocation", {"stat": "Sum"}]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "Tool Usage",
+        "period": 300
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          ["AtlassianMCP", "ToolDuration", {"stat": "Average"}]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "Tool Response Time (ms)",
+        "period": 300
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          ["AWS/ApiGateway", "4XXError", {"stat": "Sum", "label": "4xx Errors"}],
+          [".", "5XXError", {"stat": "Sum", "label": "5xx Errors"}]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "API Gateway Errors",
+        "period": 300
+      }
+    },
+    {
+      "type": "log",
+      "properties": {
+        "query": "SOURCE '/aws/lambda/atlassian-mcp-stack-AtlassianMCPFunction-ewHMl9d3K7wM'\n| fields @timestamp, message\n| filter message like /ERROR/\n| sort @timestamp desc\n| limit 20",
+        "region": "us-east-1",
+        "title": "Recent Errors",
+        "stacked": false
+      }
+    }
+  ]
+}

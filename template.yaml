@@ -39,6 +39,8 @@ Resources:
           ATLASSIAN_BASE_URL: !Ref AtlassianBaseUrl
           ATLASSIAN_USERNAME: !Ref AtlassianUsername
           ATLASSIAN_API_TOKEN: !Ref AtlassianApiToken
+      Policies:
+        - CloudWatchPutMetricPolicy: {}
       Events:
         MCPApi:
           Type: Api
