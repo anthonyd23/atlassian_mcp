@@ -15,6 +15,7 @@ A Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and
 - [Configuration](#configuration)
 - [Testing](#testing)
 - [AWS Deployment](#aws-deployment)
+- [Amazon Q Integration](#amazon-q-integration)
 - [Security](#security)
 - [Project Structure](#project-structure)
 - [API Documentation](#api-documentation)
@@ -238,6 +239,90 @@ sam deploy --guided
 Once deployed, you'll receive an API Gateway URL:
 - `POST /mcp` - Main MCP protocol endpoint
 - `GET /mcp` - Health check
+
+## Amazon Q Integration
+
+Connect this MCP server to Amazon Q Developer for AI-powered Atlassian workflows.
+
+### Setup in Amazon Q Developer
+
+1. Open Amazon Q Developer settings
+2. Navigate to **Settings → MCP Servers → Add Server**
+3. Configure the server:
+
+**For Atlassian Cloud:**
+```json
+{
+  "mcpServers": {
+    "atlassian-mcp": {
+      "command": "python",
+      "args": ["/absolute/path/to/atlassian_mcp/mcp_server/main.py"],
+      "env": {
+        "ATLASSIAN_BASE_URL": "https://yourcompany.atlassian.net",
+        "ATLASSIAN_USERNAME": "your-email@company.com",
+        "ATLASSIAN_API_TOKEN": "your-api-token",
+        "BITBUCKET_WORKSPACE": "your-workspace",
+        "BITBUCKET_API_TOKEN": "your-bitbucket-token"
+      }
+    }
+  }
+}
+```
+
+**For Atlassian Data Center:**
+```json
+{
+  "mcpServers": {
+    "atlassian-mcp": {
+      "command": "python",
+      "args": ["/absolute/path/to/atlassian_mcp/mcp_server/main.py"],
+      "env": {
+        "ATLASSIAN_BASE_URL": "https://jira.yourcompany.com",
+        "ATLASSIAN_PAT_TOKEN": "your-personal-access-token",
+        "BITBUCKET_PROJECT": "YOUR_PROJECT_KEY"
+      }
+    }
+  }
+}
+```
+
+### Testing the Connection
+
+Once configured, test the connection in Amazon Q:
+
+```
+# List available tools
+"What Atlassian tools are available?"
+
+# Search Jira
+"Search for open issues in project PROJ"
+
+# Get issue details
+"Show me details for PROJ-123"
+
+# Search Confluence
+"Find Confluence pages about deployment"
+
+# List repositories
+"What Bitbucket repositories do we have?"
+```
+
+### Example Workflows
+
+**Create a Jira issue:**
+```
+"Create a Jira issue in project PROJ with summary 'Fix login bug' and description 'Users cannot log in'"
+```
+
+**Update Confluence page:**
+```
+"Update Confluence page 12345 with new deployment instructions"
+```
+
+**Review pull request:**
+```
+"Show me the diff for pull request 42 in repo my-app"
+```
 
 ## Security
 
