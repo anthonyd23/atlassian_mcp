@@ -1,0 +1,59 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Atlassian MCP Server
+
+Parameters:
+  AtlassianBaseUrl:
+    Type: String
+    Description: Base URL for your Atlassian instance
+  AtlassianUsername:
+    Type: String
+    Description: Atlassian username
+  AtlassianApiToken:
+    Type: String
+    NoEcho: true
+    Description: Atlassian API token
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Runtime: python3.11
+
+Resources:
+  AtlassianMCPFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: lambda_handler.lambda_handler
+      Environment:
+        Variables:
+          ATLASSIAN_BASE_URL: !Ref AtlassianBaseUrl
+          ATLASSIAN_USERNAME: !Ref AtlassianUsername
+          ATLASSIAN_API_TOKEN: !Ref AtlassianApiToken
+      Events:
+        MCPApi:
+          Type: Api
+          Properties:
+            Path: /mcp
+            Method: post
+        MCPApiGet:
+          Type: Api
+          Properties:
+            Path: /mcp
+            Method: get
+
+  MCPLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${AtlassianMCPFunction}'
+      RetentionInDays: 14
+
+Outputs:
+  MCPApiUrl:
+    Description: API Gateway endpoint URL for MCP server
+    Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/mcp'
+  
+  MCPFunctionArn:
+    Description: MCP Lambda Function ARN
+    Value: !GetAtt AtlassianMCPFunction.Arn

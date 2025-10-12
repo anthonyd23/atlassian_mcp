@@ -1,33 +1,104 @@
+import asyncio
+import os
+from mcp.server import Server
+from mcp.server.stdio import stdio_server
+from mcp.types import Resource, Tool, TextContent
+from .bitbucket_provider import BitbucketProvider
+from .confluence_provider import ConfluenceProvider
+from .jira_provider import JiraProvider
 
-from fastapi import FastAPI, Depends, HTTPException, status
-from mcp_server.auth import Auth
-from mcp_server.bitbucket_provider import BitbucketProvider
-from mcp_server.confluence_provider import ConfluenceProvider
-from mcp_server.jira_provider import JiraProvider
+server = Server("atlassian-mcp")
 
-app = FastAPI(title="MCP Server for Atlassian Tools")
+# Initialize providers
+bitbucket = BitbucketProvider()
+confluence = ConfluenceProvider()
+jira = JiraProvider()
 
-auth = Auth()
-bitbucket_provider = BitbucketProvider()
-confluence_provider = ConfluenceProvider()
-jira_provider = JiraProvider()
+@server.list_resources()
+async def list_resources() -> list[Resource]:
+    return [
+        Resource(
+            uri="atlassian://bitbucket/repositories",
+            name="Bitbucket Repositories",
+            description="Access to Bitbucket repositories and pull requests"
+        ),
+        Resource(
+            uri="atlassian://confluence/spaces",
+            name="Confluence Spaces",
+            description="Access to Confluence spaces and pages"
+        ),
+        Resource(
+            uri="atlassian://jira/projects",
+            name="Jira Projects",
+            description="Access to Jira projects and issues"
+        )
+    ]
 
-def authenticate(token: str):
-    if not auth.authenticate(token):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+@server.read_resource()
+async def read_resource(uri: str) -> str:
+    if uri.startswith("atlassian://bitbucket/"):
+        return await bitbucket.get_resource(uri)
+    elif uri.startswith("atlassian://confluence/"):
+        return await confluence.get_resource(uri)
+    elif uri.startswith("atlassian://jira/"):
+        return await jira.get_resource(uri)
+    else:
+        raise ValueError(f"Unknown resource: {uri}")
 
-@app.get("/")
-def read_root():
-    return {"message": "MCP Server for Atlassian Tools"}
+@server.list_tools()
+async def list_tools() -> list[Tool]:
+    return [
+        Tool(
+            name="search_bitbucket",
+            description="Search Bitbucket repositories and pull requests",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Search query"}
+                },
+                "required": ["query"]
+            }
+        ),
+        Tool(
+            name="search_confluence",
+            description="Search Confluence pages and spaces",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Search query"}
+                },
+                "required": ["query"]
+            }
+        ),
+        Tool(
+            name="search_jira",
+            description="Search Jira issues using JQL",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "jql": {"type": "string", "description": "JQL query"}
+                },
+                "required": ["jql"]
+            }
+        )
+    ]
 
-@app.get("/context/bitbucket")
-def get_bitbucket_context(token: str = Depends(authenticate)):
-    return bitbucket_provider.get_context()
+@server.call_tool()
+async def call_tool(name: str, arguments: dict) -> list[TextContent]:
+    if name == "search_bitbucket":
+        result = await bitbucket.search(arguments["query"])
+    elif name == "search_confluence":
+        result = await confluence.search(arguments["query"])
+    elif name == "search_jira":
+        result = await jira.search(arguments["jql"])
+    else:
+        raise ValueError(f"Unknown tool: {name}")
+    
+    return [TextContent(type="text", text=str(result))]
 
-@app.get("/context/confluence")
-def get_confluence_context(token: str = Depends(authenticate)):
-    return confluence_provider.get_context()
+async def main():
+    async with stdio_server() as (read_stream, write_stream):
+        await server.run(read_stream, write_stream, server.create_initialization_options())
 
-@app.get("/context/jira")
-def get_jira_context(token: str = Depends(authenticate)):
-    return jira_provider.get_context()
+if __name__ == "__main__":
+    asyncio.run(main())
