@@ -40,18 +40,18 @@ A comprehensive Model Context Protocol (MCP) server for Atlassian tools (Jira, C
 3. **Test locally**:
    ```bash
    # Test all 46 tools
-   python test_all_tools.py
+   python tests/test_all_tools.py
    
    # Or test individual services
-   python test_jira_tools.py
-   python test_confluence_tools.py
-   python test_bitbucket_tools.py
+   python tests/test_jira_tools.py
+   python tests/test_confluence_tools.py
+   python tests/test_bitbucket_tools.py
    ```
 
 4. **Deploy to AWS**:
    ```bash
-   chmod +x deploy.sh
-   ./deploy.sh
+   sam build
+   sam deploy --guided
    ```
 
 ## MCP Tools (46 Total)
@@ -147,12 +147,12 @@ Run comprehensive tests for all 46 tools:
 
 ```bash
 # Test all tools
-python test_all_tools.py
+python tests/test_all_tools.py
 
 # Test individual services
-python test_jira_tools.py        # 14 Jira tools
-python test_confluence_tools.py  # 12 Confluence tools
-python test_bitbucket_tools.py   # 20 Bitbucket tools
+python tests/test_jira_tools.py        # 14 Jira tools
+python tests/test_confluence_tools.py  # 12 Confluence tools
+python tests/test_bitbucket_tools.py   # 20 Bitbucket tools
 ```
 
 ## AWS Deployment
@@ -160,7 +160,8 @@ python test_bitbucket_tools.py   # 20 Bitbucket tools
 The server deploys as a Lambda function with API Gateway:
 
 ```bash
-./deploy.sh
+sam build
+sam deploy --guided
 ```
 
 Once deployed, you'll receive an API Gateway URL:
@@ -185,14 +186,15 @@ atlassian_mcp/
 │   ├── jira_provider.py        # Jira API integration
 │   ├── confluence_provider.py  # Confluence API integration
 │   ├── bitbucket_provider.py   # Bitbucket API integration
-│   └── requirements.txt        # Python dependencies
+│   └── requirements.txt        # MCP server dependencies
+├── tests/
+│   ├── test_all_tools.py       # Master test suite
+│   ├── test_jira_tools.py      # Jira tools tests
+│   ├── test_confluence_tools.py # Confluence tools tests
+│   └── test_bitbucket_tools.py # Bitbucket tools tests
 ├── lambda_handler.py           # AWS Lambda handler
 ├── template.yaml               # SAM deployment template
-├── deploy.sh                   # Deployment script
-├── test_all_tools.py          # Master test suite
-├── test_jira_tools.py         # Jira tools tests
-├── test_confluence_tools.py   # Confluence tools tests
-├── test_bitbucket_tools.py    # Bitbucket tools tests
+├── requirements.txt            # Lambda dependencies
 └── README.md                   # This file
 ```
 

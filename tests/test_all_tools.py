@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Test all 50 MCP tools"""
+"""Test all 46 MCP tools"""
 import asyncio
 import os
 import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 async def run_tests():
     print("=" * 60)
-    print("Testing All 50 Atlassian MCP Tools")
+    print("Testing All 46 Atlassian MCP Tools")
     print("=" * 60)
     print()
     
@@ -42,9 +43,9 @@ async def run_tests():
     except Exception as e:
         print(f"Confluence tests failed: {e}")
     
-    # Test Bitbucket (24 tools)
+    # Test Bitbucket (20 tools)
     print("\n" + "=" * 60)
-    print("BITBUCKET TOOLS (24 tools)")
+    print("BITBUCKET TOOLS (20 tools)")
     print("=" * 60)
     from test_bitbucket_tools import test_bitbucket_tools
     try:
@@ -54,7 +55,7 @@ async def run_tests():
     
     print("\n" + "=" * 60)
     print("ALL TESTS COMPLETED")
-    print("Total: 50 tools (14 Jira + 12 Confluence + 24 Bitbucket)")
+    print("Total: 46 tools (14 Jira + 12 Confluence + 20 Bitbucket)")
     print("=" * 60)
 
 if __name__ == "__main__":

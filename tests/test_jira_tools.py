@@ -2,6 +2,8 @@
 """Test all 14 Jira tools"""
 import asyncio
 import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from mcp_server.jira_provider import JiraProvider
 
 async def test_jira_tools():

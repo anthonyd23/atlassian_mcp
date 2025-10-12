@@ -2,6 +2,8 @@
 """Test all 24 Bitbucket tools"""
 import asyncio
 import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from mcp_server.bitbucket_provider import BitbucketProvider
 
 async def test_bitbucket_tools():
