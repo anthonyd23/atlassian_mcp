@@ -2,91 +2,111 @@
   "widgets": [
     {
       "type": "metric",
+      "x": 0,
+      "y": 0,
+      "width": 12,
+      "height": 6,
       "properties": {
         "metrics": [
-          ["AWS/Lambda", "Invocations", {"stat": "Sum", "label": "Total Invocations"}],
-          [".", "Errors", {"stat": "Sum", "label": "Errors"}],
-          [".", "Throttles", {"stat": "Sum", "label": "Throttles"}]
+          ["AWS/Lambda", "Invocations", {"FunctionName": "atlassian-mcp-stack-AtlassianMCPFunction-ewHMl9d3K7wM"}],
+          [".", "Errors", "."],
+          [".", "Throttles", "."]
         ],
         "view": "timeSeries",
         "stacked": false,
         "region": "us-east-1",
+        "stat": "Sum",
         "title": "Lambda Performance",
         "period": 300,
-        "yAxis": {
-          "left": {
-            "min": 0
-          }
-        }
+        "yAxis": {"left": {"min": 0}}
       }
     },
     {
       "type": "metric",
+      "x": 12,
+      "y": 0,
+      "width": 12,
+      "height": 6,
       "properties": {
         "metrics": [
-          ["AWS/Lambda", "Duration", {"stat": "Average", "label": "Avg Duration"}],
-          ["...", {"stat": "p95", "label": "p95 Duration"}],
-          ["...", {"stat": "p99", "label": "p99 Duration"}]
+          ["AWS/Lambda", "Duration", {"FunctionName": "atlassian-mcp-stack-AtlassianMCPFunction-ewHMl9d3K7wM"}, {"stat": "Average"}],
+          ["...", {"stat": "p95"}],
+          ["...", {"stat": "p99"}]
         ],
         "view": "timeSeries",
         "stacked": false,
         "region": "us-east-1",
         "title": "Response Time (ms)",
         "period": 300,
-        "yAxis": {
-          "left": {
-            "min": 0
-          }
-        }
+        "yAxis": {"left": {"min": 0}}
       }
     },
     {
       "type": "metric",
+      "x": 0,
+      "y": 6,
+      "width": 12,
+      "height": 6,
       "properties": {
         "metrics": [
-          ["AtlassianMCP", "ToolInvocation", {"stat": "Sum"}]
+          [{"expression": "SEARCH('{AtlassianMCP,ToolName,Platform,Status} MetricName=\"ToolInvocation\"', 'Sum', 300)", "id": "e1", "region": "us-east-1"}]
         ],
         "view": "timeSeries",
         "stacked": false,
         "region": "us-east-1",
         "title": "Tool Usage",
-        "period": 300
+        "period": 300,
+        "yAxis": {"left": {"min": 0}}
       }
     },
     {
       "type": "metric",
+      "x": 12,
+      "y": 6,
+      "width": 12,
+      "height": 6,
       "properties": {
         "metrics": [
-          ["AtlassianMCP", "ToolDuration", {"stat": "Average"}]
+          [{"expression": "SEARCH('{AtlassianMCP,ToolName,Platform} MetricName=\"ToolDuration\"', 'Average', 300)", "id": "e1", "region": "us-east-1"}]
         ],
         "view": "timeSeries",
         "stacked": false,
         "region": "us-east-1",
         "title": "Tool Response Time (ms)",
-        "period": 300
+        "period": 300,
+        "yAxis": {"left": {"min": 0}}
       }
     },
     {
       "type": "metric",
+      "x": 0,
+      "y": 12,
+      "width": 12,
+      "height": 6,
       "properties": {
         "metrics": [
-          ["AWS/ApiGateway", "4XXError", {"stat": "Sum", "label": "4xx Errors"}],
-          [".", "5XXError", {"stat": "Sum", "label": "5xx Errors"}]
+          ["AWS/ApiGateway", "4XXError", "ApiName", "atlassian-mcp-stack", "Stage", "Prod", {"region": "us-east-1"}],
+          [".", "5XXError", ".", ".", ".", ".", {"region": "us-east-1"}]
         ],
         "view": "timeSeries",
         "stacked": false,
         "region": "us-east-1",
+        "stat": "Sum",
         "title": "API Gateway Errors",
-        "period": 300
+        "period": 300,
+        "yAxis": {"left": {"min": 0}}
       }
     },
     {
       "type": "log",
+      "x": 12,
+      "y": 12,
+      "width": 12,
+      "height": 6,
       "properties": {
-        "query": "SOURCE '/aws/lambda/atlassian-mcp-stack-AtlassianMCPFunction-ewHMl9d3K7wM'\n| fields @timestamp, message\n| filter message like /ERROR/\n| sort @timestamp desc\n| limit 20",
+        "query": "fields @timestamp as timestamp, @message as message | filter @message like /ERROR/ | sort @timestamp desc | limit 20",
         "region": "us-east-1",
-        "title": "Recent Errors",
-        "stacked": false
+        "title": "Recent Errors"
       }
     }
   ]
