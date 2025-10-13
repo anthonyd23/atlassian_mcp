@@ -31,8 +31,9 @@ def validate_space_key(space_key: str) -> Tuple[bool, str]:
     """Validate Confluence space key"""
     if not space_key or not space_key.strip():
         return False, "space_key is required"
-    if not re.match(r'^[A-Z0-9]+$', space_key):
-        return False, "Invalid space_key format. Expected uppercase alphanumeric: SPACE or TEAM123"
+    # Allow team spaces (TEAM, PROJ) or personal spaces (~accountId)
+    if not re.match(r'^([A-Z0-9]+|~[a-zA-Z0-9:_-]+)$', space_key):
+        return False, "Invalid space_key format. Expected: SPACE, TEAM123, or ~accountId"
     return True, ""
 
 def validate_repo_slug(repo_slug: str) -> Tuple[bool, str]:
