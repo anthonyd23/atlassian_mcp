@@ -35,9 +35,9 @@ class CloudAuth(BaseAuth):
 
 class DataCenterAuth(BaseAuth):
     """Authentication for Atlassian Data Center (Personal Access Token)"""
-    def __init__(self, service: str = None):
+    def __init__(self, service: str = None, token: str = None):
         super().__init__()
-        self.pat_token = os.getenv('ATLASSIAN_PAT_TOKEN')
+        self.pat_token = token or os.getenv('ATLASSIAN_PAT_TOKEN')
         self.service = service
     
     def get_base_url(self) -> str:

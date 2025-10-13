@@ -14,10 +14,8 @@ DEFAULT_PAGE_SIZE = 25
 class JiraDCProvider:
     def __init__(self) -> None:
         # Support separate Jira token
-        jira_token = os.getenv('JIRA_PAT_TOKEN')
-        if jira_token:
-            os.environ['ATLASSIAN_PAT_TOKEN'] = jira_token
-        self.auth = DataCenterAuth(service='jira')
+        self.jira_token = os.getenv('JIRA_PAT_TOKEN') or os.getenv('ATLASSIAN_PAT_TOKEN')
+        self.auth = DataCenterAuth(service='jira', token=self.jira_token)
         self.base_url = self.auth.get_base_url()
         self.session = self._create_session()
         self.timeout = 25

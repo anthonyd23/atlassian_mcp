@@ -15,10 +15,8 @@ LIST_PAGE_SIZE = 50
 class ConfluenceDCProvider:
     def __init__(self) -> None:
         # Support separate Confluence token
-        confluence_token = os.getenv('CONFLUENCE_PAT_TOKEN')
-        if confluence_token:
-            os.environ['ATLASSIAN_PAT_TOKEN'] = confluence_token
-        self.auth = DataCenterAuth(service='confluence')
+        self.confluence_token = os.getenv('CONFLUENCE_PAT_TOKEN') or os.getenv('ATLASSIAN_PAT_TOKEN')
+        self.auth = DataCenterAuth(service='confluence', token=self.confluence_token)
         self.base_url = self.auth.get_base_url()
         self.session = self._create_session()
         self.timeout = 25

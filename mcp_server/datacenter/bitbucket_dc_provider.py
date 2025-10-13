@@ -15,10 +15,8 @@ LIST_PAGE_SIZE = 50
 class BitbucketDCProvider:
     def __init__(self) -> None:
         # Support separate Bitbucket token
-        bitbucket_token = os.getenv('BITBUCKET_PAT_TOKEN')
-        if bitbucket_token:
-            os.environ['ATLASSIAN_PAT_TOKEN'] = bitbucket_token
-        self.auth = DataCenterAuth(service='bitbucket')
+        self.bitbucket_token = os.getenv('BITBUCKET_PAT_TOKEN') or os.getenv('ATLASSIAN_PAT_TOKEN')
+        self.auth = DataCenterAuth(service='bitbucket', token=self.bitbucket_token)
         self.base_url = self.auth.get_base_url()
         self.project = os.getenv('BITBUCKET_PROJECT', 'PROJECT')
         self.session = self._create_session()

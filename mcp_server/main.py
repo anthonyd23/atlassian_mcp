@@ -16,7 +16,7 @@ from mcp_server.common.router import route_tool_call
 server = Server("atlassian-mcp")
 
 # Detect platform: Data Center uses PAT token, Cloud uses API token
-PLATFORM = 'datacenter' if os.getenv('ATLASSIAN_PAT_TOKEN') else 'cloud'
+PLATFORM = 'datacenter' if (os.getenv('ATLASSIAN_PAT_TOKEN') or os.getenv('JIRA_PAT_TOKEN') or os.getenv('CONFLUENCE_PAT_TOKEN') or os.getenv('BITBUCKET_PAT_TOKEN')) else 'cloud'
 
 # Initialize providers based on platform
 if PLATFORM == 'datacenter':
