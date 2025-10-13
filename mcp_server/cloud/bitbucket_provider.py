@@ -21,9 +21,7 @@ class BitbucketProvider:
         self.session = self._create_session()
         self.timeout = 25
         
-        if not self.bitbucket_token or not self.workspace:
-            logger.warning("BITBUCKET_API_TOKEN or BITBUCKET_WORKSPACE not set - Bitbucket operations will fail")
-        else:
+        if self.bitbucket_token and self.workspace:
             logger.info(f"BitbucketProvider initialized for workspace: {self.workspace}")
     
     def _create_session(self) -> requests.Session:
