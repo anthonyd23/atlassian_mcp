@@ -3,11 +3,12 @@ import os
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Resource, Tool, TextContent
-from .cloud.bitbucket_provider import BitbucketProvider
-from .cloud.confluence_provider import ConfluenceProvider
-from .cloud.jira_provider import JiraProvider
-from .common.tools import JIRA_TOOLS, CONFLUENCE_TOOLS, BITBUCKET_TOOLS
-from .common.router import route_tool_call
+from mcp_server.cloud.bitbucket_provider import BitbucketProvider
+from mcp_server.cloud.confluence_provider import ConfluenceProvider
+from mcp_server.cloud.jira_provider import JiraProvider
+from mcp_server.common.tools import JIRA_TOOLS, CONFLUENCE_TOOLS, BITBUCKET_TOOLS
+from mcp_server.common.tool_schemas import TOOL_SCHEMAS
+from mcp_server.common.router import route_tool_call
 
 server = Server("atlassian-mcp")
 
@@ -49,7 +50,8 @@ async def read_resource(uri: str) -> str:
 
 @server.list_tools()
 async def list_tools() -> list[Tool]:
-    return JIRA_TOOLS + CONFLUENCE_TOOLS + BITBUCKET_TOOLS
+    all_tools = JIRA_TOOLS + CONFLUENCE_TOOLS + BITBUCKET_TOOLS
+    return [Tool(name=t["name"], description=t["description"], inputSchema=TOOL_SCHEMAS.get(t["name"], {"type": "object", "properties": {}})) for t in all_tools]
 
 @server.call_tool()
 async def call_tool(name: str, arguments: dict) -> list[TextContent]:
