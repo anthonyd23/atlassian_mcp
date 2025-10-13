@@ -95,23 +95,34 @@ A Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and
    export BITBUCKET_API_TOKEN="your-bitbucket-token"  # From https://bitbucket.org/account/settings/app-passwords/
    ```
    
-   **For Atlassian Data Center/Server:**
+   **For Atlassian Data Center/Server (Single Token):**
    ```bash
-   # Required
+   # Required: One token for all services
    export ATLASSIAN_PAT_TOKEN="your-personal-access-token"
    
    # Option 1: Single URL for all services
    export ATLASSIAN_BASE_URL="https://atlassian.yourcompany.com"
    
-   # Option 2: Separate URLs for each service (overrides ATLASSIAN_BASE_URL)
+   # Option 2: Separate URLs for each service
    export JIRA_BASE_URL="https://jira.yourcompany.com"
    export CONFLUENCE_BASE_URL="https://wiki.yourcompany.com"
    export BITBUCKET_BASE_URL="https://git.yourcompany.com"
    
-   # Optional: Separate tokens for each service (if required)
+   # Optional: Only if using Bitbucket Server tools
+   export BITBUCKET_PROJECT="YOUR_PROJECT_KEY"
+   ```
+   
+   **For Atlassian Data Center/Server (Separate Tokens):**
+   ```bash
+   # Required: Individual tokens for each service
    export JIRA_PAT_TOKEN="your-jira-token"
    export CONFLUENCE_PAT_TOKEN="your-confluence-token"
-   export BITBUCKET_PAT_TOKEN="your-bitbucket-token"
+   export BITBUCKET_PAT_TOKEN="your-bitbucket-http-token"
+   
+   # Required: Separate URLs for each service
+   export JIRA_BASE_URL="https://jira.yourcompany.com"
+   export CONFLUENCE_BASE_URL="https://wiki.yourcompany.com"
+   export BITBUCKET_BASE_URL="https://git.yourcompany.com"
    
    # Optional: Only if using Bitbucket Server tools
    export BITBUCKET_PROJECT="YOUR_PROJECT_KEY"
@@ -251,7 +262,7 @@ Connect this MCP server to Amazon Q Developer for AI-powered Atlassian workflows
 }
 ```
 
-**For Atlassian Data Center (Single URL):**
+**For Atlassian Data Center (Single Token, Single URL):**
 ```json
 {
   "mcpServers": {
@@ -261,9 +272,6 @@ Connect this MCP server to Amazon Q Developer for AI-powered Atlassian workflows
       "env": {
         "ATLASSIAN_BASE_URL": "https://atlassian.yourcompany.com",
         "ATLASSIAN_PAT_TOKEN": "your-personal-access-token",
-        "JIRA_PAT_TOKEN": "your-jira-token",
-        "CONFLUENCE_PAT_TOKEN": "your-confluence-token",
-        "BITBUCKET_PAT_TOKEN": "your-bitbucket-token",
         "BITBUCKET_PROJECT": "YOUR_PROJECT_KEY"
       }
     }
@@ -271,7 +279,7 @@ Connect this MCP server to Amazon Q Developer for AI-powered Atlassian workflows
 }
 ```
 
-**For Atlassian Data Center (Separate URLs):**
+**For Atlassian Data Center (Single Token, Separate URLs):**
 ```json
 {
   "mcpServers": {
@@ -281,11 +289,29 @@ Connect this MCP server to Amazon Q Developer for AI-powered Atlassian workflows
       "env": {
         "ATLASSIAN_PAT_TOKEN": "your-personal-access-token",
         "JIRA_BASE_URL": "https://jira.yourcompany.com",
+        "CONFLUENCE_BASE_URL": "https://wiki.yourcompany.com",
+        "BITBUCKET_BASE_URL": "https://git.yourcompany.com",
+        "BITBUCKET_PROJECT": "YOUR_PROJECT_KEY"
+      }
+    }
+  }
+}
+```
+
+**For Atlassian Data Center (Separate Tokens, Separate URLs):**
+```json
+{
+  "mcpServers": {
+    "atlassian-mcp": {
+      "command": "python",
+      "args": ["/absolute/path/to/atlassian_mcp/mcp_server/main.py"],
+      "env": {
+        "JIRA_BASE_URL": "https://jira.yourcompany.com",
         "JIRA_PAT_TOKEN": "your-jira-token",
         "CONFLUENCE_BASE_URL": "https://wiki.yourcompany.com",
         "CONFLUENCE_PAT_TOKEN": "your-confluence-token",
         "BITBUCKET_BASE_URL": "https://git.yourcompany.com",
-        "BITBUCKET_PAT_TOKEN": "your-bitbucket-token",
+        "BITBUCKET_PAT_TOKEN": "your-bitbucket-http-token",
         "BITBUCKET_PROJECT": "YOUR_PROJECT_KEY"
       }
     }
