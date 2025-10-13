@@ -1,10 +1,31 @@
 import requests
 import json
+import logging
+from typing import Dict, Any, Optional
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from ..common.auth import Auth
+from ..common.validation import sanitize_url_path,  validate_page_id, validate_space_key, validate_non_empty
+
+logger = logging.getLogger(__name__)
+
+DEFAULT_PAGE_SIZE = 25
+LIST_PAGE_SIZE = 50
 
 class ConfluenceProvider:
-    def __init__(self):
+    def __init__(self) -> None:
         self.auth = Auth()
+        self.session = self._create_session()
+        self.timeout = 25
+        logger.info("ConfluenceProvider initialized")
+    
+    def _create_session(self) -> requests.Session:
+        session = requests.Session()
+        retry = Retry(total=3, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504], allowed_methods=["GET", "POST", "PUT", "DELETE"])
+        adapter = HTTPAdapter(max_retries=retry)
+        session.mount('http://', adapter)
+        session.mount('https://', adapter)
+        return session
     
     async def get_resource(self, uri: str) -> str:
         if uri == "atlassian://confluence/spaces":
@@ -15,28 +36,43 @@ class ConfluenceProvider:
         else:
             raise ValueError(f"Unknown Confluence resource: {uri}")
     
-    async def get_page(self, page_id: str) -> dict:
+    async def get_page(self, page_id: str) -> Dict[str, Any]:
+        """Get Confluence page content and metadata."""
+        valid, error = validate_page_id(page_id)
+        if not valid:
+            logger.warning(f"Invalid page_id: {page_id}")
+            return {'error': error}
         try:
+            logger.info(f"Fetching page: {page_id}")
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{page_id}?expand=body.storage,version"
-            response = requests.get(url, headers=headers)
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}?expand=body.storage,version"
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
         except Exception as e:
+            logger.error(f"Error fetching page {page_id}: {e}")
             return {'error': str(e)}
     
-    async def get_page_by_title(self, space_key: str, title: str) -> dict:
+    async def get_page_by_title(self, space_key: str, title: str) -> Dict[str, Any]:
+        """Find and retrieve a page by title and space."""
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/wiki/rest/api/content"
             params = {'spaceKey': space_key, 'title': title, 'expand': 'body.storage,version'}
-            response = requests.get(url, headers=headers, params=params)
+            response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
         except Exception as e:
             return {'error': str(e)}
     
-    async def create_page(self, space_key: str, title: str, content: str, parent_id: str = None) -> dict:
+    async def create_page(self, space_key: str, title: str, content: str, parent_id: Optional[str] = None) -> Dict[str, Any]:
+        """Create a new Confluence page."""
+        valid, error = validate_space_key(space_key)
+        if not valid:
+            return {'error': error}
+        valid, error = validate_non_empty(title, "title")
+        if not valid:
+            return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/wiki/rest/api/content"
@@ -48,80 +84,90 @@ class ConfluenceProvider:
             }
             if parent_id:
                 payload["ancestors"] = [{"id": parent_id}]
-            response = requests.post(url, headers=headers, json=payload)
+            response = self.session.post(url, headers=headers, json=payload, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
         except Exception as e:
             return {'error': str(e)}
     
-    async def update_page(self, page_id: str, title: str, content: str, version: int) -> dict:
+    async def update_page(self, page_id: str, title: str, content: str, version: int) -> Dict[str, Any]:
+        """Update page title and content."""
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{page_id}"
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}"
             payload = {
                 "version": {"number": version + 1},
                 "title": title,
                 "type": "page",
                 "body": {"storage": {"value": content, "representation": "storage"}}
             }
-            response = requests.put(url, headers=headers, json=payload)
+            response = self.session.put(url, headers=headers, json=payload, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
         except Exception as e:
             return {'error': str(e)}
     
-    async def delete_page(self, page_id: str) -> dict:
+    async def delete_page(self, page_id: str) -> Dict[str, Any]:
+        """Permanently delete a page."""
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{page_id}"
-            response = requests.delete(url, headers=headers)
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}"
+            response = self.session.delete(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return {'success': True}
         except Exception as e:
             return {'error': str(e)}
     
-    async def list_pages(self, space_key: str) -> dict:
+    async def list_pages(self, space_key: str) -> Dict[str, Any]:
+        """List all pages in a space."""
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/wiki/rest/api/content"
-            params = {'spaceKey': space_key, 'type': 'page', 'limit': 50}
-            response = requests.get(url, headers=headers, params=params)
+            params = {'spaceKey': space_key, 'type': 'page', 'limit': LIST_PAGE_SIZE}
+            response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
         except Exception as e:
             return {'error': str(e)}
     
-    async def get_space(self, space_key: str) -> dict:
+    async def get_space(self, space_key: str) -> Dict[str, Any]:
+        """Get detailed information about a space."""
+        valid, error = validate_space_key(space_key)
+        if not valid:
+            return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/wiki/rest/api/space/{space_key}"
-            response = requests.get(url, headers=headers)
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/space/{sanitize_url_path(space_key)}"
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
         except Exception as e:
             return {'error': str(e)}
     
-    async def list_spaces(self) -> dict:
+    async def list_spaces(self) -> Dict[str, Any]:
+        """List all accessible Confluence spaces."""
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/wiki/rest/api/space"
-            response = requests.get(url, headers=headers, params={'limit': 50})
+            response = self.session.get(url, headers=headers, params={'limit': LIST_PAGE_SIZE}, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
         except Exception as e:
             return {'error': str(e)}
     
-    async def get_page_comments(self, page_id: str) -> dict:
+    async def get_page_comments(self, page_id: str) -> Dict[str, Any]:
+        """Retrieve all comments on a page."""
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{page_id}/child/comment"
-            response = requests.get(url, headers=headers)
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}/child/comment"
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
         except Exception as e:
             return {'error': str(e)}
     
-    async def add_page_comment(self, page_id: str, comment: str) -> dict:
+    async def add_page_comment(self, page_id: str, comment: str) -> Dict[str, Any]:
+        """Add a comment to a page."""
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/wiki/rest/api/content"
@@ -130,33 +176,36 @@ class ConfluenceProvider:
                 "container": {"id": page_id, "type": "page"},
                 "body": {"storage": {"value": comment, "representation": "storage"}}
             }
-            response = requests.post(url, headers=headers, json=payload)
+            response = self.session.post(url, headers=headers, json=payload, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
         except Exception as e:
             return {'error': str(e)}
     
-    async def get_page_attachments(self, page_id: str) -> dict:
+    async def get_page_attachments(self, page_id: str) -> Dict[str, Any]:
+        """List all files attached to a page."""
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{page_id}/child/attachment"
-            response = requests.get(url, headers=headers)
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}/child/attachment"
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
         except Exception as e:
             return {'error': str(e)}
     
-    async def search(self, query: str) -> dict:
+    async def search(self, query: str) -> Dict[str, Any]:
+        """Search using query."""
         try:
+            logger.info(f"Searching Confluence: {query}")
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/wiki/rest/api/search"
             
             params = {
                 'cql': f'text ~ "{query}"',
-                'limit': 25
+                'limit': DEFAULT_PAGE_SIZE
             }
             
-            response = requests.get(url, headers=headers, params=params)
+            response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
             
             results = response.json().get('results', [])
@@ -179,7 +228,7 @@ class ConfluenceProvider:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/wiki/rest/api/space"
             
-            response = requests.get(url, headers=headers, params={'limit': 25})
+            response = self.session.get(url, headers=headers, params={'limit': DEFAULT_PAGE_SIZE}, timeout=self.timeout)
             response.raise_for_status()
             
             spaces = response.json().get('results', [])
@@ -190,9 +239,9 @@ class ConfluenceProvider:
     async def _get_pages(self, space_key: str) -> str:
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/wiki/rest/api/space/{space_key}/content"
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/space/{sanitize_url_path(space_key)}/content"
             
-            response = requests.get(url, headers=headers, params={'limit': 25})
+            response = self.session.get(url, headers=headers, params={'limit': DEFAULT_PAGE_SIZE}, timeout=self.timeout)
             response.raise_for_status()
             
             pages = response.json().get('results', [])

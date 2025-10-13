@@ -1,5 +1,14 @@
 # Monitoring and Alerts Guide
 
+Comprehensive monitoring with structured logging, custom metrics, and CloudWatch dashboard.
+
+## Features
+
+- **Structured JSON Logging**: All logs include request ID, tool name, duration, and platform
+- **Custom Metrics**: Track tool usage and performance in CloudWatch namespace `AtlassianMCP`
+- **CloudWatch Dashboard**: Visual overview of Lambda performance, tool usage, and errors
+- **Email Alerts**: Automatic notifications for errors, throttles, and slow responses
+
 ## CloudWatch Alarms
 
 The following alarms are automatically created when you provide an email address during deployment:
@@ -27,12 +36,14 @@ The following alarms are automatically created when you provide an email address
 - **Threshold**: > 20 errors in 5 minutes
 - **Action**: Email alert
 - **What it means**: Bad requests (likely missing/invalid API key)
+- **Note**: Requires detailed CloudWatch metrics enabled ($0.10/month per metric)
 
 ### 5. **API Gateway 5xx Alarm**
 - **Metric**: Server Errors (5xx)
 - **Threshold**: > 1 error in 5 minutes
 - **Action**: Email alert
 - **What it means**: Lambda or API Gateway failure
+- **Note**: Requires detailed CloudWatch metrics enabled ($0.10/month per metric)
 
 ## Setup Alerts
 
@@ -52,6 +63,19 @@ sam deploy --parameter-overrides AlertEmail=your-email@example.com
 ```bash
 sam deploy --parameter-overrides AlertEmail=""
 ```
+
+### Enable Detailed API Gateway Metrics
+
+For 4xx/5xx alarms to work, enable detailed metrics:
+
+```bash
+aws apigateway update-stage \
+  --rest-api-id <API_ID> \
+  --stage-name Prod \
+  --patch-operations op=replace,path=/*/*/metrics/enabled,value=true
+```
+
+**Cost**: $0.10/month per metric (~$0.20/month for 4xx + 5xx)
 
 ## View Metrics in AWS Console
 
@@ -85,36 +109,76 @@ aws logs tail /aws/lambda/atlassian-mcp-stack-AtlassianMCPFunction-xxx --follow
 aws logs filter-log-events \
   --log-group-name /aws/lambda/atlassian-mcp-stack-AtlassianMCPFunction-xxx \
   --filter-pattern "ERROR"
+
+# Query structured logs with CloudWatch Insights
+aws logs start-query \
+  --log-group-name /aws/lambda/atlassian-mcp-stack-AtlassianMCPFunction-xxx \
+  --start-time $(date -u -d '1 hour ago' +%s) \
+  --end-time $(date -u +%s) \
+  --query-string 'fields @timestamp, message | filter message like /tool_name/ | sort @timestamp desc | limit 20'
 ```
 
-## Custom Dashboards
+## CloudWatch Dashboard
 
-### Create CloudWatch Dashboard
+View the dashboard at: https://console.aws.amazon.com/cloudwatch/home?region=us-east-1#dashboards:name=AtlassianMCP
+
+The dashboard shows:
+- Lambda invocations, errors, and throttles
+- Response time (average, p95, p99)
+- Tool usage by name
+- Tool response times
+- API Gateway errors
+- Recent error logs
+
+### Create/Update Dashboard
 ```bash
 aws cloudwatch put-dashboard --dashboard-name AtlassianMCP --dashboard-body file://dashboard.json
 ```
 
-**dashboard.json:**
-```json
-{
-  "widgets": [
-    {
-      "type": "metric",
-      "properties": {
-        "metrics": [
-          ["AWS/Lambda", "Invocations", {"stat": "Sum"}],
-          [".", "Errors", {"stat": "Sum"}],
-          [".", "Duration", {"stat": "Average"}]
-        ],
-        "period": 300,
-        "stat": "Average",
-        "region": "us-east-1",
-        "title": "Lambda Performance"
-      }
-    }
-  ]
-}
+The `dashboard.json` file is included in the repository.
+
+## Custom Metrics
+
+Available in CloudWatch namespace `AtlassianMCP`:
+
+### ToolInvocation
+- **Description**: Count of tool calls
+- **Dimensions**: ToolName, Platform, Status (Success/Failure)
+- **Unit**: Count
+
+### ToolDuration
+- **Description**: Tool execution time
+- **Dimensions**: ToolName, Platform
+- **Unit**: Milliseconds
+
+### Query Custom Metrics
+
+```bash
+# List all custom metrics
+aws cloudwatch list-metrics --namespace AtlassianMCP
+
+# Get tool invocation stats
+aws cloudwatch get-metric-statistics \
+  --namespace AtlassianMCP \
+  --metric-name ToolInvocation \
+  --dimensions Name=ToolName,Value=list_projects Name=Platform,Value=cloud Name=Status,Value=Success \
+  --start-time $(date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%S) \
+  --end-time $(date -u +%Y-%m-%dT%H:%M:%S) \
+  --period 300 \
+  --statistics Sum
 ```
+
+## Structured Logging
+
+All logs are in JSON format with the following fields:
+- `timestamp`: ISO 8601 timestamp
+- `level`: INFO, ERROR, etc.
+- `message`: Log message
+- `request_id`: AWS request ID for tracing
+- `tool_name`: Name of tool being invoked
+- `duration_ms`: Execution time in milliseconds
+- `platform`: cloud or datacenter
+- `error`: Error message (if applicable)
 
 ## Cost Monitoring
 

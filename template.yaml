@@ -3,16 +3,49 @@ Transform: AWS::Serverless-2016-10-31
 Description: Atlassian MCP Server with CloudWatch Monitoring
 
 Parameters:
+  Platform:
+    Type: String
+    Description: Choose your Atlassian platform
+    AllowedValues:
+      - cloud
+      - datacenter
+    Default: cloud
+  
   AtlassianBaseUrl:
     Type: String
     Description: Base URL for your Atlassian instance
+  
+  # Cloud parameters
   AtlassianUsername:
     Type: String
-    Description: Atlassian username/email
+    Description: Atlassian username/email (Cloud only)
+    Default: ""
   AtlassianApiToken:
     Type: String
     NoEcho: true
-    Description: Atlassian API token
+    Description: Atlassian API token (Cloud only)
+    Default: ""
+  BitbucketWorkspace:
+    Type: String
+    Description: Bitbucket workspace name (Cloud only)
+    Default: ""
+  BitbucketApiToken:
+    Type: String
+    NoEcho: true
+    Description: Bitbucket API token (Cloud only)
+    Default: ""
+  
+  # Data Center parameters
+  AtlassianPatToken:
+    Type: String
+    NoEcho: true
+    Description: Personal Access Token (Data Center only)
+    Default: ""
+  BitbucketProject:
+    Type: String
+    Description: Bitbucket project key (Data Center only)
+    Default: ""
+  
   AlertEmail:
     Type: String
     Description: Email address for CloudWatch alerts (optional)
@@ -39,6 +72,10 @@ Resources:
           ATLASSIAN_BASE_URL: !Ref AtlassianBaseUrl
           ATLASSIAN_USERNAME: !Ref AtlassianUsername
           ATLASSIAN_API_TOKEN: !Ref AtlassianApiToken
+          ATLASSIAN_PAT_TOKEN: !Ref AtlassianPatToken
+          BITBUCKET_WORKSPACE: !Ref BitbucketWorkspace
+          BITBUCKET_API_TOKEN: !Ref BitbucketApiToken
+          BITBUCKET_PROJECT: !Ref BitbucketProject
       Policies:
         - CloudWatchPutMetricPolicy: {}
       Events:

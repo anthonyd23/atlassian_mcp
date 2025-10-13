@@ -1,50 +1,78 @@
 # Atlassian MCP Server
 
-A Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and Bitbucket) with 46 tools deployed on AWS Lambda.
+A Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and Bitbucket) with 46 tools. Works with both Atlassian Cloud and Data Center/Server deployments.
 
 ## Table of Contents
 
-- [Features](#features)
+- [Quick Start](#quick-start)
 - [Prerequisites](#prerequisites)
 - [Setup](#setup)
+- [Usage](#usage)
+  - [Amazon Q Integration](#amazon-q-integration)
+  - [Example Workflows](#example-workflows)
 - [MCP Tools (46 Total)](#mcp-tools-46-total)
   - [Jira Tools (14)](#jira-tools-14)
   - [Confluence Tools (12)](#confluence-tools-12)
   - [Bitbucket Tools (20)](#bitbucket-tools-20)
-- [MCP Resources](#mcp-resources)
-- [Configuration](#configuration)
-- [Testing](#testing)
 - [AWS Deployment](#aws-deployment)
+- [Testing](#testing)
 - [Monitoring and Alerts](#monitoring-and-alerts)
-- [Amazon Q Integration](#amazon-q-integration)
 - [Security](#security)
 - [Project Structure](#project-structure)
 - [API Documentation](#api-documentation)
+- [Architecture](#architecture)
 - [License](#license)
 
-## Features
+## Quick Start
 
-- **46 MCP Tools**: Complete integration with Jira (14 tools), Confluence (12 tools), and Bitbucket (20 tools)
-- **Dual Platform Support**: Works with both Atlassian Cloud and Data Center/Server deployments
-- **Jira Integration**: Search, create, update, delete issues, manage comments, transitions, and more
-- **Confluence Integration**: Search, create, update pages, manage spaces, comments, and attachments
-- **Bitbucket Integration**: Repository management, pull requests, commits, branches, file operations
-- **AWS Deployment**: Serverless deployment using Lambda and API Gateway
-- **Comprehensive Testing**: Full test suite for all 46 tools on both platforms
+**For Amazon Q Developer (Local):**
+
+1. Install dependencies:
+   ```bash
+   pip install -r mcp_server/requirements.txt
+   ```
+
+2. Configure Amazon Q Developer with your Atlassian credentials (see [Amazon Q Integration](#amazon-q-integration))
+
+3. Start using natural language commands:
+   ```
+   "Search for open issues in project PROJ"
+   "Show me details for PROJ-123"
+   "List Bitbucket repositories"
+   ```
+
+**For AWS Lambda Deployment:**
+
+1. Deploy to AWS:
+   ```bash
+   sam build
+   sam deploy --guided
+   ```
+
+2. Retrieve your API key:
+   ```bash
+   aws apigateway get-api-key --api-key <API_KEY_ID> --include-value --query "value" --output text
+   ```
+
+3. Use the API endpoint with your key
 
 ## Prerequisites
 
+### Required:
+1. **Python 3.11+**: Required for local development and testing
+2. **Atlassian Account**: Cloud or Data Center/Server instance
+
 ### For Atlassian Cloud:
 1. **Atlassian API Token**: Generate from https://id.atlassian.com/manage-profile/security/api-tokens
-2. **Bitbucket API Token**: Generate from https://bitbucket.org/account/settings/app-passwords/ (if using Bitbucket Cloud)
+2. **Bitbucket API Token** (optional): Only if using Bitbucket tools. Generate from https://bitbucket.org/account/settings/app-passwords/
 
 ### For Atlassian Data Center/Server:
 1. **Personal Access Token (PAT)**: Generate from your Atlassian instance (Profile → Personal Access Tokens)
-2. **Bitbucket Server Access**: Personal Access Token from Bitbucket Server
+2. **Bitbucket Server Access** (optional): Only if using Bitbucket tools. Personal Access Token from Bitbucket Server
 
 ### For AWS Deployment:
-3. **AWS CLI**: Configured with appropriate permissions
-4. **SAM CLI**: For deployment to AWS
+1. **AWS CLI**: Configured with appropriate permissions. Install: https://aws.amazon.com/cli/
+2. **SAM CLI**: For deployment to AWS. Install: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html
 
 ## Setup
 
@@ -62,7 +90,7 @@ A Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and
    export ATLASSIAN_USERNAME="your-email@company.com"
    export ATLASSIAN_API_TOKEN="your-api-token"
    
-   # Required for Bitbucket Cloud
+   # Optional: Only if using Bitbucket Cloud tools
    export BITBUCKET_WORKSPACE="your-workspace-name"  # Found in your Bitbucket URL
    export BITBUCKET_API_TOKEN="your-bitbucket-token"  # From https://bitbucket.org/account/settings/app-passwords/
    ```
@@ -73,11 +101,19 @@ A Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and
    export ATLASSIAN_BASE_URL="https://jira.yourcompany.com"
    export ATLASSIAN_PAT_TOKEN="your-personal-access-token"
    
-   # Required for Bitbucket Server
+   # Optional: Only if using Bitbucket Server tools
    export BITBUCKET_PROJECT="YOUR_PROJECT_KEY"  # Your Bitbucket project key
    ```
+   
+   **Platform Detection:**
+   - If `ATLASSIAN_PAT_TOKEN` is set → Data Center mode
+   - Otherwise → Cloud mode
 
-3. **Test locally**:
+3. **Use with Amazon Q Developer** (see [Usage](#usage) section)
+
+4. **Test locally** (optional):
+   
+   Integration tests require real Atlassian credentials and will make actual API calls.
    
    **For Cloud:**
    ```bash
@@ -101,11 +137,7 @@ A Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and
    python tests/datacenter/test_bitbucket_dc_tools.py
    ```
 
-4. **Deploy to AWS**:
-   ```bash
-   sam build
-   sam deploy --guided
-   ```
+5. **Deploy to AWS** (optional, see [AWS Deployment](#aws-deployment) section)
 
 ## MCP Tools (46 Total)
 
@@ -175,36 +207,99 @@ A Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and
 19. `approve_pull_request` - Approve a pull request
 20. `merge_pull_request` - Merge an approved pull request
 
-## MCP Resources
+## Usage
 
-- `atlassian://bitbucket/repositories` - Access Bitbucket repositories
-- `atlassian://confluence/spaces` - Access Confluence spaces  
-- `atlassian://jira/projects` - Access Jira projects
+### Amazon Q Integration
 
-## Configuration
+Connect this MCP server to Amazon Q Developer for AI-powered Atlassian workflows.
 
-### Environment Variables
+**Setup:**
+
+1. Install Python dependencies: `pip install -r mcp_server/requirements.txt`
+2. Open Amazon Q Developer settings
+3. Navigate to **Settings → MCP Servers → Add Server**
+4. Configure the server:
 
 **For Atlassian Cloud:**
-- `ATLASSIAN_BASE_URL` - Your Atlassian Cloud URL (e.g., https://yourcompany.atlassian.net)
-- `ATLASSIAN_USERNAME` - Your Atlassian email address
-- `ATLASSIAN_API_TOKEN` - Your Atlassian API token (for Jira & Confluence Cloud)
-- `BITBUCKET_WORKSPACE` - Your Bitbucket workspace name (found in URL: bitbucket.org/WORKSPACE_NAME)
-- `BITBUCKET_API_TOKEN` - Bitbucket Cloud API token (create at https://bitbucket.org/account/settings/app-passwords/)
+```json
+{
+  "mcpServers": {
+    "atlassian-mcp": {
+      "command": "python",
+      "args": ["/absolute/path/to/atlassian_mcp/mcp_server/main.py"],
+      "env": {
+        "ATLASSIAN_BASE_URL": "https://yourcompany.atlassian.net",
+        "ATLASSIAN_USERNAME": "your-email@company.com",
+        "ATLASSIAN_API_TOKEN": "your-api-token",
+        "BITBUCKET_WORKSPACE": "your-workspace",
+        "BITBUCKET_API_TOKEN": "your-bitbucket-token"
+      }
+    }
+  }
+}
+```
 
-**For Atlassian Data Center/Server:**
-- `ATLASSIAN_BASE_URL` - Your Data Center instance URL (e.g., https://jira.yourcompany.com)
-- `ATLASSIAN_PAT_TOKEN` - Personal Access Token from your Data Center instance
-- `BITBUCKET_PROJECT` - Your Bitbucket Server project key
+**For Atlassian Data Center:**
+```json
+{
+  "mcpServers": {
+    "atlassian-mcp": {
+      "command": "python",
+      "args": ["/absolute/path/to/atlassian_mcp/mcp_server/main.py"],
+      "env": {
+        "ATLASSIAN_BASE_URL": "https://jira.yourcompany.com",
+        "ATLASSIAN_PAT_TOKEN": "your-personal-access-token",
+        "BITBUCKET_PROJECT": "YOUR_PROJECT_KEY"
+      }
+    }
+  }
+}
+```
 
-**Platform Detection:**
-The server automatically detects the platform:
-- If `ATLASSIAN_PAT_TOKEN` is set → Data Center mode
-- Otherwise → Cloud mode
+### Example Workflows
+
+**Jira Operations:**
+```
+"Search for open issues in project PROJ"
+"Show me details for PROJ-123"
+"Create a Jira issue in project PROJ with summary 'Fix login bug'"
+"Add comment to PROJ-123: 'Working on this now'"
+```
+
+**Confluence Operations:**
+```
+"Find Confluence pages about deployment"
+"Show me page 12345"
+"Update Confluence page 12345 with new deployment instructions"
+```
+
+**Bitbucket Operations:**
+```
+"List Bitbucket repositories"
+"Show me the diff for pull request 42 in repo my-app"
+"List open pull requests in my-app repository"
+```
 
 ## Testing
 
-Run comprehensive tests for all 46 tools:
+### Unit Tests
+
+Run unit tests with mocked responses (no credentials required):
+
+```bash
+# Install dev dependencies
+pip install -r requirements-dev.txt
+
+# Run all unit tests
+pytest tests/unit/
+
+# Run with coverage
+pytest tests/unit/ --cov=mcp_server --cov-report=term-missing
+```
+
+### Integration Tests
+
+Run integration tests for all 46 tools. Requires real Atlassian credentials and makes actual API calls.
 
 **Cloud Testing:**
 ```bash
@@ -230,12 +325,22 @@ python tests/datacenter/test_bitbucket_dc_tools.py   # 20 Bitbucket Server tools
 
 ## AWS Deployment
 
-The server deploys as a Lambda function with API Gateway:
+The server deploys as a Lambda function with API Gateway. The SAM template supports both Cloud and Data Center platforms.
+
+### Quick Deploy
 
 ```bash
 sam build
 sam deploy --guided
 ```
+
+During deployment, you'll be prompted to:
+1. Choose platform: `cloud` or `datacenter`
+2. Enter credentials for your chosen platform
+3. (Optional) Configure Bitbucket access
+4. (Optional) Set up email alerts
+
+See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for detailed deployment instructions for each platform.
 
 Once deployed, you'll receive:
 - **API Gateway URL**: `https://<api-id>.execute-api.<region>.amazonaws.com/Prod/mcp`
@@ -294,7 +399,7 @@ sam deploy --parameter-overrides AlertEmail=your-email@example.com
 
 ### CloudWatch Dashboard
 
-View the dashboard at: https://console.aws.amazon.com/cloudwatch/home?region=us-east-1#dashboards:name=AtlassianMCP
+View the dashboard in AWS Console: CloudWatch → Dashboards → AtlassianMCP
 
 The dashboard shows:
 - Lambda invocations, errors, and throttles
@@ -320,100 +425,9 @@ aws logs tail /aws/lambda/atlassian-mcp-stack-AtlassianMCPFunction-xxx --follow
 aws logs filter-log-events \
   --log-group-name /aws/lambda/atlassian-mcp-stack-AtlassianMCPFunction-xxx \
   --filter-pattern "ERROR"
-
-# Query structured logs
-aws logs start-query \
-  --log-group-name /aws/lambda/atlassian-mcp-stack-AtlassianMCPFunction-xxx \
-  --start-time $(date -u -d '1 hour ago' +%s) \
-  --end-time $(date -u +%s) \
-  --query-string 'fields @timestamp, message | filter message like /tool_name/'
 ```
 
 See [MONITORING.md](MONITORING.md) for complete monitoring guide.
-
-## Amazon Q Integration
-
-Connect this MCP server to Amazon Q Developer for AI-powered Atlassian workflows.
-
-### Setup in Amazon Q Developer
-
-1. Open Amazon Q Developer settings
-2. Navigate to **Settings → MCP Servers → Add Server**
-3. Configure the server:
-
-**For Atlassian Cloud:**
-```json
-{
-  "mcpServers": {
-    "atlassian-mcp": {
-      "command": "python",
-      "args": ["/absolute/path/to/atlassian_mcp/mcp_server/main.py"],
-      "env": {
-        "ATLASSIAN_BASE_URL": "https://yourcompany.atlassian.net",
-        "ATLASSIAN_USERNAME": "your-email@company.com",
-        "ATLASSIAN_API_TOKEN": "your-api-token",
-        "BITBUCKET_WORKSPACE": "your-workspace",
-        "BITBUCKET_API_TOKEN": "your-bitbucket-token"
-      }
-    }
-  }
-}
-```
-
-**For Atlassian Data Center:**
-```json
-{
-  "mcpServers": {
-    "atlassian-mcp": {
-      "command": "python",
-      "args": ["/absolute/path/to/atlassian_mcp/mcp_server/main.py"],
-      "env": {
-        "ATLASSIAN_BASE_URL": "https://jira.yourcompany.com",
-        "ATLASSIAN_PAT_TOKEN": "your-personal-access-token",
-        "BITBUCKET_PROJECT": "YOUR_PROJECT_KEY"
-      }
-    }
-  }
-}
-```
-
-### Testing the Connection
-
-Once configured, test the connection in Amazon Q:
-
-```
-# List available tools
-"What Atlassian tools are available?"
-
-# Search Jira
-"Search for open issues in project PROJ"
-
-# Get issue details
-"Show me details for PROJ-123"
-
-# Search Confluence
-"Find Confluence pages about deployment"
-
-# List repositories
-"What Bitbucket repositories do we have?"
-```
-
-### Example Workflows
-
-**Create a Jira issue:**
-```
-"Create a Jira issue in project PROJ with summary 'Fix login bug' and description 'Users cannot log in'"
-```
-
-**Update Confluence page:**
-```
-"Update Confluence page 12345 with new deployment instructions"
-```
-
-**Review pull request:**
-```
-"Show me the diff for pull request 42 in repo my-app"
-```
 
 ## Security
 
@@ -435,7 +449,7 @@ Once configured, test the connection in Amazon Q:
 If sharing this project:
 1. Users deploy their own Lambda stack
 2. Each user gets their own API key
-3. Set `AWS_LAMBDA_API_KEY` environment variable when using Lambda mode
+3. Users configure their own Atlassian credentials during deployment
 
 ## Project Structure
 
@@ -445,7 +459,9 @@ atlassian_mcp/
 │   ├── common/
 │   │   ├── __init__.py
 │   │   ├── auth.py             # Authentication (Cloud & Data Center)
-│   │   └── tools.py            # All 46 tool definitions
+│   │   ├── router.py           # Shared tool routing logic
+│   │   ├── tools.py            # All 46 tool definitions
+│   │   └── validation.py       # Input validation for all tools
 │   ├── cloud/
 │   │   ├── __init__.py
 │   │   ├── jira_provider.py        # Jira Cloud API integration
@@ -472,18 +488,31 @@ atlassian_mcp/
 │   │   ├── test_jira_dc_tools.py      # Jira Data Center tests
 │   │   ├── test_confluence_dc_tools.py # Confluence Data Center tests
 │   │   └── test_bitbucket_dc_tools.py # Bitbucket Server tests
+│   ├── unit/
+│   │   ├── __init__.py
+│   │   ├── test_jira_provider.py      # Jira provider unit tests
+│   │   ├── test_confluence_provider.py # Confluence provider unit tests
+│   │   ├── test_bitbucket_provider.py # Bitbucket provider unit tests
+│   │   ├── test_validation.py         # Validation module tests
+│   │   └── test_router.py             # Router module tests
 │   └── __init__.py
 ├── .gitignore                  # Git ignore rules
 ├── .samignore                  # SAM ignore rules
-├── DEPLOYMENT_CHECKLIST.md     # Deployment guide
+├── dashboard.json              # CloudWatch dashboard configuration
+├── DEPLOYMENT_CHECKLIST.md     # Deployment checklist
+├── DEPLOYMENT_GUIDE.md         # Platform-specific deployment guide
 ├── lambda_handler.py           # AWS Lambda handler (auto-detects platform)
 ├── LICENSE                     # MIT License
+├── MONITORING.md               # Monitoring and alerts guide
 ├── PHASE2_SUMMARY.md           # Phase 2 implementation details
 ├── PLATFORM_GUIDE.md           # Quick reference for both platforms
+├── pytest.ini                  # Pytest configuration
 ├── README.md                   # This file
+├── requirements-dev.txt        # Development dependencies
 ├── requirements.txt            # Lambda dependencies
 ├── samconfig.toml              # SAM configuration
-└── template.yaml               # SAM deployment template
+├── template.yaml               # SAM deployment template
+└── VALIDATION.md               # Input validation guide
 ```
 
 ## API Documentation
@@ -498,6 +527,22 @@ atlassian_mcp/
 - [Confluence Data Center REST API](https://docs.atlassian.com/confluence/REST/latest/)
 - [Bitbucket Server REST API](https://docs.atlassian.com/bitbucket-server/rest/latest/)
 
+## Architecture
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system architecture, component diagrams, and request flow.
+
 ## License
 
 MIT
+
+---
+
+## Additional Features
+
+- **Input Validation**: All inputs validated before API calls with actionable error messages
+- **Rate Limiting**: Automatic retry with exponential backoff for API rate limits (429 errors)
+- **Request Timeouts**: 25-second timeout on all HTTP requests
+- **Structured Logging**: JSON logs with request ID, tool name, duration, and platform
+- **Type Hints**: Full type annotations throughout codebase
+
+See [VALIDATION.md](VALIDATION.md) for complete validation rules.

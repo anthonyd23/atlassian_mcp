@@ -1,13 +1,38 @@
 import requests
 import json
 import os
+import logging
+from typing import Dict, Any, Optional
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from ..common.auth import Auth
+from ..common.validation import validate_repo_slug, validate_pr_id, validate_non_empty, validate_path, validate_branch_name, validate_commit_hash, sanitize_url_path
+
+logger = logging.getLogger(__name__)
+
+DEFAULT_PAGE_SIZE = 25
+LIST_PAGE_SIZE = 50
 
 class BitbucketProvider:
-    def __init__(self):
+    def __init__(self) -> None:
         self.auth = Auth()
-        self.bitbucket_token = os.getenv('BITBUCKET_API_TOKEN', self.auth.api_token)
-        self.workspace = os.getenv('BITBUCKET_WORKSPACE', self.auth.username.split('@')[0])
+        self.bitbucket_token = os.getenv('BITBUCKET_API_TOKEN')
+        self.workspace = os.getenv('BITBUCKET_WORKSPACE')
+        self.session = self._create_session()
+        self.timeout = 25
+        
+        if not self.bitbucket_token or not self.workspace:
+            logger.warning("BITBUCKET_API_TOKEN or BITBUCKET_WORKSPACE not set - Bitbucket operations will fail")
+        else:
+            logger.info(f"BitbucketProvider initialized for workspace: {self.workspace}")
+    
+    def _create_session(self) -> requests.Session:
+        session = requests.Session()
+        retry = Retry(total=3, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504], allowed_methods=["GET", "POST", "PUT", "DELETE"])
+        adapter = HTTPAdapter(max_retries=retry)
+        session.mount('http://', adapter)
+        session.mount('https://', adapter)
+        return session
     
     async def get_resource(self, uri: str) -> str:
         if uri == "atlassian://bitbucket/repositories":
@@ -18,44 +43,73 @@ class BitbucketProvider:
         else:
             raise ValueError(f"Unknown Bitbucket resource: {uri}")
     
-    async def get_repository(self, repo_slug: str) -> dict:
+    async def get_repository(self, repo_slug: str) -> Dict[str, Any]:
+        """Get detailed repository information."""
+        valid, error = validate_repo_slug(repo_slug)
+        if not valid:
+            logger.warning(f"Invalid repo_slug: {repo_slug}")
+            return {'error': error}
         try:
-            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}"
-            response = requests.get(url, auth=(self.auth.username, self.bitbucket_token))
+            logger.info(f"Fetching repository: {repo_slug}")
+            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{sanitize_url_path(repo_slug)}"
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout)
             response.raise_for_status()
             return response.json()
         except Exception as e:
+            logger.error(f"Error fetching repository {repo_slug}: {e}")
             return {'error': str(e)}
     
-    async def list_repositories(self) -> dict:
+    async def list_repositories(self) -> Dict[str, Any]:
+        """List all repositories in workspace."""
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}"
-            response = requests.get(url, auth=(self.auth.username, self.bitbucket_token), params={'pagelen': 50})
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout, params={'pagelen': LIST_PAGE_SIZE})
             response.raise_for_status()
             return response.json()
         except Exception as e:
             return {'error': str(e)}
     
-    async def list_pull_requests(self, repo_slug: str, state: str = "OPEN") -> dict:
+    async def list_pull_requests(self, repo_slug: str, state: str = "OPEN") -> Dict[str, Any]:
+        """List pull requests with optional state filter."""
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/pullrequests"
-            params = {'state': state, 'pagelen': 50}
-            response = requests.get(url, auth=(self.auth.username, self.bitbucket_token), params=params)
+            params = {'state': state, 'pagelen': LIST_PAGE_SIZE}
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout, params=params)
             response.raise_for_status()
             return response.json()
         except Exception as e:
             return {'error': str(e)}
     
-    async def get_pull_request(self, repo_slug: str, pr_id: int) -> dict:
+    async def get_pull_request(self, repo_slug: str, pr_id: int) -> Dict[str, Any]:
+        """Get detailed pull request information."""
+        valid, error = validate_repo_slug(repo_slug)
+        if not valid:
+            return {'error': error}
+        valid, error = validate_pr_id(pr_id)
+        if not valid:
+            return {'error': error}
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/pullrequests/{pr_id}"
-            response = requests.get(url, auth=(self.auth.username, self.bitbucket_token))
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout)
             response.raise_for_status()
             return response.json()
         except Exception as e:
             return {'error': str(e)}
     
-    async def create_pull_request(self, repo_slug: str, title: str, source_branch: str, dest_branch: str, description: str = "") -> dict:
+    async def create_pull_request(self, repo_slug: str, title: str, source_branch: str, dest_branch: str, description: str = "") -> Dict[str, Any]:
+        """Create a new pull request."""
+        valid, error = validate_repo_slug(repo_slug)
+        if not valid:
+            return {'error': error}
+        valid, error = validate_non_empty(title, "title")
+        if not valid:
+            return {'error': error}
+        valid, error = validate_non_empty(source_branch, "source_branch")
+        if not valid:
+            return {'error': error}
+        valid, error = validate_non_empty(dest_branch, "dest_branch")
+        if not valid:
+            return {'error': error}
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/pullrequests"
             payload = {
@@ -64,122 +118,156 @@ class BitbucketProvider:
                 "destination": {"branch": {"name": dest_branch}},
                 "description": description
             }
-            response = requests.post(url, auth=(self.auth.username, self.bitbucket_token), json=payload)
+            response = self.session.post(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout, json=payload)
             response.raise_for_status()
             return response.json()
         except Exception as e:
             return {'error': str(e)}
     
-    async def get_file_content(self, repo_slug: str, file_path: str, branch: str = "main") -> dict:
+    async def get_file_content(self, repo_slug: str, file_path: str, branch: str = "main") -> Dict[str, Any]:
+        """Get raw content of a file."""
+        valid, error = validate_path(file_path, "file_path")
+        if not valid:
+            return {'error': error}
+        valid, error = validate_branch_name(branch)
+        if not valid:
+            return {'error': error}
         try:
-            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/src/{branch}/{file_path}"
-            response = requests.get(url, auth=(self.auth.username, self.bitbucket_token))
+            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{sanitize_url_path(repo_slug)}/src/{sanitize_url_path(branch)}/{sanitize_url_path(file_path)}"
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout)
             response.raise_for_status()
             return {'content': response.text, 'path': file_path}
         except Exception as e:
             return {'error': str(e)}
     
-    async def list_commits(self, repo_slug: str, branch: str = "main") -> dict:
+    async def list_commits(self, repo_slug: str, branch: str = "main") -> Dict[str, Any]:
+        """List commits in a branch."""
+        valid, error = validate_branch_name(branch)
+        if not valid:
+            return {'error': error}
         try:
-            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/commits/{branch}"
-            response = requests.get(url, auth=(self.auth.username, self.bitbucket_token), params={'pagelen': 50})
+            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{sanitize_url_path(repo_slug)}/commits/{sanitize_url_path(branch)}"
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout, params={'pagelen': LIST_PAGE_SIZE})
             response.raise_for_status()
             return response.json()
         except Exception as e:
             return {'error': str(e)}
     
-    async def get_commit(self, repo_slug: str, commit_hash: str) -> dict:
+    async def get_commit(self, repo_slug: str, commit_hash: str) -> Dict[str, Any]:
+        """Get detailed information about a commit."""
+        valid, error = validate_commit_hash(commit_hash)
+        if not valid:
+            return {'error': error}
         try:
-            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/commit/{commit_hash}"
-            response = requests.get(url, auth=(self.auth.username, self.bitbucket_token))
+            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{sanitize_url_path(repo_slug)}/commit/{commit_hash}"
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout)
             response.raise_for_status()
             return response.json()
         except Exception as e:
             return {'error': str(e)}
     
-    async def list_branches(self, repo_slug: str) -> dict:
+    async def list_branches(self, repo_slug: str) -> Dict[str, Any]:
+        """List all branches in a repository."""
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/refs/branches"
-            response = requests.get(url, auth=(self.auth.username, self.bitbucket_token), params={'pagelen': 50})
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout, params={'pagelen': LIST_PAGE_SIZE})
             response.raise_for_status()
             return response.json()
         except Exception as e:
             return {'error': str(e)}
     
-    async def get_pull_request_diff(self, repo_slug: str, pr_id: int) -> dict:
+    async def get_pull_request_diff(self, repo_slug: str, pr_id: int) -> Dict[str, Any]:
+        """Get the full diff for a pull request."""
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/pullrequests/{pr_id}/diff"
-            response = requests.get(url, auth=(self.auth.username, self.bitbucket_token))
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout)
             response.raise_for_status()
             return {'diff': response.text}
         except Exception as e:
             return {'error': str(e)}
     
-    async def get_pull_request_comments(self, repo_slug: str, pr_id: int) -> dict:
+    async def get_pull_request_comments(self, repo_slug: str, pr_id: int) -> Dict[str, Any]:
+        """Retrieve all comments on a pull request."""
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/pullrequests/{pr_id}/comments"
-            response = requests.get(url, auth=(self.auth.username, self.bitbucket_token))
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout)
             response.raise_for_status()
             return response.json()
         except Exception as e:
             return {'error': str(e)}
     
-    async def add_pr_comment(self, repo_slug: str, pr_id: int, comment: str) -> dict:
+    async def add_pr_comment(self, repo_slug: str, pr_id: int, comment: str) -> Dict[str, Any]:
+        """Add a comment to a pull request."""
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/pullrequests/{pr_id}/comments"
             payload = {"content": {"raw": comment}}
-            response = requests.post(url, auth=(self.auth.username, self.bitbucket_token), json=payload)
+            response = self.session.post(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout, json=payload)
             response.raise_for_status()
             return response.json()
         except Exception as e:
             return {'error': str(e)}
     
-    async def approve_pull_request(self, repo_slug: str, pr_id: int) -> dict:
+    async def approve_pull_request(self, repo_slug: str, pr_id: int) -> Dict[str, Any]:
+        """Approve a pull request."""
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/pullrequests/{pr_id}/approve"
-            response = requests.post(url, auth=(self.auth.username, self.bitbucket_token))
+            response = self.session.post(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout)
             response.raise_for_status()
             return {'success': True}
         except Exception as e:
             return {'error': str(e)}
     
-    async def merge_pull_request(self, repo_slug: str, pr_id: int) -> dict:
+    async def merge_pull_request(self, repo_slug: str, pr_id: int) -> Dict[str, Any]:
+        """Merge an approved pull request."""
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/pullrequests/{pr_id}/merge"
-            response = requests.post(url, auth=(self.auth.username, self.bitbucket_token))
+            response = self.session.post(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout)
             response.raise_for_status()
             return response.json()
         except Exception as e:
             return {'error': str(e)}
     
-    async def get_commit_diff(self, repo_slug: str, commit_hash: str) -> dict:
+    async def get_commit_diff(self, repo_slug: str, commit_hash: str) -> Dict[str, Any]:
+        """Get the diff/changes for a commit."""
+        valid, error = validate_commit_hash(commit_hash)
+        if not valid:
+            return {'error': error}
         try:
-            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/diff/{commit_hash}"
-            response = requests.get(url, auth=(self.auth.username, self.bitbucket_token))
+            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{sanitize_url_path(repo_slug)}/diff/{commit_hash}"
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout)
             response.raise_for_status()
             return {'diff': response.text}
         except Exception as e:
             return {'error': str(e)}
     
-    async def list_tags(self, repo_slug: str) -> dict:
+    async def list_tags(self, repo_slug: str) -> Dict[str, Any]:
+        """List all tags in a repository."""
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/refs/tags"
-            response = requests.get(url, auth=(self.auth.username, self.bitbucket_token), params={'pagelen': 50})
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout, params={'pagelen': LIST_PAGE_SIZE})
             response.raise_for_status()
             return response.json()
         except Exception as e:
             return {'error': str(e)}
     
-    async def list_directory(self, repo_slug: str, path: str = "", branch: str = "main") -> dict:
+    async def list_directory(self, repo_slug: str, path: str = "", branch: str = "main") -> Dict[str, Any]:
+        """List files and folders in a directory path."""
+        valid, error = validate_path(path, "path")
+        if not valid:
+            return {'error': error}
+        valid, error = validate_branch_name(branch)
+        if not valid:
+            return {'error': error}
         try:
-            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/src/{branch}/{path}"
-            response = requests.get(url, auth=(self.auth.username, self.bitbucket_token))
+            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{sanitize_url_path(repo_slug)}/src/{sanitize_url_path(branch)}/{sanitize_url_path(path)}"
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout)
             response.raise_for_status()
             return response.json()
         except Exception as e:
             return {'error': str(e)}
     
-    async def update_pull_request(self, repo_slug: str, pr_id: int, title: str = None, description: str = None) -> dict:
+    async def update_pull_request(self, repo_slug: str, pr_id: int, title: Optional[str] = None, description: Optional[str] = None) -> Dict[str, Any]:
+        """Update pull request title or description."""
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/pullrequests/{pr_id}"
             payload = {}
@@ -187,26 +275,35 @@ class BitbucketProvider:
                 payload["title"] = title
             if description:
                 payload["description"] = description
-            response = requests.put(url, auth=(self.auth.username, self.bitbucket_token), json=payload)
+            response = self.session.put(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout, json=payload)
             response.raise_for_status()
             return response.json()
         except Exception as e:
             return {'error': str(e)}
     
-    async def compare_commits(self, repo_slug: str, from_commit: str, to_commit: str) -> dict:
+    async def compare_commits(self, repo_slug: str, from_commit: str, to_commit: str) -> Dict[str, Any]:
+        """Compare differences between two commits."""
+        valid, error = validate_commit_hash(from_commit)
+        if not valid:
+            return {'error': error.replace('commit_hash', 'from_commit')}
+        valid, error = validate_commit_hash(to_commit)
+        if not valid:
+            return {'error': error.replace('commit_hash', 'to_commit')}
         try:
-            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/diff/{from_commit}..{to_commit}"
-            response = requests.get(url, auth=(self.auth.username, self.bitbucket_token))
+            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{sanitize_url_path(repo_slug)}/diff/{from_commit}..{to_commit}"
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout)
             response.raise_for_status()
             return {'diff': response.text}
         except Exception as e:
             return {'error': str(e)}
     
-    async def search(self, query: str) -> dict:
+    async def search(self, query: str) -> Dict[str, Any]:
+        """Search using query."""
         try:
+            logger.info(f"Searching Bitbucket: {query}")
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}"
             
-            response = requests.get(url, auth=(self.auth.username, self.bitbucket_token))
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout)
             
             if response.status_code == 401:
                 return {
@@ -237,7 +334,7 @@ class BitbucketProvider:
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}"
             
-            response = requests.get(url, auth=(self.auth.username, self.bitbucket_token), params={'pagelen': 25})
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout, params={'pagelen': DEFAULT_PAGE_SIZE})
             response.raise_for_status()
             
             repos = response.json().get('values', [])
@@ -249,7 +346,7 @@ class BitbucketProvider:
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo}/pullrequests"
             
-            response = requests.get(url, auth=(self.auth.username, self.bitbucket_token), params={'pagelen': 25})
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout, params={'pagelen': DEFAULT_PAGE_SIZE})
             response.raise_for_status()
             
             prs = response.json().get('values', [])

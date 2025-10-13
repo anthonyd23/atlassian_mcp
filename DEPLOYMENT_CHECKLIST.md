@@ -132,8 +132,11 @@ curl -X POST https://YOUR-API-URL/Prod/mcp \
 
 ### 10. Monitoring
 - [ ] Check CloudWatch Logs for any errors
-- [ ] Set up CloudWatch alarms (optional)
-- [ ] Monitor Lambda metrics (invocations, errors, duration)
+- [ ] Set up email alerts: `sam deploy --parameter-overrides AlertEmail=your-email@example.com`
+- [ ] Confirm SNS subscription email
+- [ ] Enable detailed API Gateway metrics (for 4xx/5xx alarms)
+- [ ] View CloudWatch dashboard: https://console.aws.amazon.com/cloudwatch/home?region=us-east-1#dashboards:name=AtlassianMCP
+- [ ] Verify custom metrics appearing in namespace `AtlassianMCP`
 
 ### 11. Security Review
 - [ ] Verify environment variables are encrypted
