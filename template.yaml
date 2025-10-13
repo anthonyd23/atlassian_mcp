@@ -41,9 +41,36 @@ Parameters:
     NoEcho: true
     Description: Personal Access Token (Data Center only)
     Default: ""
+  JiraBaseUrl:
+    Type: String
+    Description: Jira base URL (Data Center with separate URLs only)
+    Default: ""
+  ConfluenceBaseUrl:
+    Type: String
+    Description: Confluence base URL (Data Center with separate URLs only)
+    Default: ""
+  BitbucketBaseUrl:
+    Type: String
+    Description: Bitbucket base URL (Data Center with separate URLs only)
+    Default: ""
   BitbucketProject:
     Type: String
     Description: Bitbucket project key (Data Center only)
+    Default: ""
+  JiraPatToken:
+    Type: String
+    NoEcho: true
+    Description: Separate Jira PAT token (Data Center only, optional)
+    Default: ""
+  ConfluencePatToken:
+    Type: String
+    NoEcho: true
+    Description: Separate Confluence PAT token (Data Center only, optional)
+    Default: ""
+  BitbucketPatToken:
+    Type: String
+    NoEcho: true
+    Description: Separate Bitbucket PAT token (Data Center only, optional)
     Default: ""
   
   AlertEmail:
@@ -73,9 +100,15 @@ Resources:
           ATLASSIAN_USERNAME: !Ref AtlassianUsername
           ATLASSIAN_API_TOKEN: !Ref AtlassianApiToken
           ATLASSIAN_PAT_TOKEN: !Ref AtlassianPatToken
+          JIRA_BASE_URL: !Ref JiraBaseUrl
+          JIRA_PAT_TOKEN: !Ref JiraPatToken
+          CONFLUENCE_BASE_URL: !Ref ConfluenceBaseUrl
+          CONFLUENCE_PAT_TOKEN: !Ref ConfluencePatToken
+          BITBUCKET_BASE_URL: !Ref BitbucketBaseUrl
           BITBUCKET_WORKSPACE: !Ref BitbucketWorkspace
           BITBUCKET_API_TOKEN: !Ref BitbucketApiToken
           BITBUCKET_PROJECT: !Ref BitbucketProject
+          BITBUCKET_PAT_TOKEN: !Ref BitbucketPatToken
       Policies:
         - CloudWatchPutMetricPolicy: {}
       Events:

@@ -14,11 +14,16 @@ LIST_PAGE_SIZE = 50
 
 class BitbucketDCProvider:
     def __init__(self) -> None:
-        self.auth = DataCenterAuth()
+        # Support separate Bitbucket token
+        bitbucket_token = os.getenv('BITBUCKET_PAT_TOKEN')
+        if bitbucket_token:
+            os.environ['ATLASSIAN_PAT_TOKEN'] = bitbucket_token
+        self.auth = DataCenterAuth(service='bitbucket')
+        self.base_url = self.auth.get_base_url()
         self.project = os.getenv('BITBUCKET_PROJECT', 'PROJECT')
         self.session = self._create_session()
         self.timeout = 25
-        logger.info(f"BitbucketDCProvider initialized for project: {self.project}")
+        logger.info(f"BitbucketDCProvider initialized with base_url: {self.base_url}, project: {self.project}")
     
     def _create_session(self) -> requests.Session:
         session = requests.Session()
@@ -37,7 +42,7 @@ class BitbucketDCProvider:
         try:
             logger.info(f"Fetching repository: {repo_slug}")
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/1.0/projects/{self.project}/repos/{sanitize_url_path(repo_slug)}"
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{sanitize_url_path(repo_slug)}"
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -49,7 +54,7 @@ class BitbucketDCProvider:
         """List all repositories in workspace."""
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/1.0/projects/{self.project}/repos"
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos"
             response = self.session.get(url, headers=headers, params={'limit': LIST_PAGE_SIZE}, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -60,7 +65,7 @@ class BitbucketDCProvider:
         """List pull requests with optional state filter."""
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests"
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests"
             params = {'state': state, 'limit': LIST_PAGE_SIZE}
             response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
@@ -78,7 +83,7 @@ class BitbucketDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}"
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}"
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -101,7 +106,7 @@ class BitbucketDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests"
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests"
             payload = {
                 "title": title,
                 "fromRef": {"id": f"refs/heads/{source_branch}", "repository": {"slug": repo_slug, "project": {"key": self.project}}},
@@ -124,7 +129,7 @@ class BitbucketDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/1.0/projects/{self.project}/repos/{sanitize_url_path(repo_slug)}/browse/{sanitize_url_path(file_path)}"
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{sanitize_url_path(repo_slug)}/browse/{sanitize_url_path(file_path)}"
             params = {'at': branch}
             response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
@@ -141,7 +146,7 @@ class BitbucketDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/1.0/projects/{self.project}/repos/{sanitize_url_path(repo_slug)}/commits"
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{sanitize_url_path(repo_slug)}/commits"
             params = {'until': branch, 'limit': LIST_PAGE_SIZE}
             response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
@@ -156,7 +161,7 @@ class BitbucketDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/1.0/projects/{self.project}/repos/{sanitize_url_path(repo_slug)}/commits/{commit_hash}"
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{sanitize_url_path(repo_slug)}/commits/{commit_hash}"
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -167,7 +172,7 @@ class BitbucketDCProvider:
         """List all branches in a repository."""
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/branches"
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/branches"
             response = self.session.get(url, headers=headers, params={'limit': LIST_PAGE_SIZE}, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -178,7 +183,7 @@ class BitbucketDCProvider:
         """Get the full diff for a pull request."""
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}/diff"
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}/diff"
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return {'diff': response.text}
@@ -189,7 +194,7 @@ class BitbucketDCProvider:
         """Retrieve all comments on a pull request."""
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}/activities"
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}/activities"
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -200,7 +205,7 @@ class BitbucketDCProvider:
         """Add a comment to a pull request."""
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}/comments"
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}/comments"
             payload = {"text": comment}
             response = self.session.post(url, headers=headers, json=payload, timeout=self.timeout)
             response.raise_for_status()
@@ -212,7 +217,7 @@ class BitbucketDCProvider:
         """Approve a pull request."""
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}/approve"
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}/approve"
             response = self.session.post(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return {'success': True}
@@ -223,11 +228,11 @@ class BitbucketDCProvider:
         """Merge an approved pull request."""
         try:
             headers = self.auth.get_auth_headers()
-            pr_url = f"{self.auth.get_base_url()}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}"
+            pr_url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}"
             pr_response = self.session.get(pr_url, headers=headers, timeout=self.timeout)
             pr_response.raise_for_status()
             version = pr_response.json().get('version')
-            url = f"{self.auth.get_base_url()}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}/merge"
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}/merge"
             payload = {"version": version}
             response = self.session.post(url, headers=headers, json=payload, timeout=self.timeout)
             response.raise_for_status()
@@ -242,7 +247,7 @@ class BitbucketDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/1.0/projects/{self.project}/repos/{sanitize_url_path(repo_slug)}/commits/{commit_hash}/diff"
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{sanitize_url_path(repo_slug)}/commits/{commit_hash}/diff"
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return {'diff': response.text}
@@ -253,7 +258,7 @@ class BitbucketDCProvider:
         """List all tags in a repository."""
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/tags"
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/tags"
             response = self.session.get(url, headers=headers, params={'limit': LIST_PAGE_SIZE}, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -270,7 +275,7 @@ class BitbucketDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/1.0/projects/{self.project}/repos/{sanitize_url_path(repo_slug)}/browse/{sanitize_url_path(path)}"
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{sanitize_url_path(repo_slug)}/browse/{sanitize_url_path(path)}"
             params = {'at': branch}
             response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
@@ -282,7 +287,7 @@ class BitbucketDCProvider:
         """Update pull request title or description."""
         try:
             headers = self.auth.get_auth_headers()
-            pr_url = f"{self.auth.get_base_url()}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}"
+            pr_url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}"
             pr_response = self.session.get(pr_url, headers=headers, timeout=self.timeout)
             pr_response.raise_for_status()
             pr_data = pr_response.json()
@@ -307,7 +312,7 @@ class BitbucketDCProvider:
             return {'error': error.replace('commit_hash', 'to_commit')}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/1.0/projects/{self.project}/repos/{sanitize_url_path(repo_slug)}/compare/diff"
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{sanitize_url_path(repo_slug)}/compare/diff"
             params = {'from': from_commit, 'to': to_commit}
             response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
@@ -320,7 +325,7 @@ class BitbucketDCProvider:
         try:
             logger.info(f"Searching Bitbucket: {query}")
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/1.0/projects/{self.project}/repos"
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos"
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             repos = response.json().get('values', [])

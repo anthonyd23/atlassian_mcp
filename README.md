@@ -97,12 +97,24 @@ A Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and
    
    **For Atlassian Data Center/Server:**
    ```bash
-   # Required for Jira and Confluence Data Center
-   export ATLASSIAN_BASE_URL="https://jira.yourcompany.com"
+   # Required
    export ATLASSIAN_PAT_TOKEN="your-personal-access-token"
    
+   # Option 1: Single URL for all services
+   export ATLASSIAN_BASE_URL="https://atlassian.yourcompany.com"
+   
+   # Option 2: Separate URLs for each service (overrides ATLASSIAN_BASE_URL)
+   export JIRA_BASE_URL="https://jira.yourcompany.com"
+   export CONFLUENCE_BASE_URL="https://wiki.yourcompany.com"
+   export BITBUCKET_BASE_URL="https://git.yourcompany.com"
+   
+   # Optional: Separate tokens for each service (if required)
+   export JIRA_PAT_TOKEN="your-jira-token"
+   export CONFLUENCE_PAT_TOKEN="your-confluence-token"
+   export BITBUCKET_PAT_TOKEN="your-bitbucket-token"
+   
    # Optional: Only if using Bitbucket Server tools
-   export BITBUCKET_PROJECT="YOUR_PROJECT_KEY"  # Your Bitbucket project key
+   export BITBUCKET_PROJECT="YOUR_PROJECT_KEY"
    ```
    
    **Platform Detection:**
@@ -239,7 +251,7 @@ Connect this MCP server to Amazon Q Developer for AI-powered Atlassian workflows
 }
 ```
 
-**For Atlassian Data Center:**
+**For Atlassian Data Center (Single URL):**
 ```json
 {
   "mcpServers": {
@@ -247,8 +259,33 @@ Connect this MCP server to Amazon Q Developer for AI-powered Atlassian workflows
       "command": "python",
       "args": ["/absolute/path/to/atlassian_mcp/mcp_server/main.py"],
       "env": {
-        "ATLASSIAN_BASE_URL": "https://jira.yourcompany.com",
+        "ATLASSIAN_BASE_URL": "https://atlassian.yourcompany.com",
         "ATLASSIAN_PAT_TOKEN": "your-personal-access-token",
+        "JIRA_PAT_TOKEN": "your-jira-token",
+        "CONFLUENCE_PAT_TOKEN": "your-confluence-token",
+        "BITBUCKET_PAT_TOKEN": "your-bitbucket-token",
+        "BITBUCKET_PROJECT": "YOUR_PROJECT_KEY"
+      }
+    }
+  }
+}
+```
+
+**For Atlassian Data Center (Separate URLs):**
+```json
+{
+  "mcpServers": {
+    "atlassian-mcp": {
+      "command": "python",
+      "args": ["/absolute/path/to/atlassian_mcp/mcp_server/main.py"],
+      "env": {
+        "ATLASSIAN_PAT_TOKEN": "your-personal-access-token",
+        "JIRA_BASE_URL": "https://jira.yourcompany.com",
+        "JIRA_PAT_TOKEN": "your-jira-token",
+        "CONFLUENCE_BASE_URL": "https://wiki.yourcompany.com",
+        "CONFLUENCE_PAT_TOKEN": "your-confluence-token",
+        "BITBUCKET_BASE_URL": "https://git.yourcompany.com",
+        "BITBUCKET_PAT_TOKEN": "your-bitbucket-token",
         "BITBUCKET_PROJECT": "YOUR_PROJECT_KEY"
       }
     }

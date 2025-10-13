@@ -14,10 +14,15 @@ LIST_PAGE_SIZE = 50
 
 class ConfluenceDCProvider:
     def __init__(self) -> None:
-        self.auth = DataCenterAuth()
+        # Support separate Confluence token
+        confluence_token = os.getenv('CONFLUENCE_PAT_TOKEN')
+        if confluence_token:
+            os.environ['ATLASSIAN_PAT_TOKEN'] = confluence_token
+        self.auth = DataCenterAuth(service='confluence')
+        self.base_url = self.auth.get_base_url()
         self.session = self._create_session()
         self.timeout = 25
-        logger.info("ConfluenceDCProvider initialized")
+        logger.info(f"ConfluenceDCProvider initialized with base_url: {self.base_url}")
     
     def _create_session(self) -> requests.Session:
         session = requests.Session()
@@ -36,7 +41,7 @@ class ConfluenceDCProvider:
         try:
             logger.info(f"Fetching page: {page_id}")
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}?expand=body.storage,version"
+            url = f"{self.base_url}/wiki/rest/api/content/{sanitize_url_path(page_id)}?expand=body.storage,version"
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -48,7 +53,7 @@ class ConfluenceDCProvider:
         """Find and retrieve a page by title and space."""
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/wiki/rest/api/content"
+            url = f"{self.base_url}/wiki/rest/api/content"
             params = {'spaceKey': space_key, 'title': title, 'expand': 'body.storage,version'}
             response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
@@ -66,7 +71,7 @@ class ConfluenceDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/wiki/rest/api/content"
+            url = f"{self.base_url}/wiki/rest/api/content"
             payload = {
                 "type": "page",
                 "title": title,
@@ -85,7 +90,7 @@ class ConfluenceDCProvider:
         """Update page title and content."""
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}"
+            url = f"{self.base_url}/wiki/rest/api/content/{sanitize_url_path(page_id)}"
             payload = {
                 "version": {"number": version + 1},
                 "title": title,
@@ -102,7 +107,7 @@ class ConfluenceDCProvider:
         """Permanently delete a page."""
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}"
+            url = f"{self.base_url}/wiki/rest/api/content/{sanitize_url_path(page_id)}"
             response = self.session.delete(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return {'success': True}
@@ -113,7 +118,7 @@ class ConfluenceDCProvider:
         """List all pages in a space."""
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/wiki/rest/api/content"
+            url = f"{self.base_url}/wiki/rest/api/content"
             params = {'spaceKey': space_key, 'type': 'page', 'limit': LIST_PAGE_SIZE}
             response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
@@ -128,7 +133,7 @@ class ConfluenceDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/wiki/rest/api/space/{sanitize_url_path(space_key)}"
+            url = f"{self.base_url}/wiki/rest/api/space/{sanitize_url_path(space_key)}"
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -139,7 +144,7 @@ class ConfluenceDCProvider:
         """List all accessible Confluence spaces."""
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/wiki/rest/api/space"
+            url = f"{self.base_url}/wiki/rest/api/space"
             response = self.session.get(url, headers=headers, params={'limit': LIST_PAGE_SIZE}, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -150,7 +155,7 @@ class ConfluenceDCProvider:
         """Retrieve all comments on a page."""
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}/child/comment"
+            url = f"{self.base_url}/wiki/rest/api/content/{sanitize_url_path(page_id)}/child/comment"
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -161,7 +166,7 @@ class ConfluenceDCProvider:
         """Add a comment to a page."""
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/wiki/rest/api/content"
+            url = f"{self.base_url}/wiki/rest/api/content"
             payload = {
                 "type": "comment",
                 "container": {"id": page_id, "type": "page"},
@@ -177,7 +182,7 @@ class ConfluenceDCProvider:
         """List all files attached to a page."""
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}/child/attachment"
+            url = f"{self.base_url}/wiki/rest/api/content/{sanitize_url_path(page_id)}/child/attachment"
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -189,7 +194,7 @@ class ConfluenceDCProvider:
         try:
             logger.info(f"Searching Confluence: {query}")
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/wiki/rest/api/search"
+            url = f"{self.base_url}/wiki/rest/api/search"
             params = {'cql': f'text ~ "{query}"', 'limit': DEFAULT_PAGE_SIZE}
             response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
