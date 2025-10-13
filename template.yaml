@@ -206,12 +206,13 @@ Resources:
       Threshold: 20
       ComparisonOperator: GreaterThanThreshold
       Dimensions:
-        - Name: ApiId
-          Value: !Ref ServerlessRestApi
+        - Name: ApiName
+          Value: !Ref AWS::StackName
         - Name: Stage
           Value: Prod
       AlarmActions:
         - !Ref AlertTopic
+      TreatMissingData: notBreaching
 
   ApiGateway5xxAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -227,12 +228,13 @@ Resources:
       Threshold: 1
       ComparisonOperator: GreaterThanThreshold
       Dimensions:
-        - Name: ApiId
-          Value: !Ref ServerlessRestApi
+        - Name: ApiName
+          Value: !Ref AWS::StackName
         - Name: Stage
           Value: Prod
       AlarmActions:
         - !Ref AlertTopic
+      TreatMissingData: notBreaching
 
 Conditions:
   HasAlertEmail: !Not [!Equals [!Ref AlertEmail, ""]]
