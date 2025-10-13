@@ -1,5 +1,6 @@
 import requests
 import json
+import os
 import logging
 from typing import Dict, Any, Optional
 from requests.adapters import HTTPAdapter
