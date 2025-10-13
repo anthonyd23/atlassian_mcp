@@ -6,16 +6,27 @@ from mcp.types import Resource, Tool, TextContent
 from mcp_server.cloud.bitbucket_provider import BitbucketProvider
 from mcp_server.cloud.confluence_provider import ConfluenceProvider
 from mcp_server.cloud.jira_provider import JiraProvider
+from mcp_server.datacenter.bitbucket_dc_provider import BitbucketDCProvider
+from mcp_server.datacenter.confluence_dc_provider import ConfluenceDCProvider
+from mcp_server.datacenter.jira_dc_provider import JiraDCProvider
 from mcp_server.common.tools import JIRA_TOOLS, CONFLUENCE_TOOLS, BITBUCKET_TOOLS
 from mcp_server.common.tool_schemas import TOOL_SCHEMAS
 from mcp_server.common.router import route_tool_call
 
 server = Server("atlassian-mcp")
 
-# Initialize providers
-bitbucket = BitbucketProvider()
-confluence = ConfluenceProvider()
-jira = JiraProvider()
+# Detect platform: Data Center uses PAT token, Cloud uses API token
+PLATFORM = 'datacenter' if os.getenv('ATLASSIAN_PAT_TOKEN') else 'cloud'
+
+# Initialize providers based on platform
+if PLATFORM == 'datacenter':
+    jira = JiraDCProvider()
+    confluence = ConfluenceDCProvider()
+    bitbucket = BitbucketDCProvider()
+else:
+    jira = JiraProvider()
+    confluence = ConfluenceProvider()
+    bitbucket = BitbucketProvider()
 
 @server.list_resources()
 async def list_resources() -> list[Resource]:

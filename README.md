@@ -461,6 +461,7 @@ atlassian_mcp/
 │   │   ├── auth.py             # Authentication (Cloud & Data Center)
 │   │   ├── router.py           # Shared tool routing logic
 │   │   ├── tools.py            # All 46 tool definitions
+│   │   ├── tool_schemas.py     # JSON schemas for tool inputs
 │   │   └── validation.py       # Input validation for all tools
 │   ├── cloud/
 │   │   ├── __init__.py
