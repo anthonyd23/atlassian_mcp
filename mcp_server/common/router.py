@@ -33,6 +33,20 @@ async def route_tool_call(name: str, arguments: Dict[str, Any], jira, confluence
         return await jira.get_issue_attachments(arguments["issue_key"])
     elif name == "get_issue_watchers":
         return await jira.get_issue_watchers(arguments["issue_key"])
+    elif name == "get_user":
+        return await jira.get_user(arguments["account_id"])
+    elif name == "search_users":
+        return await jira.search_users(arguments["query"])
+    elif name == "get_current_user":
+        return await jira.get_current_user()
+    elif name == "link_issues":
+        return await jira.link_issues(arguments["inward_issue"], arguments["outward_issue"], arguments.get("link_type", "Relates"))
+    elif name == "add_worklog":
+        return await jira.add_worklog(arguments["issue_key"], arguments["time_spent"], arguments.get("comment", ""))
+    elif name == "get_worklogs":
+        return await jira.get_worklogs(arguments["issue_key"])
+    elif name == "add_label":
+        return await jira.add_label(arguments["issue_key"], arguments["label"])
     
     # Confluence tools
     elif name == "search_confluence":

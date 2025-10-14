@@ -262,6 +262,140 @@ class JiraProvider:
         except Exception as e:
             return {'error': str(e)}
     
+    async def get_user(self, account_id: str) -> Dict[str, Any]:
+        """Get user details by account ID."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_non_empty(account_id, "account_id")
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.auth.get_base_url()}/rest/api/3/user?accountId={sanitize_url_path(account_id)}"
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def search_users(self, query: str) -> Dict[str, Any]:
+        """Search for users by name or email."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_non_empty(query, "query")
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.auth.get_base_url()}/rest/api/3/user/search?query={sanitize_url_path(query)}"
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            return {'users': response.json()}
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def get_current_user(self) -> Dict[str, Any]:
+        """Get authenticated user information."""
+        check = self._check_available()
+        if check:
+            return check
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.auth.get_base_url()}/rest/api/3/myself"
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def link_issues(self, inward_issue: str, outward_issue: str, link_type: str = "Relates") -> Dict[str, Any]:
+        """Create a link between two issues."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_issue_key(inward_issue)
+        if not valid:
+            return {'error': error.replace('issue_key', 'inward_issue')}
+        valid, error = validate_issue_key(outward_issue)
+        if not valid:
+            return {'error': error.replace('issue_key', 'outward_issue')}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.auth.get_base_url()}/rest/api/2/issueLink"
+            payload = {
+                "type": {"name": link_type},
+                "inwardIssue": {"key": inward_issue},
+                "outwardIssue": {"key": outward_issue}
+            }
+            response = self.session.post(url, headers=headers, json=payload, timeout=self.timeout)
+            response.raise_for_status()
+            return {'success': True}
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def add_worklog(self, issue_key: str, time_spent: str, comment: str = "") -> Dict[str, Any]:
+        """Log time spent on an issue."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_issue_key(issue_key)
+        if not valid:
+            return {'error': error}
+        valid, error = validate_non_empty(time_spent, "time_spent")
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.auth.get_base_url()}/rest/api/2/issue/{sanitize_url_path(issue_key)}/worklog"
+            payload = {"timeSpent": time_spent}
+            if comment:
+                payload["comment"] = comment
+            response = self.session.post(url, headers=headers, json=payload, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def get_worklogs(self, issue_key: str) -> Dict[str, Any]:
+        """Get time tracking data for an issue."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_issue_key(issue_key)
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.auth.get_base_url()}/rest/api/2/issue/{sanitize_url_path(issue_key)}/worklog"
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def add_label(self, issue_key: str, label: str) -> Dict[str, Any]:
+        """Add a label to an issue."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_issue_key(issue_key)
+        if not valid:
+            return {'error': error}
+        valid, error = validate_non_empty(label, "label")
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.auth.get_base_url()}/rest/api/2/issue/{sanitize_url_path(issue_key)}"
+            payload = {"update": {"labels": [{"add": label}]}}
+            response = self.session.put(url, headers=headers, json=payload, timeout=self.timeout)
+            response.raise_for_status()
+            return {'success': True}
+        except Exception as e:
+            return {'error': str(e)}
+    
     async def search(self, jql: str) -> Dict[str, Any]:
         """Search using query."""
         check = self._check_available()

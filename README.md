@@ -33,9 +33,9 @@ sam build && sam deploy --guided
 
 ## Features
 
-- **Jira**: Search, create, update issues, manage comments, transitions, and attachments
-- **Confluence**: Search, create, update pages, manage spaces and comments
-- **Bitbucket**: Repository operations, pull requests, commits, branches, and diffs
+- **Jira**: Issues, comments, transitions, attachments, users, worklogs, labels, issue linking
+- **Confluence**: Pages, spaces, comments, attachments, search
+- **Bitbucket**: Repositories, pull requests, commits, branches, diffs
 - **Flexible Credentials**: Configure only the services you need
 - **Dual Platform**: Supports both Cloud and Data Center deployments
 - **AWS Ready**: Deploy as Lambda function with API Gateway

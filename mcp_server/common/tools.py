@@ -12,7 +12,14 @@ JIRA_TOOLS = [
     {"name": "list_projects", "description": "List all Jira projects"},
     {"name": "get_project", "description": "Get Jira project details"},
     {"name": "get_issue_attachments", "description": "Get attachments for Jira issue"},
-    {"name": "get_issue_watchers", "description": "Get watchers for Jira issue"}
+    {"name": "get_issue_watchers", "description": "Get watchers for Jira issue"},
+    {"name": "get_user", "description": "Get Jira user details by account ID"},
+    {"name": "search_users", "description": "Search Jira users by name or email"},
+    {"name": "get_current_user", "description": "Get authenticated Jira user information"},
+    {"name": "link_issues", "description": "Create a link between two Jira issues"},
+    {"name": "add_worklog", "description": "Log time spent on a Jira issue"},
+    {"name": "get_worklogs", "description": "Get time tracking data for a Jira issue"},
+    {"name": "add_label", "description": "Add a label to a Jira issue"}
 ]
 
 CONFLUENCE_TOOLS = [
