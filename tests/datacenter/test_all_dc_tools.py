@@ -9,6 +9,30 @@ from mcp_server.datacenter.jira_dc_provider import JiraDCProvider
 from mcp_server.datacenter.confluence_dc_provider import ConfluenceDCProvider
 from mcp_server.datacenter.bitbucket_dc_provider import BitbucketDCProvider
 import getpass
+import re
+
+def is_connection_error(error_msg):
+    """Check if error is a connection/DNS issue"""
+    connection_indicators = [
+        'Failed to resolve',
+        'getaddrinfo failed',
+        'Name or service not known',
+        'Max retries exceeded',
+        'Connection refused',
+        'Connection timed out',
+        'No route to host'
+    ]
+    return any(indicator in str(error_msg) for indicator in connection_indicators)
+
+def format_error(name, error_msg):
+    """Format error message nicely"""
+    if is_connection_error(error_msg):
+        match = re.search(r"host='([^']+)'", str(error_msg))
+        if match:
+            hostname = match.group(1)
+            return f"Cannot connect to {hostname} (check URL/network/VPN)"
+        return "Connection failed (check URL/network/VPN)"
+    return str(error_msg)
 
 def prompt_credentials():
     """Prompt for missing credentials"""
@@ -40,7 +64,7 @@ async def test_all_jira_dc_tools():
     if not jira.available:
         return 0, 0, 0, 31
     
-    passed = failed = exceptions = 0
+    passed = failed = exceptions = skipped = 0
     projects = await jira.list_projects()
     project_key = projects.get('projects', [{}])[0].get('key') if projects.get('projects') else None
     
@@ -62,7 +86,8 @@ async def test_all_jira_dc_tools():
         ]:
             result = await func()
             if 'error' in result:
-                print(f"  [FAIL] {name}: {result['error']}")
+                error_msg = format_error(name, result['error'])
+                print(f"  [FAIL] {name}: {error_msg}")
                 failed += 1
             else:
                 print(f"  [PASS] {name}")
@@ -85,6 +110,7 @@ async def test_all_jira_dc_tools():
             
             # 11: Create issue - skip due to custom field requirements
             print(f"  [SKIP] create_issue (requires project-specific field configuration)")
+            skipped += 1
             
             # Use existing issue for tests
             search_result = await jira.search(f"project = {project_key} order by created DESC")
@@ -152,21 +178,23 @@ async def test_all_jira_dc_tools():
                             passed += 1
                     else:
                         print(f"  [SKIP] get_sprint_issues (no sprints available)")
+                        skipped += 1
                 
                 # Skip write operations that would modify existing issues
                 for skip_name in ["update_issue", "add_comment", "transition_issue", "assign_issue", 
                                 "add_label", "set_priority", "add_worklog", "link_issues", "add_attachment"]:
                     print(f"  [SKIP] {skip_name} (would modify existing issue)")
+                    skipped += 1
             else:
                 print(f"  [SKIP] No existing issues found for testing")
-                failed += 20  # Skip remaining tests
+                skipped += 20
     finally:
         if created_issue:
             await jira.delete_issue(created_issue)
             print(f"  [PASS] delete_issue (cleanup)")
             passed += 1
     
-    return passed, failed, exceptions, 0
+    return passed, failed, exceptions, skipped
 
 async def test_all_confluence_dc_tools():
     """Test all 25 Confluence DC tools"""
@@ -174,7 +202,7 @@ async def test_all_confluence_dc_tools():
     if not confluence.available:
         return 0, 0, 0, 25
     
-    passed = failed = exceptions = 0
+    passed = failed = exceptions = skipped = 0
     spaces = await confluence.list_spaces()
     valid_space_keys = []
     if spaces.get('results'):
@@ -196,7 +224,8 @@ async def test_all_confluence_dc_tools():
         ]:
             result = await func()
             if 'error' in result:
-                print(f"  [FAIL] {name}: {result['error']}")
+                error_msg = format_error(name, result['error'])
+                print(f"  [FAIL] {name}: {error_msg}")
                 failed += 1
             else:
                 print(f"  [PASS] {name}")
@@ -204,6 +233,7 @@ async def test_all_confluence_dc_tools():
         
         # Skip search_confluence_users - not supported in this DC version
         print(f"  [SKIP] search_confluence_users (not supported)")
+        skipped += 1
         
         if space_key:
             print(f"  [INFO] Using valid space: {space_key}")
@@ -264,19 +294,20 @@ async def test_all_confluence_dc_tools():
                 # Skip operations that need specific user data
                 for skip_name in ["get_user", "set_page_restrictions", "restore_page_version"]:
                     print(f"  [SKIP] {skip_name} (requires specific user/version data)")
+                    skipped += 1
             else:
                 print(f"  [FAIL] create_page: {result['error']}")
                 failed += 1
         else:
-            print(f"  [SKIP] No valid space keys found")
-            failed += 18  # Skip space-specific tests
+            print(f"  [SKIP] No valid space keys found - skipping 18 space-dependent tests")
+            skipped += 18
     finally:
         if created_page:
             await confluence.delete_page(created_page)
             print(f"  [PASS] delete_page (cleanup)")
             passed += 1
     
-    return passed, failed, exceptions, 0
+    return passed, failed, exceptions, skipped
 
 async def test_all_bitbucket_dc_tools():
     """Test all 33 Bitbucket DC tools"""
@@ -284,7 +315,7 @@ async def test_all_bitbucket_dc_tools():
     if not bitbucket.available:
         return 0, 0, 0, 33
     
-    passed = failed = exceptions = 0
+    passed = failed = exceptions = skipped = 0
     repos = await bitbucket.list_repositories()
     accessible_repos = []
     if repos.get('values'):
@@ -306,7 +337,8 @@ async def test_all_bitbucket_dc_tools():
         ]:
             result = await func()
             if 'error' in result:
-                print(f"  [FAIL] {name}: {result['error']}")
+                error_msg = format_error(name, result['error'])
+                print(f"  [FAIL] {name}: {error_msg}")
                 failed += 1
             else:
                 print(f"  [PASS] {name}")
@@ -442,16 +474,17 @@ async def test_all_bitbucket_dc_tools():
                                 "approve_pull_request", "merge_pull_request", "decline_pull_request",
                                 "add_pr_reviewer", "request_changes", "create_webhook"]:
                     print(f"  [SKIP] {skip_name} (requires write permissions)")
+                    skipped += 1
         else:
-            print(f"  [SKIP] No accessible repositories found")
-            failed += 31  # Skip repo-specific tests
+            print(f"  [SKIP] No accessible repositories found - skipping 31 repo-dependent tests")
+            skipped += 31
     finally:
         if created_branch and accessible_repos:
             await bitbucket.delete_branch(accessible_repos[0], created_branch)
             print(f"  [PASS] delete_branch (cleanup)")
             passed += 1
     
-    return passed, failed, exceptions, 0
+    return passed, failed, exceptions, skipped
 
 async def main():
     print("=" * 60)

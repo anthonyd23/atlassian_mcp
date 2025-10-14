@@ -42,9 +42,14 @@ sam build && sam deploy --guided
 
 ## Prerequisites
 
+**Local Development:**
 - Python 3.11+
 - Atlassian account (Cloud or Data Center)
 - API tokens for services you want to use
+
+**AWS Deployment (optional):**
+- AWS CLI configured with credentials
+- AWS SAM CLI installed ([installation guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html))
 
 **Generate Tokens:**
 - Cloud: https://id.atlassian.com/manage-profile/security/api-tokens

@@ -75,6 +75,32 @@ sam deploy \
     JiraPatToken=your-jira-token
 ```
 
+## Configuration File (samconfig.toml)
+
+The `samconfig.toml` file stores your deployment settings. After running `sam deploy --guided` once, your choices are saved here:
+
+```toml
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "atlassian-mcp-stack"
+resolve_s3 = true
+s3_prefix = "atlassian-mcp-stack"
+region = "us-east-1"
+confirm_changeset = false
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "AtlassianBaseUrl=\"https://yourcompany.atlassian.net\" AtlassianUsername=\"your-email@company.com\""
+```
+
+**Note:** API tokens are NOT stored in `samconfig.toml` for security. You must provide them on each deployment via:
+- Command line: `--parameter-overrides AtlassianApiToken=your-token`
+- Interactive prompt: `sam deploy --guided`
+
+After initial setup, subsequent deployments only need:
+```bash
+sam build && sam deploy
+```
+
 ## Platform Detection
 
 The Lambda function automatically detects the platform:
