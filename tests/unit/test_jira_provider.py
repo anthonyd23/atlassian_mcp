@@ -74,13 +74,13 @@ async def test_search_success(jira_provider, mock_response):
         "total": 1,
         "issues": [{"key": "TEST-123", "fields": {"summary": "Test"}}]
     })
-    jira_provider.session.post = Mock(return_value=mock_response)
+    jira_provider.session.get = Mock(return_value=mock_response)
     
     result = await jira_provider.search("project = TEST")
     
     assert result["total"] == 1
     assert len(result["results"]) == 1
-    jira_provider.session.post.assert_called_once()
+    jira_provider.session.get.assert_called_once()
 
 
 @pytest.mark.asyncio

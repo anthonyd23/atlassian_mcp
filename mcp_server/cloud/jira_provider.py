@@ -525,10 +525,11 @@ class JiraProvider:
             return check
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/3/mypermissions"
+            url = f"{self.auth.get_base_url()}/rest/api/2/mypermissions"
+            params = {'permissions': 'BROWSE_PROJECTS,CREATE_ISSUES,EDIT_ISSUES'}
             if project_key:
-                url += f"?projectKey={sanitize_url_path(project_key)}"
-            response = self.session.get(url, headers=headers, timeout=self.timeout)
+                params['projectKey'] = project_key
+            response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
         except Exception as e:
@@ -565,15 +566,13 @@ class JiraProvider:
         try:
             logger.info(f"Searching Jira with JQL: {jql}")
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/2/search"
+            url = f"{self.auth.get_base_url()}/rest/api/3/search/jql"
             
-            payload = {
-                'jql': jql,
-                'maxResults': DEFAULT_PAGE_SIZE,
-                'fields': ['summary', 'status', 'assignee', 'priority', 'created']
+            params = {
+                'jql': jql
             }
             
-            response = self.session.post(url, headers=headers, json=payload, timeout=self.timeout)
+            response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
             
             data = response.json()
@@ -614,14 +613,14 @@ class JiraProvider:
     async def _get_issues(self, project_key: str) -> str:
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/2/search"
+            url = f"{self.auth.get_base_url()}/rest/api/3/search"
             
-            payload = {
+            params = {
                 'jql': f'project = {project_key}',
                 'maxResults': DEFAULT_PAGE_SIZE
             }
             
-            response = self.session.post(url, headers=headers, json=payload, timeout=self.timeout)
+            response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
             
             issues = response.json().get('issues', [])

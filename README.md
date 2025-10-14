@@ -119,20 +119,29 @@ See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for platform-specific deployment 
 
 ## Testing
 
-**Unit Tests:**
+**Unit Tests (129 tests):**
 ```bash
 pip install -r requirements-dev.txt
 pytest tests/unit/
 ```
 
 **Integration Tests:**
-```bash
-# Cloud
-python tests/cloud/test_all_tools.py
 
-# Data Center
+Cloud (tests 39 of 89 tools with real credentials):
+```bash
+python tests/cloud/test_all_tools.py
+```
+
+Data Center (tests core tools with real credentials):
+```bash
 python tests/datacenter/test_all_dc_tools.py
 ```
+
+**Test Coverage:**
+- Unit tests: 100% of core functionality
+- Integration tests: 44% of tools (39/89)
+- All tests include automatic cleanup
+- Verbose output shows each tool result
 
 ## Monitoring
 

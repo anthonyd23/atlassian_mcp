@@ -407,7 +407,7 @@ class ConfluenceProvider:
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/wiki/rest/api/content"
-            params = {'orderby': 'lastmodified', 'limit': DEFAULT_PAGE_SIZE}
+            params = {'limit': DEFAULT_PAGE_SIZE, 'expand': 'version'}
             if space_key:
                 params['spaceKey'] = space_key
             response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
