@@ -81,10 +81,11 @@ export BITBUCKET_PAT_TOKEN="your-token"
 export BITBUCKET_PROJECT="PROJECT_KEY"
 ```
 
-## Amazon Q Integration
+## AI Agent Integration
 
-Add to Amazon Q Developer settings:
+Integrate with popular AI agents and development tools:
 
+**Amazon Q Developer:**
 ```json
 {
   "mcpServers": {
@@ -100,6 +101,10 @@ Add to Amazon Q Developer settings:
   }
 }
 ```
+
+**Also supports:** Claude Desktop, Cline (VS Code), Cursor, Continue, Zed Editor
+
+See [AGENT_INTEGRATION.md](AGENT_INTEGRATION.md) for complete setup instructions.
 
 ## AWS Deployment
 
@@ -119,7 +124,7 @@ See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for platform-specific deployment 
 
 ## Testing
 
-**Unit Tests (129 tests):**
+**Unit Tests:**
 ```bash
 pip install -r requirements-dev.txt
 pytest tests/unit/
@@ -127,21 +132,21 @@ pytest tests/unit/
 
 **Integration Tests:**
 
-Cloud (tests 39 of 89 tools with real credentials):
+Cloud (tests with real credentials):
 ```bash
 python tests/cloud/test_all_tools.py
 ```
 
-Data Center (tests core tools with real credentials):
+Data Center (tests with real credentials):
 ```bash
 python tests/datacenter/test_all_dc_tools.py
 ```
 
-**Test Coverage:**
-- Unit tests: 100% of core functionality
-- Integration tests: 44% of tools (39/89)
-- All tests include automatic cleanup
-- Verbose output shows each tool result
+**Test Features:**
+- Comprehensive unit test coverage
+- Integration tests for core workflows
+- Automatic cleanup after tests
+- Verbose output showing results
 
 ## Monitoring
 
@@ -155,6 +160,7 @@ See [MONITORING.md](MONITORING.md) for setup and configuration.
 
 ## Documentation
 
+- [AGENT_INTEGRATION.md](AGENT_INTEGRATION.md) - AI agent integration (Claude, Cursor, Cline, etc.)
 - [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - AWS deployment and configuration
 - [MONITORING.md](MONITORING.md) - CloudWatch setup and alerts
 - [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture and design
