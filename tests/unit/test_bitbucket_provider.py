@@ -87,3 +87,77 @@ async def test_search_success(bitbucket_provider, mock_response):
     
     assert "results" in result
     bitbucket_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_add_pr_reviewer_success(bitbucket_provider, mock_response):
+    bitbucket_provider.session.get = Mock(return_value=mock_response)
+    bitbucket_provider.session.put = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.add_pr_reviewer("test-repo", 1, "account123")
+    
+    assert result["success"] == True
+    bitbucket_provider.session.put.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_decline_pull_request_success(bitbucket_provider, mock_response):
+    bitbucket_provider.session.post = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.decline_pull_request("test-repo", 1)
+    
+    assert result["success"] == True
+    bitbucket_provider.session.post.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_create_branch_success(bitbucket_provider, mock_response):
+    bitbucket_provider.session.post = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.create_branch("test-repo", "feature-branch", "main")
+    
+    assert result == {"slug": "test-repo", "name": "Test Repo"}
+    bitbucket_provider.session.post.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_delete_branch_success(bitbucket_provider, mock_response):
+    bitbucket_provider.session.delete = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.delete_branch("test-repo", "feature-branch")
+    
+    assert result["success"] == True
+    bitbucket_provider.session.delete.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_user_success(bitbucket_provider, mock_response):
+    mock_response.json = Mock(return_value={"username": "testuser", "display_name": "Test User"})
+    bitbucket_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.get_user("testuser")
+    
+    assert result["username"] == "testuser"
+    bitbucket_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_pr_activity_success(bitbucket_provider, mock_response):
+    mock_response.json = Mock(return_value={"values": [{"update": {"state": "APPROVED"}}]})
+    bitbucket_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.get_pr_activity("test-repo", 1)
+    
+    assert "values" in result
+    bitbucket_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_default_reviewers_success(bitbucket_provider, mock_response):
+    mock_response.json = Mock(return_value={"values": [{"username": "reviewer1"}]})
+    bitbucket_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.get_default_reviewers("test-repo")
+    
+    assert "values" in result
+    bitbucket_provider.session.get.assert_called_once()

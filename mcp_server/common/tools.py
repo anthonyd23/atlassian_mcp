@@ -23,7 +23,12 @@ JIRA_TOOLS = [
     {"name": "search_by_assignee", "description": "Find Jira issues by assignee"},
     {"name": "search_by_reporter", "description": "Find Jira issues by reporter"},
     {"name": "get_recent_issues", "description": "Get recently updated Jira issues"},
-    {"name": "set_priority", "description": "Change Jira issue priority"}
+    {"name": "set_priority", "description": "Change Jira issue priority"},
+    {"name": "list_boards", "description": "Get all Scrum/Kanban boards"},
+    {"name": "get_board_issues", "description": "Get issues on a board"},
+    {"name": "list_sprints", "description": "Get sprints for a board"},
+    {"name": "get_sprint_issues", "description": "Get issues in a sprint"},
+    {"name": "get_user_permissions", "description": "Check user permissions"}
 ]
 
 CONFLUENCE_TOOLS = [
@@ -46,7 +51,12 @@ CONFLUENCE_TOOLS = [
     {"name": "get_page_history", "description": "Get Confluence page version history"},
     {"name": "get_page_restrictions", "description": "View Confluence page permissions"},
     {"name": "set_page_restrictions", "description": "Update Confluence page permissions"},
-    {"name": "copy_page", "description": "Duplicate a Confluence page"}
+    {"name": "copy_page", "description": "Duplicate a Confluence page"},
+    {"name": "get_user_content", "description": "Get pages created by a user"},
+    {"name": "get_recent_content", "description": "Get recently updated content"},
+    {"name": "restore_page_version", "description": "Restore previous version"},
+    {"name": "search_by_author", "description": "Find content by author"},
+    {"name": "search_by_label", "description": "Find content by label"}
 ]
 
 BITBUCKET_TOOLS = [

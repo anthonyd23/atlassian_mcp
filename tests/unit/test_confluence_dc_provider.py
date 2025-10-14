@@ -79,3 +79,101 @@ async def test_list_spaces_success(confluence_dc_provider, mock_response):
     
     assert "results" in result
     confluence_dc_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_search_users_success(confluence_dc_provider, mock_response):
+    mock_response.json = Mock(return_value={"results": [{"username": "testuser", "displayName": "Test User"}]})
+    confluence_dc_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await confluence_dc_provider.search_users("test")
+    
+    assert "users" in result
+    confluence_dc_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_add_label_success(confluence_dc_provider, mock_response):
+    confluence_dc_provider.session.post = Mock(return_value=mock_response)
+    
+    result = await confluence_dc_provider.add_label("12345", "test-label")
+    
+    assert result["success"] == True
+    confluence_dc_provider.session.post.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_page_history_success(confluence_dc_provider, mock_response):
+    mock_response.json = Mock(return_value={"results": [{"number": 1}]})
+    confluence_dc_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await confluence_dc_provider.get_page_history("12345")
+    
+    assert "results" in result
+    confluence_dc_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_copy_page_invalid_id(confluence_dc_provider):
+    result = await confluence_dc_provider.copy_page("invalid", "TEAM123", "New Title")
+    
+    assert "error" in result
+    assert "page_id must be numeric" in result["error"]
+
+
+@pytest.mark.asyncio
+async def test_get_user_content_success(confluence_dc_provider, mock_response):
+    mock_response.json = Mock(return_value={"results": [{"id": "123", "title": "Page"}]})
+    confluence_dc_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await confluence_dc_provider.get_user_content("testuser")
+    
+    assert "results" in result
+    confluence_dc_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_recent_content_success(confluence_dc_provider, mock_response):
+    mock_response.json = Mock(return_value={"results": [{"id": "123", "title": "Page"}]})
+    confluence_dc_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await confluence_dc_provider.get_recent_content()
+    
+    assert "results" in result
+    confluence_dc_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_restore_page_version_success(confluence_dc_provider, mock_response):
+    from unittest.mock import AsyncMock
+    mock_response.json = Mock(return_value={"id": "12345", "title": "Test", "body": {"storage": {"value": "<p>Old</p>"}}, "version": {"number": 2}})
+    confluence_dc_provider.session.get = Mock(return_value=mock_response)
+    confluence_dc_provider.session.put = Mock(return_value=mock_response)
+    confluence_dc_provider.get_page = AsyncMock(return_value={"version": {"number": 3}})
+    confluence_dc_provider.update_page = AsyncMock(return_value={"id": "12345"})
+    
+    result = await confluence_dc_provider.restore_page_version("12345", 2)
+    
+    assert result["id"] == "12345"
+
+
+@pytest.mark.asyncio
+async def test_search_by_author_success(confluence_dc_provider, mock_response):
+    mock_response.json = Mock(return_value={"results": [{"id": "123", "title": "Page"}]})
+    confluence_dc_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await confluence_dc_provider.search_by_author("testuser")
+    
+    assert "results" in result
+    confluence_dc_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_search_by_label_success(confluence_dc_provider, mock_response):
+    mock_response.json = Mock(return_value={"results": [{"id": "123", "title": "Page"}]})
+    confluence_dc_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await confluence_dc_provider.search_by_label("test-label")
+    
+    assert "results" in result
+    confluence_dc_provider.session.get.assert_called_once()

@@ -381,6 +381,112 @@ class ConfluenceProvider:
         except Exception as e:
             return {'error': str(e)}
     
+    async def get_user_content(self, account_id: str) -> Dict[str, Any]:
+        """Get pages created by a user."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_non_empty(account_id, "account_id")
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/search"
+            params = {'cql': f'creator = {account_id}', 'limit': DEFAULT_PAGE_SIZE}
+            response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def get_recent_content(self, days: int = 7, space_key: str = "") -> Dict[str, Any]:
+        """Get recently updated content."""
+        check = self._check_available()
+        if check:
+            return check
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/content"
+            params = {'orderby': 'lastmodified', 'limit': DEFAULT_PAGE_SIZE}
+            if space_key:
+                params['spaceKey'] = space_key
+            response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def restore_page_version(self, page_id: str, version: int) -> Dict[str, Any]:
+        """Restore previous version."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_page_id(page_id)
+        if not valid:
+            return {'error': error}
+        try:
+            # Get the specific version
+            headers = self.auth.get_auth_headers()
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}?version={version}&expand=body.storage"
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            old_version = response.json()
+            # Get current version
+            current = await self.get_page(page_id)
+            if 'error' in current:
+                return current
+            # Update with old content
+            return await self.update_page(
+                page_id,
+                old_version.get('title'),
+                old_version.get('body', {}).get('storage', {}).get('value', ''),
+                current.get('version', {}).get('number', 1)
+            )
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def search_by_author(self, account_id: str, space_key: str = "") -> Dict[str, Any]:
+        """Find content by author."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_non_empty(account_id, "account_id")
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/search"
+            cql = f'creator = {account_id}'
+            if space_key:
+                cql += f' AND space = {space_key}'
+            params = {'cql': cql, 'limit': DEFAULT_PAGE_SIZE}
+            response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def search_by_label(self, label: str, space_key: str = "") -> Dict[str, Any]:
+        """Find content by label."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_non_empty(label, "label")
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/search"
+            cql = f'label = {label}'
+            if space_key:
+                cql += f' AND space = {space_key}'
+            params = {'cql': cql, 'limit': DEFAULT_PAGE_SIZE}
+            response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
     async def search(self, query: str) -> Dict[str, Any]:
         """Search using query."""
         check = self._check_available()

@@ -102,6 +102,73 @@ class JiraDCProvider:
         except Exception as e:
             return {'error': str(e)}
     
+    async def list_boards(self) -> Dict[str, Any]:
+        """Get all Scrum/Kanban boards."""
+        check = self._check_available()
+        if check:
+            return check
+        try:
+            url = f"{self.base_url}/rest/agile/1.0/board"
+            response = self.session.get(url, headers=self.auth.get_auth_headers(), timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def get_board_issues(self, board_id: int) -> Dict[str, Any]:
+        """Get issues on a board."""
+        check = self._check_available()
+        if check:
+            return check
+        try:
+            url = f"{self.base_url}/rest/agile/1.0/board/{board_id}/issue"
+            response = self.session.get(url, headers=self.auth.get_auth_headers(), timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def list_sprints(self, board_id: int) -> Dict[str, Any]:
+        """Get sprints for a board."""
+        check = self._check_available()
+        if check:
+            return check
+        try:
+            url = f"{self.base_url}/rest/agile/1.0/board/{board_id}/sprint"
+            response = self.session.get(url, headers=self.auth.get_auth_headers(), timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def get_sprint_issues(self, sprint_id: int) -> Dict[str, Any]:
+        """Get issues in a sprint."""
+        check = self._check_available()
+        if check:
+            return check
+        try:
+            url = f"{self.base_url}/rest/agile/1.0/sprint/{sprint_id}/issue"
+            response = self.session.get(url, headers=self.auth.get_auth_headers(), timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def get_user_permissions(self, project_key: str = "") -> Dict[str, Any]:
+        """Check user permissions."""
+        check = self._check_available()
+        if check:
+            return check
+        try:
+            url = f"{self.base_url}/rest/api/2/mypermissions"
+            if project_key:
+                url += f"?projectKey={sanitize_url_path(project_key)}"
+            response = self.session.get(url, headers=self.auth.get_auth_headers(), timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
     async def search(self, jql: str) -> Dict[str, Any]:
         """Search using query."""
         check = self._check_available()

@@ -55,6 +55,16 @@ async def route_tool_call(name: str, arguments: Dict[str, Any], jira, confluence
         return await jira.get_recent_issues(arguments.get("days", 7), arguments.get("project_key", ""))
     elif name == "set_priority":
         return await jira.set_priority(arguments["issue_key"], arguments["priority"])
+    elif name == "list_boards":
+        return await jira.list_boards()
+    elif name == "get_board_issues":
+        return await jira.get_board_issues(arguments["board_id"])
+    elif name == "list_sprints":
+        return await jira.list_sprints(arguments["board_id"])
+    elif name == "get_sprint_issues":
+        return await jira.get_sprint_issues(arguments["sprint_id"])
+    elif name == "get_user_permissions":
+        return await jira.get_user_permissions(arguments.get("project_key", ""))
     
     # Confluence tools
     elif name == "search_confluence":
@@ -97,6 +107,16 @@ async def route_tool_call(name: str, arguments: Dict[str, Any], jira, confluence
         return await confluence.set_page_restrictions(arguments["page_id"], arguments["restrictions"])
     elif name == "copy_page":
         return await confluence.copy_page(arguments["page_id"], arguments["new_title"], arguments.get("space_key", ""))
+    elif name == "get_user_content":
+        return await confluence.get_user_content(arguments["account_id"])
+    elif name == "get_recent_content":
+        return await confluence.get_recent_content(arguments.get("days", 7), arguments.get("space_key", ""))
+    elif name == "restore_page_version":
+        return await confluence.restore_page_version(arguments["page_id"], arguments["version"])
+    elif name == "search_by_author":
+        return await confluence.search_by_author(arguments["account_id"], arguments.get("space_key", ""))
+    elif name == "search_by_label":
+        return await confluence.search_by_label(arguments["label"], arguments.get("space_key", ""))
     
     # Bitbucket tools
     elif name == "search_bitbucket":

@@ -9,12 +9,12 @@ from mcp_server.datacenter.bitbucket_dc_provider import BitbucketDCProvider
 
 async def test_all_dc_tools():
     print("=" * 60)
-    print("TESTING ALL ATLASSIAN DATA CENTER TOOLS (46 TOTAL)")
+    print("TESTING ALL ATLASSIAN DATA CENTER TOOLS (82 TOTAL)")
     print("=" * 60)
     
-    # Jira Data Center (14 tools)
+    # Jira Data Center (30 tools)
     print("\n" + "=" * 60)
-    print("JIRA DATA CENTER TOOLS (14)")
+    print("JIRA DATA CENTER TOOLS (30)")
     print("=" * 60)
     jira = JiraDCProvider()
     
@@ -24,9 +24,24 @@ async def test_all_dc_tools():
     print("\n2. search_jira")
     print(await jira.search("project = TEST"))
     
-    # Confluence Data Center (12 tools)
+    print("\n3. get_current_user (Phase 1)")
+    print(await jira.get_current_user())
+    
+    print("\n4. search_users (Phase 1)")
+    print(await jira.search_users("test"))
+    
+    print("\n5. get_recent_issues (Phase 3)")
+    print(await jira.get_recent_issues())
+    
+    print("\n6. list_boards (Phase 4)")
+    print(await jira.list_boards())
+    
+    print("\n7. get_user_permissions (Phase 5)")
+    print(await jira.get_user_permissions())
+    
+    # Confluence Data Center (25 tools)
     print("\n" + "=" * 60)
-    print("CONFLUENCE DATA CENTER TOOLS (12)")
+    print("CONFLUENCE DATA CENTER TOOLS (25)")
     print("=" * 60)
     confluence = ConfluenceDCProvider()
     
@@ -36,9 +51,18 @@ async def test_all_dc_tools():
     print("\n2. search_confluence")
     print(await confluence.search("test"))
     
-    # Bitbucket Server Data Center (20 tools)
+    print("\n3. search_users (Phase 2)")
+    print(await confluence.search_users("test"))
+    
+    print("\n4. get_recent_content (Phase 4)")
+    print(await confluence.get_recent_content())
+    
+    print("\n5. search_by_label (Phase 5)")
+    print(await confluence.search_by_label("test"))
+    
+    # Bitbucket Data Center (27 tools)
     print("\n" + "=" * 60)
-    print("BITBUCKET SERVER DATA CENTER TOOLS (20)")
+    print("BITBUCKET DATA CENTER TOOLS (27)")
     print("=" * 60)
     bitbucket = BitbucketDCProvider()
     
@@ -47,6 +71,9 @@ async def test_all_dc_tools():
     
     print("\n2. search_bitbucket")
     print(await bitbucket.search("test"))
+    
+    print("\n3. get_user (Phase 3)")
+    print(await bitbucket.get_user("testuser"))
     
     print("\n" + "=" * 60)
     print("ALL DATA CENTER TOOLS TEST COMPLETED!")

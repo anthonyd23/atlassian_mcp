@@ -8,7 +8,7 @@ def bitbucket_dc_provider():
     with patch('mcp_server.datacenter.bitbucket_dc_provider.DataCenterAuth'):
         with patch.dict('os.environ', {'BITBUCKET_PROJECT': 'PROJ'}):
             provider = BitbucketDCProvider()
-            provider.auth.get_base_url = Mock(return_value="https://bitbucket.company.com")
+            provider.base_url = "https://bitbucket.company.com"
             provider.auth.get_auth_headers = Mock(return_value={"Authorization": "Bearer token"})
             return provider
 
@@ -87,4 +87,73 @@ async def test_search_success(bitbucket_dc_provider, mock_response):
     result = await bitbucket_dc_provider.search("test")
     
     assert "results" in result
+    bitbucket_dc_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_add_pr_reviewer_invalid_id(bitbucket_dc_provider):
+    result = await bitbucket_dc_provider.add_pr_reviewer("test-repo", -1, "testuser")
+    
+    assert "error" in result
+    assert "pr_id must be a positive integer" in result["error"]
+
+
+@pytest.mark.asyncio
+async def test_decline_pull_request_invalid_id(bitbucket_dc_provider):
+    result = await bitbucket_dc_provider.decline_pull_request("test-repo", -1)
+    
+    assert "error" in result
+    assert "pr_id must be a positive integer" in result["error"]
+
+
+@pytest.mark.asyncio
+async def test_create_branch_success(bitbucket_dc_provider, mock_response):
+    bitbucket_dc_provider.session.post = Mock(return_value=mock_response)
+    
+    result = await bitbucket_dc_provider.create_branch("test-repo", "feature-branch", "main")
+    
+    assert result == {"slug": "test-repo", "name": "Test Repo"}
+    bitbucket_dc_provider.session.post.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_delete_branch_success(bitbucket_dc_provider, mock_response):
+    bitbucket_dc_provider.session.delete = Mock(return_value=mock_response)
+    
+    result = await bitbucket_dc_provider.delete_branch("test-repo", "feature-branch")
+    
+    assert result["success"] == True
+    bitbucket_dc_provider.session.delete.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_user_success(bitbucket_dc_provider, mock_response):
+    mock_response.json = Mock(return_value={"name": "testuser", "displayName": "Test User"})
+    bitbucket_dc_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await bitbucket_dc_provider.get_user("testuser")
+    
+    assert result["name"] == "testuser"
+    bitbucket_dc_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_pr_activity_success(bitbucket_dc_provider, mock_response):
+    mock_response.json = Mock(return_value={"values": [{"action": "APPROVED"}]})
+    bitbucket_dc_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await bitbucket_dc_provider.get_pr_activity("test-repo", 1)
+    
+    assert "values" in result
+    bitbucket_dc_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_default_reviewers_success(bitbucket_dc_provider, mock_response):
+    mock_response.json = Mock(return_value=[{"name": "reviewer1"}])
+    bitbucket_dc_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await bitbucket_dc_provider.get_default_reviewers("test-repo")
+    
+    assert isinstance(result, list)
     bitbucket_dc_provider.session.get.assert_called_once()

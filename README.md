@@ -33,8 +33,8 @@ sam build && sam deploy --guided
 
 ## Features
 
-- **Jira**: Issues, comments, transitions, attachments, users, worklogs, labels, issue linking, advanced search, priority management
-- **Confluence**: Pages, spaces, comments, attachments, search, users, labels, page history, permissions, page copying
+- **Jira**: Issues, comments, transitions, attachments, users, worklogs, labels, issue linking, advanced search, priority management, agile boards, sprints, user permissions
+- **Confluence**: Pages, spaces, comments, attachments, search, users, labels, page history, permissions, page copying, user content, recent content, version restore, search by author/label
 - **Bitbucket**: Repositories, pull requests, commits, branches, diffs, reviewers, branch management, PR activity, default reviewers
 - **Flexible Credentials**: Configure only the services you need
 - **Dual Platform**: Supports both Cloud and Data Center deployments
