@@ -50,7 +50,7 @@ class ConfluenceDCProvider:
         try:
             logger.info(f"Fetching page: {page_id}")
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/wiki/rest/api/content/{sanitize_url_path(page_id)}?expand=body.storage,version"
+            url = f"{self.base_url}/rest/api/content/{sanitize_url_path(page_id)}?expand=body.storage,version"
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -65,7 +65,7 @@ class ConfluenceDCProvider:
             return check
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/wiki/rest/api/content"
+            url = f"{self.base_url}/rest/api/content"
             params = {'spaceKey': space_key, 'title': title, 'expand': 'body.storage,version'}
             response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
@@ -86,7 +86,7 @@ class ConfluenceDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/wiki/rest/api/content"
+            url = f"{self.base_url}/rest/api/content"
             payload = {
                 "type": "page",
                 "title": title,
@@ -108,7 +108,7 @@ class ConfluenceDCProvider:
             return check
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/wiki/rest/api/content/{sanitize_url_path(page_id)}"
+            url = f"{self.base_url}/rest/api/content/{sanitize_url_path(page_id)}"
             payload = {
                 "version": {"number": version + 1},
                 "title": title,
@@ -128,7 +128,7 @@ class ConfluenceDCProvider:
             return check
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/wiki/rest/api/content/{sanitize_url_path(page_id)}"
+            url = f"{self.base_url}/rest/api/content/{sanitize_url_path(page_id)}"
             response = self.session.delete(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return {'success': True}
@@ -142,7 +142,7 @@ class ConfluenceDCProvider:
             return check
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/wiki/rest/api/content"
+            url = f"{self.base_url}/rest/api/content"
             params = {'spaceKey': space_key, 'type': 'page', 'limit': LIST_PAGE_SIZE}
             response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
@@ -160,7 +160,7 @@ class ConfluenceDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/wiki/rest/api/space/{sanitize_url_path(space_key)}"
+            url = f"{self.base_url}/rest/api/space/{sanitize_url_path(space_key)}"
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -174,7 +174,7 @@ class ConfluenceDCProvider:
             return check
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/wiki/rest/api/space"
+            url = f"{self.base_url}/rest/api/space"
             response = self.session.get(url, headers=headers, params={'limit': LIST_PAGE_SIZE}, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -188,7 +188,7 @@ class ConfluenceDCProvider:
             return check
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/wiki/rest/api/content/{sanitize_url_path(page_id)}/child/comment"
+            url = f"{self.base_url}/rest/api/content/{sanitize_url_path(page_id)}/child/comment"
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -202,7 +202,7 @@ class ConfluenceDCProvider:
             return check
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/wiki/rest/api/content"
+            url = f"{self.base_url}/rest/api/content"
             payload = {
                 "type": "comment",
                 "container": {"id": page_id, "type": "page"},
@@ -221,7 +221,7 @@ class ConfluenceDCProvider:
             return check
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/wiki/rest/api/content/{sanitize_url_path(page_id)}/child/attachment"
+            url = f"{self.base_url}/rest/api/content/{sanitize_url_path(page_id)}/child/attachment"
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -238,7 +238,7 @@ class ConfluenceDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/wiki/rest/api/user?accountId={sanitize_url_path(account_id)}"
+            url = f"{self.base_url}/rest/api/user?accountId={sanitize_url_path(account_id)}"
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -255,7 +255,7 @@ class ConfluenceDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/wiki/rest/api/search/user?cql=user.fullname~\"{sanitize_url_path(query)}\""
+            url = f"{self.base_url}/rest/api/search/user?cql=user.fullname~\"{sanitize_url_path(query)}\""
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return {'users': response.json().get('results', [])}
@@ -275,7 +275,7 @@ class ConfluenceDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/wiki/rest/api/content/{sanitize_url_path(page_id)}/label"
+            url = f"{self.base_url}/rest/api/content/{sanitize_url_path(page_id)}/label"
             payload = {"prefix": "global", "name": label}
             response = self.session.post(url, headers=headers, json=payload, timeout=self.timeout)
             response.raise_for_status()
@@ -293,7 +293,7 @@ class ConfluenceDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/wiki/rest/api/content/{sanitize_url_path(page_id)}/label"
+            url = f"{self.base_url}/rest/api/content/{sanitize_url_path(page_id)}/label"
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -310,7 +310,7 @@ class ConfluenceDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/wiki/rest/api/content/{sanitize_url_path(page_id)}/history"
+            url = f"{self.base_url}/rest/api/content/{sanitize_url_path(page_id)}/history"
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -327,7 +327,7 @@ class ConfluenceDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/wiki/rest/api/content/{sanitize_url_path(page_id)}/restriction"
+            url = f"{self.base_url}/rest/api/content/{sanitize_url_path(page_id)}/restriction"
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -344,7 +344,7 @@ class ConfluenceDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/wiki/rest/api/content/{sanitize_url_path(page_id)}/restriction"
+            url = f"{self.base_url}/rest/api/content/{sanitize_url_path(page_id)}/restriction"
             response = self.session.put(url, headers=headers, json=restrictions, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -384,7 +384,7 @@ class ConfluenceDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/wiki/rest/api/content/search"
+            url = f"{self.base_url}/rest/api/content/search"
             params = {'cql': f'creator = {username}', 'limit': DEFAULT_PAGE_SIZE}
             response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
@@ -399,7 +399,7 @@ class ConfluenceDCProvider:
             return check
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/wiki/rest/api/content"
+            url = f"{self.base_url}/rest/api/content"
             params = {'orderby': 'lastmodified', 'limit': DEFAULT_PAGE_SIZE}
             if space_key:
                 params['spaceKey'] = space_key
@@ -420,7 +420,7 @@ class ConfluenceDCProvider:
         try:
             # Get the specific version
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/wiki/rest/api/content/{sanitize_url_path(page_id)}?version={version}&expand=body.storage"
+            url = f"{self.base_url}/rest/api/content/{sanitize_url_path(page_id)}?version={version}&expand=body.storage"
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             old_version = response.json()
@@ -448,7 +448,7 @@ class ConfluenceDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/wiki/rest/api/content/search"
+            url = f"{self.base_url}/rest/api/content/search"
             cql = f'creator = {username}'
             if space_key:
                 cql += f' AND space = {space_key}'
@@ -469,7 +469,7 @@ class ConfluenceDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/wiki/rest/api/content/search"
+            url = f"{self.base_url}/rest/api/content/search"
             cql = f'label = {label}'
             if space_key:
                 cql += f' AND space = {space_key}'
@@ -488,7 +488,7 @@ class ConfluenceDCProvider:
         try:
             logger.info(f"Searching Confluence: {query}")
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/wiki/rest/api/search"
+            url = f"{self.base_url}/rest/api/search"
             params = {'cql': f'text ~ "{query}"', 'limit': DEFAULT_PAGE_SIZE}
             response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
