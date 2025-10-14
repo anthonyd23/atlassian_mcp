@@ -489,6 +489,110 @@ class BitbucketProvider:
         except Exception as e:
             return {'error': str(e)}
     
+    async def list_pull_requests_by_author(self, repo_slug: str, author: str) -> Dict[str, Any]:
+        """Get PRs by specific user."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_non_empty(author, "author")
+        if not valid:
+            return {'error': error}
+        try:
+            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/pullrequests"
+            params = {'q': f'author.username="{author}"', 'pagelen': LIST_PAGE_SIZE}
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout, params=params)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def list_commits_by_author(self, repo_slug: str, author: str, branch: str = "main") -> Dict[str, Any]:
+        """Get commits by specific user."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_non_empty(author, "author")
+        if not valid:
+            return {'error': error}
+        try:
+            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/commits/{branch}"
+            params = {'author': author, 'pagelen': LIST_PAGE_SIZE}
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout, params=params)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def request_changes(self, repo_slug: str, pr_id: int, comment: str = "") -> Dict[str, Any]:
+        """Request changes on PR."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_pr_id(pr_id)
+        if not valid:
+            return {'error': error}
+        try:
+            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/pullrequests/{pr_id}/request-changes"
+            payload = {}
+            if comment:
+                payload['comment'] = {'raw': comment}
+            response = self.session.post(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout, json=payload)
+            response.raise_for_status()
+            return {'success': True}
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def get_branch_restrictions(self, repo_slug: str) -> Dict[str, Any]:
+        """Get branch permissions."""
+        check = self._check_available()
+        if check:
+            return check
+        try:
+            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/branch-restrictions"
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def get_build_status(self, repo_slug: str, commit_hash: str) -> Dict[str, Any]:
+        """Get CI/CD build status."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_commit_hash(commit_hash)
+        if not valid:
+            return {'error': error}
+        try:
+            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/commit/{commit_hash}/statuses"
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def create_webhook(self, repo_slug: str, url: str, events: list) -> Dict[str, Any]:
+        """Set up webhooks."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_non_empty(url, "url")
+        if not valid:
+            return {'error': error}
+        try:
+            api_url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/hooks"
+            payload = {
+                "description": "MCP Webhook",
+                "url": url,
+                "active": True,
+                "events": events if events else ["repo:push", "pullrequest:created"]
+            }
+            response = self.session.post(api_url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout, json=payload)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
     async def search(self, query: str) -> Dict[str, Any]:
         """Search using query."""
         check = self._check_available()

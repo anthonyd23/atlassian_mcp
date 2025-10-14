@@ -199,3 +199,14 @@ async def test_get_user_permissions_success(jira_dc_provider, mock_response):
     
     assert "permissions" in result
     jira_dc_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_add_attachment_success(jira_dc_provider, mock_response):
+    mock_response.json = Mock(return_value=[{"id": "10001", "filename": "test.txt"}])
+    jira_dc_provider.session.post = Mock(return_value=mock_response)
+    
+    result = await jira_dc_provider.add_attachment("TEST-123", "test.txt", b"content")
+    
+    assert result[0]["filename"] == "test.txt"
+    jira_dc_provider.session.post.assert_called_once()

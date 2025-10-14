@@ -9,12 +9,12 @@ from mcp_server.datacenter.bitbucket_dc_provider import BitbucketDCProvider
 
 async def test_all_dc_tools():
     print("=" * 60)
-    print("TESTING ALL ATLASSIAN DATA CENTER TOOLS (82 TOTAL)")
+    print("TESTING ALL ATLASSIAN DATA CENTER TOOLS (89 TOTAL)")
     print("=" * 60)
     
-    # Jira Data Center (30 tools)
+    # Jira Data Center (31 tools)
     print("\n" + "=" * 60)
-    print("JIRA DATA CENTER TOOLS (30)")
+    print("JIRA DATA CENTER TOOLS (31)")
     print("=" * 60)
     jira = JiraDCProvider()
     
@@ -39,6 +39,9 @@ async def test_all_dc_tools():
     print("\n7. get_user_permissions (Phase 5)")
     print(await jira.get_user_permissions())
     
+    print("\n8. add_attachment (Phase 6)")
+    print(await jira.add_attachment("TEST-1", "test.txt", b"test content"))
+    
     # Confluence Data Center (25 tools)
     print("\n" + "=" * 60)
     print("CONFLUENCE DATA CENTER TOOLS (25)")
@@ -60,9 +63,9 @@ async def test_all_dc_tools():
     print("\n5. search_by_label (Phase 5)")
     print(await confluence.search_by_label("test"))
     
-    # Bitbucket Data Center (27 tools)
+    # Bitbucket Data Center (33 tools)
     print("\n" + "=" * 60)
-    print("BITBUCKET DATA CENTER TOOLS (27)")
+    print("BITBUCKET DATA CENTER TOOLS (33)")
     print("=" * 60)
     bitbucket = BitbucketDCProvider()
     
@@ -74,6 +77,12 @@ async def test_all_dc_tools():
     
     print("\n3. get_user (Phase 3)")
     print(await bitbucket.get_user("testuser"))
+    
+    print("\n4. list_commits_by_author (Phase 6)")
+    print(await bitbucket.list_commits_by_author("test-repo", "testuser"))
+    
+    print("\n5. get_branch_restrictions (Phase 6)")
+    print(await bitbucket.get_branch_restrictions("test-repo"))
     
     print("\n" + "=" * 60)
     print("ALL DATA CENTER TOOLS TEST COMPLETED!")

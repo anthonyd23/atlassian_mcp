@@ -161,3 +161,68 @@ async def test_get_default_reviewers_success(bitbucket_provider, mock_response):
     
     assert "values" in result
     bitbucket_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_list_pull_requests_by_author_success(bitbucket_provider, mock_response):
+    mock_response.json = Mock(return_value={"values": [{"id": 1, "author": {"username": "testuser"}}]})
+    bitbucket_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.list_pull_requests_by_author("test-repo", "testuser")
+    
+    assert "values" in result
+    bitbucket_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_list_commits_by_author_success(bitbucket_provider, mock_response):
+    mock_response.json = Mock(return_value={"values": [{"hash": "abc123", "author": {"user": {"username": "testuser"}}}]})
+    bitbucket_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.list_commits_by_author("test-repo", "testuser")
+    
+    assert "values" in result
+    bitbucket_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_request_changes_success(bitbucket_provider, mock_response):
+    bitbucket_provider.session.post = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.request_changes("test-repo", 1)
+    
+    assert result["success"] == True
+    bitbucket_provider.session.post.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_branch_restrictions_success(bitbucket_provider, mock_response):
+    mock_response.json = Mock(return_value={"values": [{"kind": "push", "pattern": "main"}]})
+    bitbucket_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.get_branch_restrictions("test-repo")
+    
+    assert "values" in result
+    bitbucket_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_build_status_success(bitbucket_provider, mock_response):
+    mock_response.json = Mock(return_value={"values": [{"state": "SUCCESSFUL", "key": "build-1"}]})
+    bitbucket_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.get_build_status("test-repo", "abc1234")
+    
+    assert "values" in result
+    bitbucket_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_create_webhook_success(bitbucket_provider, mock_response):
+    mock_response.json = Mock(return_value={"uuid": "{123}", "url": "https://example.com/hook"})
+    bitbucket_provider.session.post = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.create_webhook("test-repo", "https://example.com/hook", ["repo:push"])
+    
+    assert result["url"] == "https://example.com/hook"
+    bitbucket_provider.session.post.assert_called_once()

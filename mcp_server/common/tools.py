@@ -28,7 +28,8 @@ JIRA_TOOLS = [
     {"name": "get_board_issues", "description": "Get issues on a board"},
     {"name": "list_sprints", "description": "Get sprints for a board"},
     {"name": "get_sprint_issues", "description": "Get issues in a sprint"},
-    {"name": "get_user_permissions", "description": "Check user permissions"}
+    {"name": "get_user_permissions", "description": "Check user permissions"},
+    {"name": "add_attachment", "description": "Upload file to Jira issue"}
 ]
 
 CONFLUENCE_TOOLS = [
@@ -86,5 +87,11 @@ BITBUCKET_TOOLS = [
     {"name": "delete_branch", "description": "Delete a branch"},
     {"name": "get_bitbucket_user", "description": "Get Bitbucket user details"},
     {"name": "get_pr_activity", "description": "Get pull request activity/timeline"},
-    {"name": "get_default_reviewers", "description": "Get default reviewers for repository"}
+    {"name": "get_default_reviewers", "description": "Get default reviewers for repository"},
+    {"name": "list_pull_requests_by_author", "description": "List pull requests by author"},
+    {"name": "list_commits_by_author", "description": "List commits by author"},
+    {"name": "request_changes", "description": "Request changes on pull request"},
+    {"name": "get_branch_restrictions", "description": "Get branch permissions/restrictions"},
+    {"name": "get_build_status", "description": "Get CI/CD build status for commit"},
+    {"name": "create_webhook", "description": "Create repository webhook"}
 ]

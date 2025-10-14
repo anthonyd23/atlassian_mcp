@@ -534,6 +534,29 @@ class JiraProvider:
         except Exception as e:
             return {'error': str(e)}
     
+    async def add_attachment(self, issue_key: str, filename: str, content: bytes) -> Dict[str, Any]:
+        """Upload file to issue."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_issue_key(issue_key)
+        if not valid:
+            return {'error': error}
+        valid, error = validate_non_empty(filename, "filename")
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            headers.pop('Content-Type', None)  # Let requests set multipart boundary
+            url = f"{self.auth.get_base_url()}/rest/api/2/issue/{sanitize_url_path(issue_key)}/attachments"
+            headers['X-Atlassian-Token'] = 'no-check'
+            files = {'file': (filename, content)}
+            response = self.session.post(url, headers=headers, files=files, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
     async def search(self, jql: str) -> Dict[str, Any]:
         """Search using query."""
         check = self._check_available()

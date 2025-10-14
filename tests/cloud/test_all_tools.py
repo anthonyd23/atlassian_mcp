@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Test all 82 MCP tools"""
+"""Test all 89 MCP tools"""
 import asyncio
 import os
 import sys
@@ -7,16 +7,16 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 async def run_tests():
     print("=" * 60)
-    print("TESTING ALL ATLASSIAN CLOUD TOOLS (82 TOTAL)")
+    print("TESTING ALL ATLASSIAN CLOUD TOOLS (89 TOTAL)")
     print("=" * 60)
     
     from mcp_server.cloud.jira_provider import JiraProvider
     from mcp_server.cloud.confluence_provider import ConfluenceProvider
     from mcp_server.cloud.bitbucket_provider import BitbucketProvider
     
-    # Test Jira (30 tools)
+    # Test Jira (31 tools)
     print("\n" + "=" * 60)
-    print("JIRA CLOUD TOOLS (30)")
+    print("JIRA CLOUD TOOLS (31)")
     print("=" * 60)
     jira = JiraProvider()
     
@@ -41,6 +41,9 @@ async def run_tests():
     print("\n7. get_user_permissions (Phase 5)")
     print(await jira.get_user_permissions())
     
+    print("\n8. add_attachment (Phase 6)")
+    print(await jira.add_attachment("TEST-1", "test.txt", b"test content"))
+    
     # Test Confluence (25 tools)
     print("\n" + "=" * 60)
     print("CONFLUENCE CLOUD TOOLS (25)")
@@ -62,9 +65,9 @@ async def run_tests():
     print("\n5. search_by_label (Phase 5)")
     print(await confluence.search_by_label("test"))
     
-    # Test Bitbucket (27 tools)
+    # Test Bitbucket (33 tools)
     print("\n" + "=" * 60)
-    print("BITBUCKET CLOUD TOOLS (27)")
+    print("BITBUCKET CLOUD TOOLS (33)")
     print("=" * 60)
     bitbucket = BitbucketProvider()
     
@@ -76,6 +79,12 @@ async def run_tests():
     
     print("\n3. get_user (Phase 3)")
     print(await bitbucket.get_user("testuser"))
+    
+    print("\n4. list_pull_requests_by_author (Phase 6)")
+    print(await bitbucket.list_pull_requests_by_author("test-repo", "testuser"))
+    
+    print("\n5. get_build_status (Phase 6)")
+    print(await bitbucket.get_build_status("test-repo", "abc123"))
     
     print("\n" + "=" * 60)
     print("ALL CLOUD TOOLS TEST COMPLETED!")

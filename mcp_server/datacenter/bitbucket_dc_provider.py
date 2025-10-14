@@ -518,6 +518,117 @@ class BitbucketDCProvider:
         except Exception as e:
             return {'error': str(e)}
     
+    async def list_pull_requests_by_author(self, repo_slug: str, author: str) -> Dict[str, Any]:
+        """Get PRs by specific user."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_non_empty(author, "author")
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests"
+            params = {'filterText': f'author:{author}', 'limit': LIST_PAGE_SIZE}
+            response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def list_commits_by_author(self, repo_slug: str, author: str, branch: str = "main") -> Dict[str, Any]:
+        """Get commits by specific user."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_non_empty(author, "author")
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/commits"
+            params = {'until': branch, 'author': author, 'limit': LIST_PAGE_SIZE}
+            response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def request_changes(self, repo_slug: str, pr_id: int, comment: str = "") -> Dict[str, Any]:
+        """Request changes on PR."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_pr_id(pr_id)
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}/participants"
+            payload = {"status": "NEEDS_WORK"}
+            response = self.session.put(url, headers=headers, json=payload, timeout=self.timeout)
+            response.raise_for_status()
+            if comment:
+                comment_url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}/comments"
+                self.session.post(comment_url, headers=headers, json={"text": comment}, timeout=self.timeout)
+            return {'success': True}
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def get_branch_restrictions(self, repo_slug: str) -> Dict[str, Any]:
+        """Get branch permissions."""
+        check = self._check_available()
+        if check:
+            return check
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.base_url}/rest/branch-permissions/2.0/projects/{self.project}/repos/{repo_slug}/restrictions"
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def get_build_status(self, repo_slug: str, commit_hash: str) -> Dict[str, Any]:
+        """Get CI/CD build status."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_commit_hash(commit_hash)
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.base_url}/rest/build-status/1.0/commits/{commit_hash}"
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def create_webhook(self, repo_slug: str, url: str, events: list) -> Dict[str, Any]:
+        """Set up webhooks."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_non_empty(url, "url")
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            api_url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/webhooks"
+            payload = {
+                "name": "MCP Webhook",
+                "url": url,
+                "active": True,
+                "events": events if events else ["repo:refs_changed", "pr:opened"]
+            }
+            response = self.session.post(api_url, headers=headers, json=payload, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
     async def search(self, query: str) -> Dict[str, Any]:
         """Search using query."""
         check = self._check_available()

@@ -65,6 +65,8 @@ async def route_tool_call(name: str, arguments: Dict[str, Any], jira, confluence
         return await jira.get_sprint_issues(arguments["sprint_id"])
     elif name == "get_user_permissions":
         return await jira.get_user_permissions(arguments.get("project_key", ""))
+    elif name == "add_attachment":
+        return await jira.add_attachment(arguments["issue_key"], arguments["filename"], arguments["content"])
     
     # Confluence tools
     elif name == "search_confluence":
@@ -173,6 +175,18 @@ async def route_tool_call(name: str, arguments: Dict[str, Any], jira, confluence
         return await bitbucket.get_pr_activity(arguments["repo_slug"], arguments["pr_id"])
     elif name == "get_default_reviewers":
         return await bitbucket.get_default_reviewers(arguments["repo_slug"])
+    elif name == "list_pull_requests_by_author":
+        return await bitbucket.list_pull_requests_by_author(arguments["repo_slug"], arguments["author"])
+    elif name == "list_commits_by_author":
+        return await bitbucket.list_commits_by_author(arguments["repo_slug"], arguments["author"])
+    elif name == "request_changes":
+        return await bitbucket.request_changes(arguments["repo_slug"], arguments["pr_id"])
+    elif name == "get_branch_restrictions":
+        return await bitbucket.get_branch_restrictions(arguments["repo_slug"])
+    elif name == "get_build_status":
+        return await bitbucket.get_build_status(arguments["repo_slug"], arguments["commit_hash"])
+    elif name == "create_webhook":
+        return await bitbucket.create_webhook(arguments["repo_slug"], arguments["url"], arguments.get("events", []))
     
     else:
         raise ValueError(f"Unknown tool: {name}")
