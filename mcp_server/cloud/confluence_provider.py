@@ -15,9 +15,18 @@ LIST_PAGE_SIZE = 50
 class ConfluenceProvider:
     def __init__(self) -> None:
         self.auth = Auth()
-        self.session = self._create_session()
+        self.available = self.auth.is_available()
+        self.session = self._create_session() if self.available else None
         self.timeout = 25
-        logger.info("ConfluenceProvider initialized")
+        if self.available:
+            logger.info("ConfluenceProvider initialized")
+        else:
+            logger.warning("ConfluenceProvider not available - missing credentials")
+    
+    def _check_available(self) -> Dict[str, Any]:
+        if not self.available:
+            return {'error': 'Confluence Cloud not configured. Set: ATLASSIAN_BASE_URL, ATLASSIAN_USERNAME, ATLASSIAN_API_TOKEN'}
+        return None
     
     def _create_session(self) -> requests.Session:
         session = requests.Session()
@@ -38,6 +47,9 @@ class ConfluenceProvider:
     
     async def get_page(self, page_id: str) -> Dict[str, Any]:
         """Get Confluence page content and metadata."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_page_id(page_id)
         if not valid:
             logger.warning(f"Invalid page_id: {page_id}")
@@ -55,6 +67,9 @@ class ConfluenceProvider:
     
     async def get_page_by_title(self, space_key: str, title: str) -> Dict[str, Any]:
         """Find and retrieve a page by title and space."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/wiki/rest/api/content"
@@ -67,6 +82,9 @@ class ConfluenceProvider:
     
     async def create_page(self, space_key: str, title: str, content: str, parent_id: Optional[str] = None) -> Dict[str, Any]:
         """Create a new Confluence page."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_space_key(space_key)
         if not valid:
             return {'error': error}
@@ -92,6 +110,9 @@ class ConfluenceProvider:
     
     async def update_page(self, page_id: str, title: str, content: str, version: int) -> Dict[str, Any]:
         """Update page title and content."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}"
@@ -109,6 +130,9 @@ class ConfluenceProvider:
     
     async def delete_page(self, page_id: str) -> Dict[str, Any]:
         """Permanently delete a page."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}"
@@ -120,6 +144,9 @@ class ConfluenceProvider:
     
     async def list_pages(self, space_key: str) -> Dict[str, Any]:
         """List all pages in a space."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/wiki/rest/api/content"
@@ -132,6 +159,9 @@ class ConfluenceProvider:
     
     async def get_space(self, space_key: str) -> Dict[str, Any]:
         """Get detailed information about a space."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_space_key(space_key)
         if not valid:
             return {'error': error}
@@ -146,6 +176,9 @@ class ConfluenceProvider:
     
     async def list_spaces(self) -> Dict[str, Any]:
         """List all accessible Confluence spaces."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/wiki/rest/api/space"
@@ -157,6 +190,9 @@ class ConfluenceProvider:
     
     async def get_page_comments(self, page_id: str) -> Dict[str, Any]:
         """Retrieve all comments on a page."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}/child/comment"
@@ -168,6 +204,9 @@ class ConfluenceProvider:
     
     async def add_page_comment(self, page_id: str, comment: str) -> Dict[str, Any]:
         """Add a comment to a page."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/wiki/rest/api/content"
@@ -184,6 +223,9 @@ class ConfluenceProvider:
     
     async def get_page_attachments(self, page_id: str) -> Dict[str, Any]:
         """List all files attached to a page."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}/child/attachment"
@@ -195,6 +237,9 @@ class ConfluenceProvider:
     
     async def search(self, query: str) -> Dict[str, Any]:
         """Search using query."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             logger.info(f"Searching Confluence: {query}")
             headers = self.auth.get_auth_headers()

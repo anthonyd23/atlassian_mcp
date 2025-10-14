@@ -1,14 +1,20 @@
 import os
 import base64
+from typing import Optional, Tuple
 
 class BaseAuth:
     """Base authentication class"""
     def __init__(self):
         self.base_url = os.getenv('ATLASSIAN_BASE_URL')
+        self.available = False
+    
+    def is_available(self) -> bool:
+        """Check if credentials are available"""
+        return self.available
     
     def get_base_url(self) -> str:
         if not self.base_url:
-            raise ValueError("Missing ATLASSIAN_BASE_URL. Set environment variable: export ATLASSIAN_BASE_URL='https://yourcompany.atlassian.net'")
+            raise ValueError("Missing ATLASSIAN_BASE_URL")
         return self.base_url
     
     def get_auth_headers(self) -> dict:
@@ -20,10 +26,11 @@ class CloudAuth(BaseAuth):
         super().__init__()
         self.api_token = os.getenv('ATLASSIAN_API_TOKEN')
         self.username = os.getenv('ATLASSIAN_USERNAME')
+        self.available = bool(self.base_url and self.api_token and self.username)
     
     def get_auth_headers(self) -> dict:
-        if not self.api_token or not self.username:
-            raise ValueError("Missing Atlassian Cloud credentials. Set: export ATLASSIAN_USERNAME='email@company.com' and export ATLASSIAN_API_TOKEN='token'. Generate token at: https://id.atlassian.com/manage-profile/security/api-tokens")
+        if not self.available:
+            raise ValueError("Atlassian Cloud not configured. Set: ATLASSIAN_BASE_URL, ATLASSIAN_USERNAME, ATLASSIAN_API_TOKEN")
         
         credentials = f"{self.username}:{self.api_token}"
         encoded_credentials = base64.b64encode(credentials.encode()).decode()
@@ -35,22 +42,21 @@ class CloudAuth(BaseAuth):
 
 class DataCenterAuth(BaseAuth):
     """Authentication for Atlassian Data Center (Personal Access Token)"""
-    def __init__(self, service: str = None, token: str = None):
+    def __init__(self, service: str):
         super().__init__()
-        self.pat_token = token or os.getenv('ATLASSIAN_PAT_TOKEN')
         self.service = service
+        self.pat_token = os.getenv(f'{service.upper()}_PAT_TOKEN')
+        self.service_url = os.getenv(f'{service.upper()}_BASE_URL')
+        self.available = bool(self.pat_token and self.service_url)
     
     def get_base_url(self) -> str:
-        """Get base URL for specific service or fallback to ATLASSIAN_BASE_URL"""
-        if self.service:
-            service_url = os.getenv(f'{self.service.upper()}_BASE_URL')
-            if service_url:
-                return service_url
-        return super().get_base_url()
+        if not self.service_url:
+            raise ValueError(f"Missing {self.service.upper()}_BASE_URL")
+        return self.service_url
     
     def get_auth_headers(self) -> dict:
-        if not self.pat_token:
-            raise ValueError("Missing Atlassian Data Center credentials. Set: export ATLASSIAN_PAT_TOKEN='token'. Generate PAT from: Profile → Personal Access Tokens")
+        if not self.available:
+            raise ValueError(f"{self.service.title()} Data Center not configured. Set: {self.service.upper()}_BASE_URL, {self.service.upper()}_PAT_TOKEN")
         
         return {
             'Authorization': f'Bearer {self.pat_token}',

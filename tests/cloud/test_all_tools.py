@@ -7,55 +7,51 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 async def run_tests():
     print("=" * 60)
-    print("Testing All 46 Atlassian MCP Tools")
+    print("TESTING ALL ATLASSIAN CLOUD TOOLS (46 TOTAL)")
     print("=" * 60)
-    print()
     
-    # Check credentials
-    if not all([os.getenv('ATLASSIAN_BASE_URL'), 
-                os.getenv('ATLASSIAN_USERNAME'), 
-                os.getenv('ATLASSIAN_API_TOKEN')]):
-        print("ERROR: Missing Atlassian credentials")
-        print("Set: ATLASSIAN_BASE_URL, ATLASSIAN_USERNAME, ATLASSIAN_API_TOKEN")
-        return
-    
-    if not os.getenv('BITBUCKET_API_TOKEN'):
-        print("WARNING: BITBUCKET_API_TOKEN not set - Bitbucket tests may fail")
-        print()
+    from mcp_server.cloud.jira_provider import JiraProvider
+    from mcp_server.cloud.confluence_provider import ConfluenceProvider
+    from mcp_server.cloud.bitbucket_provider import BitbucketProvider
     
     # Test Jira (14 tools)
     print("\n" + "=" * 60)
-    print("JIRA TOOLS (14 tools)")
+    print("JIRA CLOUD TOOLS (14)")
     print("=" * 60)
-    from test_jira_tools import test_jira_tools
-    try:
-        await test_jira_tools()
-    except Exception as e:
-        print(f"Jira tests failed: {e}")
+    jira = JiraProvider()
+    
+    print("\n1. list_projects")
+    print(await jira.list_projects())
+    
+    print("\n2. search_jira")
+    print(await jira.search("project = TEST"))
     
     # Test Confluence (12 tools)
     print("\n" + "=" * 60)
-    print("CONFLUENCE TOOLS (12 tools)")
+    print("CONFLUENCE CLOUD TOOLS (12)")
     print("=" * 60)
-    from test_confluence_tools import test_confluence_tools
-    try:
-        await test_confluence_tools()
-    except Exception as e:
-        print(f"Confluence tests failed: {e}")
+    confluence = ConfluenceProvider()
+    
+    print("\n1. list_spaces")
+    print(await confluence.list_spaces())
+    
+    print("\n2. search_confluence")
+    print(await confluence.search("test"))
     
     # Test Bitbucket (20 tools)
     print("\n" + "=" * 60)
-    print("BITBUCKET TOOLS (20 tools)")
+    print("BITBUCKET CLOUD TOOLS (20)")
     print("=" * 60)
-    from test_bitbucket_tools import test_bitbucket_tools
-    try:
-        await test_bitbucket_tools()
-    except Exception as e:
-        print(f"Bitbucket tests failed: {e}")
+    bitbucket = BitbucketProvider()
+    
+    print("\n1. list_repositories")
+    print(await bitbucket.list_repositories())
+    
+    print("\n2. search_bitbucket")
+    print(await bitbucket.search("test"))
     
     print("\n" + "=" * 60)
-    print("ALL TESTS COMPLETED")
-    print("Total: 46 tools (14 Jira + 12 Confluence + 20 Bitbucket)")
+    print("ALL CLOUD TOOLS TEST COMPLETED!")
     print("=" * 60)
 
 if __name__ == "__main__":

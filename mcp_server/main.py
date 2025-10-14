@@ -21,10 +21,10 @@ from mcp_server.common.router import route_tool_call
 
 server = Server("atlassian-mcp")
 
-# Detect platform: Data Center uses PAT token, Cloud uses API token
-PLATFORM = 'datacenter' if (os.getenv('ATLASSIAN_PAT_TOKEN') or os.getenv('JIRA_PAT_TOKEN') or os.getenv('CONFLUENCE_PAT_TOKEN') or os.getenv('BITBUCKET_PAT_TOKEN')) else 'cloud'
+# Detect platform: Data Center uses service-specific PAT tokens, Cloud uses shared credentials
+PLATFORM = 'datacenter' if (os.getenv('JIRA_PAT_TOKEN') or os.getenv('CONFLUENCE_PAT_TOKEN') or os.getenv('BITBUCKET_PAT_TOKEN')) else 'cloud'
 
-# Initialize providers based on platform
+# Initialize providers based on platform (providers handle their own availability)
 if PLATFORM == 'datacenter':
     jira = JiraDCProvider()
     confluence = ConfluenceDCProvider()

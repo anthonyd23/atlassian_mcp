@@ -18,11 +18,19 @@ class BitbucketProvider:
         self.auth = Auth()
         self.bitbucket_token = os.getenv('BITBUCKET_API_TOKEN')
         self.workspace = os.getenv('BITBUCKET_WORKSPACE')
-        self.session = self._create_session()
+        self.available = bool(self.bitbucket_token and self.workspace and self.auth.username)
+        self.session = self._create_session() if self.available else None
         self.timeout = 25
         
-        if self.bitbucket_token and self.workspace:
+        if self.available:
             logger.info(f"BitbucketProvider initialized for workspace: {self.workspace}")
+        else:
+            logger.warning("BitbucketProvider not available - missing credentials")
+    
+    def _check_available(self) -> Dict[str, Any]:
+        if not self.available:
+            return {'error': 'Bitbucket Cloud not configured. Set: BITBUCKET_WORKSPACE, BITBUCKET_API_TOKEN, ATLASSIAN_USERNAME'}
+        return None
     
     def _create_session(self) -> requests.Session:
         session = requests.Session()
@@ -43,6 +51,9 @@ class BitbucketProvider:
     
     async def get_repository(self, repo_slug: str) -> Dict[str, Any]:
         """Get detailed repository information."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_repo_slug(repo_slug)
         if not valid:
             logger.warning(f"Invalid repo_slug: {repo_slug}")
@@ -59,6 +70,9 @@ class BitbucketProvider:
     
     async def list_repositories(self) -> Dict[str, Any]:
         """List all repositories in workspace."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}"
             response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout, params={'pagelen': LIST_PAGE_SIZE})
@@ -69,6 +83,9 @@ class BitbucketProvider:
     
     async def list_pull_requests(self, repo_slug: str, state: str = "OPEN") -> Dict[str, Any]:
         """List pull requests with optional state filter."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/pullrequests"
             params = {'state': state, 'pagelen': LIST_PAGE_SIZE}
@@ -80,6 +97,9 @@ class BitbucketProvider:
     
     async def get_pull_request(self, repo_slug: str, pr_id: int) -> Dict[str, Any]:
         """Get detailed pull request information."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_repo_slug(repo_slug)
         if not valid:
             return {'error': error}
@@ -96,6 +116,9 @@ class BitbucketProvider:
     
     async def create_pull_request(self, repo_slug: str, title: str, source_branch: str, dest_branch: str, description: str = "") -> Dict[str, Any]:
         """Create a new pull request."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_repo_slug(repo_slug)
         if not valid:
             return {'error': error}
@@ -124,6 +147,9 @@ class BitbucketProvider:
     
     async def get_file_content(self, repo_slug: str, file_path: str, branch: str = "main") -> Dict[str, Any]:
         """Get raw content of a file."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_path(file_path, "file_path")
         if not valid:
             return {'error': error}
@@ -140,6 +166,9 @@ class BitbucketProvider:
     
     async def list_commits(self, repo_slug: str, branch: str = "main") -> Dict[str, Any]:
         """List commits in a branch."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_branch_name(branch)
         if not valid:
             return {'error': error}
@@ -153,6 +182,9 @@ class BitbucketProvider:
     
     async def get_commit(self, repo_slug: str, commit_hash: str) -> Dict[str, Any]:
         """Get detailed information about a commit."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_commit_hash(commit_hash)
         if not valid:
             return {'error': error}
@@ -166,6 +198,9 @@ class BitbucketProvider:
     
     async def list_branches(self, repo_slug: str) -> Dict[str, Any]:
         """List all branches in a repository."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/refs/branches"
             response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout, params={'pagelen': LIST_PAGE_SIZE})
@@ -176,6 +211,9 @@ class BitbucketProvider:
     
     async def get_pull_request_diff(self, repo_slug: str, pr_id: int) -> Dict[str, Any]:
         """Get the full diff for a pull request."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/pullrequests/{pr_id}/diff"
             response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout)
@@ -186,6 +224,9 @@ class BitbucketProvider:
     
     async def get_pull_request_comments(self, repo_slug: str, pr_id: int) -> Dict[str, Any]:
         """Retrieve all comments on a pull request."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/pullrequests/{pr_id}/comments"
             response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout)
@@ -196,6 +237,9 @@ class BitbucketProvider:
     
     async def add_pr_comment(self, repo_slug: str, pr_id: int, comment: str) -> Dict[str, Any]:
         """Add a comment to a pull request."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/pullrequests/{pr_id}/comments"
             payload = {"content": {"raw": comment}}
@@ -207,6 +251,9 @@ class BitbucketProvider:
     
     async def approve_pull_request(self, repo_slug: str, pr_id: int) -> Dict[str, Any]:
         """Approve a pull request."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/pullrequests/{pr_id}/approve"
             response = self.session.post(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout)
@@ -217,6 +264,9 @@ class BitbucketProvider:
     
     async def merge_pull_request(self, repo_slug: str, pr_id: int) -> Dict[str, Any]:
         """Merge an approved pull request."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/pullrequests/{pr_id}/merge"
             response = self.session.post(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout)
@@ -227,6 +277,9 @@ class BitbucketProvider:
     
     async def get_commit_diff(self, repo_slug: str, commit_hash: str) -> Dict[str, Any]:
         """Get the diff/changes for a commit."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_commit_hash(commit_hash)
         if not valid:
             return {'error': error}
@@ -240,6 +293,9 @@ class BitbucketProvider:
     
     async def list_tags(self, repo_slug: str) -> Dict[str, Any]:
         """List all tags in a repository."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/refs/tags"
             response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout, params={'pagelen': LIST_PAGE_SIZE})
@@ -250,6 +306,9 @@ class BitbucketProvider:
     
     async def list_directory(self, repo_slug: str, path: str = "", branch: str = "main") -> Dict[str, Any]:
         """List files and folders in a directory path."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_path(path, "path")
         if not valid:
             return {'error': error}
@@ -266,6 +325,9 @@ class BitbucketProvider:
     
     async def update_pull_request(self, repo_slug: str, pr_id: int, title: Optional[str] = None, description: Optional[str] = None) -> Dict[str, Any]:
         """Update pull request title or description."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/pullrequests/{pr_id}"
             payload = {}
@@ -281,6 +343,9 @@ class BitbucketProvider:
     
     async def compare_commits(self, repo_slug: str, from_commit: str, to_commit: str) -> Dict[str, Any]:
         """Compare differences between two commits."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_commit_hash(from_commit)
         if not valid:
             return {'error': error.replace('commit_hash', 'from_commit')}
@@ -297,6 +362,9 @@ class BitbucketProvider:
     
     async def search(self, query: str) -> Dict[str, Any]:
         """Search using query."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             logger.info(f"Searching Bitbucket: {query}")
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}"

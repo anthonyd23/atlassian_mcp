@@ -14,9 +14,18 @@ DEFAULT_PAGE_SIZE = 25
 class JiraProvider:
     def __init__(self) -> None:
         self.auth = Auth()
-        self.session = self._create_session()
+        self.available = self.auth.is_available()
+        self.session = self._create_session() if self.available else None
         self.timeout = 25
-        logger.info("JiraProvider initialized")
+        if self.available:
+            logger.info("JiraProvider initialized")
+        else:
+            logger.warning("JiraProvider not available - missing credentials")
+    
+    def _check_available(self) -> Dict[str, Any]:
+        if not self.available:
+            return {'error': 'Jira Cloud not configured. Set: ATLASSIAN_BASE_URL, ATLASSIAN_USERNAME, ATLASSIAN_API_TOKEN'}
+        return None
     
     def _create_session(self) -> requests.Session:
         """Create requests session with retry logic"""
@@ -43,6 +52,9 @@ class JiraProvider:
     
     async def get_issue(self, issue_key: str) -> Dict[str, Any]:
         """Get full details of a Jira issue."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_issue_key(issue_key)
         if not valid:
             logger.warning(f"Invalid issue_key: {issue_key}")
@@ -60,6 +72,9 @@ class JiraProvider:
     
     async def create_issue(self, project_key: str, summary: str, description: str, issue_type: str = "Task") -> Dict[str, Any]:
         """Create a new Jira issue."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_project_key(project_key)
         if not valid:
             return {'error': error}
@@ -85,6 +100,9 @@ class JiraProvider:
     
     async def update_issue(self, issue_key: str, fields: Dict[str, Any]) -> Dict[str, Any]:
         """Update fields on an existing issue."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_issue_key(issue_key)
         if not valid:
             return {'error': error}
@@ -100,6 +118,9 @@ class JiraProvider:
     
     async def add_comment(self, issue_key: str, comment: str) -> Dict[str, Any]:
         """Add a comment to an issue."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/rest/api/2/issue/{sanitize_url_path(issue_key)}/comment"
@@ -112,6 +133,9 @@ class JiraProvider:
     
     async def get_issue_comments(self, issue_key: str) -> Dict[str, Any]:
         """Retrieve all comments on an issue."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/rest/api/2/issue/{sanitize_url_path(issue_key)}/comment"
@@ -123,6 +147,9 @@ class JiraProvider:
     
     async def transition_issue(self, issue_key: str, transition_id: str) -> Dict[str, Any]:
         """Move issue to a different status."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/rest/api/2/issue/{sanitize_url_path(issue_key)}/transitions"
@@ -135,6 +162,9 @@ class JiraProvider:
     
     async def get_issue_transitions(self, issue_key: str) -> Dict[str, Any]:
         """Get available status transitions for an issue."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/rest/api/2/issue/{sanitize_url_path(issue_key)}/transitions"
@@ -146,6 +176,9 @@ class JiraProvider:
     
     async def assign_issue(self, issue_key: str, account_id: str) -> Dict[str, Any]:
         """Assign an issue to a user."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/rest/api/2/issue/{sanitize_url_path(issue_key)}/assignee"
@@ -158,6 +191,9 @@ class JiraProvider:
     
     async def delete_issue(self, issue_key: str) -> Dict[str, Any]:
         """Permanently delete an issue."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/rest/api/2/issue/{sanitize_url_path(issue_key)}"
@@ -169,6 +205,9 @@ class JiraProvider:
     
     async def list_projects(self) -> Dict[str, Any]:
         """List all accessible Jira projects."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/rest/api/2/project"
@@ -180,6 +219,9 @@ class JiraProvider:
     
     async def get_project(self, project_key: str) -> Dict[str, Any]:
         """Get detailed information about a project."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_project_key(project_key)
         if not valid:
             return {'error': error}
@@ -194,6 +236,9 @@ class JiraProvider:
     
     async def get_issue_attachments(self, issue_key: str) -> Dict[str, Any]:
         """List all attachments on an issue."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/rest/api/2/issue/{sanitize_url_path(issue_key)}?fields=attachment"
@@ -205,6 +250,9 @@ class JiraProvider:
     
     async def get_issue_watchers(self, issue_key: str) -> Dict[str, Any]:
         """Get list of users watching an issue."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/rest/api/2/issue/{sanitize_url_path(issue_key)}/watchers"
@@ -216,6 +264,9 @@ class JiraProvider:
     
     async def search(self, jql: str) -> Dict[str, Any]:
         """Search using query."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             logger.info(f"Searching Jira with JQL: {jql}")
             headers = self.auth.get_auth_headers()

@@ -14,13 +14,20 @@ DEFAULT_PAGE_SIZE = 25
 
 class JiraDCProvider:
     def __init__(self) -> None:
-        # Support separate Jira token
-        self.jira_token = os.getenv('JIRA_PAT_TOKEN') or os.getenv('ATLASSIAN_PAT_TOKEN')
-        self.auth = DataCenterAuth(service='jira', token=self.jira_token)
-        self.base_url = self.auth.get_base_url()
-        self.session = self._create_session()
+        self.auth = DataCenterAuth(service='jira')
+        self.available = self.auth.is_available()
+        self.base_url = self.auth.get_base_url() if self.available else None
+        self.session = self._create_session() if self.available else None
         self.timeout = 25
-        logger.info(f"JiraDCProvider initialized with base_url: {self.base_url}")
+        if self.available:
+            logger.info(f"JiraDCProvider initialized with base_url: {self.base_url}")
+        else:
+            logger.warning("JiraDCProvider not available - missing credentials")
+    
+    def _check_available(self) -> Dict[str, Any]:
+        if not self.available:
+            return {'error': 'Jira Data Center not configured. Set: JIRA_BASE_URL and JIRA_PAT_TOKEN'}
+        return None
     
     def _create_session(self) -> requests.Session:
         session = requests.Session()
@@ -32,6 +39,9 @@ class JiraDCProvider:
     
     async def search(self, jql: str) -> Dict[str, Any]:
         """Search using query."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_non_empty(jql, "jql")
         if not valid:
             return {'error': error}
@@ -47,6 +57,9 @@ class JiraDCProvider:
     
     async def get_issue(self, issue_key: str) -> Dict[str, Any]:
         """Get full details of a Jira issue."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_issue_key(issue_key)
         if not valid:
             logger.warning(f"Invalid issue_key: {issue_key}")
@@ -63,6 +76,9 @@ class JiraDCProvider:
     
     async def create_issue(self, project_key: str, summary: str, description: str, issue_type: str = "Task") -> Dict[str, Any]:
         """Create a new Jira issue."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_project_key(project_key)
         if not valid:
             return {'error': error}
@@ -87,6 +103,9 @@ class JiraDCProvider:
     
     async def update_issue(self, issue_key: str, fields: Dict[str, Any]) -> Dict[str, Any]:
         """Update fields on an existing issue."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_issue_key(issue_key)
         if not valid:
             return {'error': error}
@@ -101,6 +120,9 @@ class JiraDCProvider:
     
     async def add_comment(self, issue_key: str, comment: str) -> Dict[str, Any]:
         """Add a comment to an issue."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             url = f"{self.base_url}/rest/api/2/issue/{sanitize_url_path(issue_key)}/comment"
             payload = {"body": comment}
@@ -112,6 +134,9 @@ class JiraDCProvider:
     
     async def get_issue_comments(self, issue_key: str) -> Dict[str, Any]:
         """Retrieve all comments on an issue."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             url = f"{self.base_url}/rest/api/2/issue/{sanitize_url_path(issue_key)}/comment"
             response = self.session.get(url, headers=self.auth.get_auth_headers(), timeout=self.timeout)
@@ -122,6 +147,9 @@ class JiraDCProvider:
     
     async def transition_issue(self, issue_key: str, transition_id: str) -> Dict[str, Any]:
         """Move issue to a different status."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             url = f"{self.base_url}/rest/api/2/issue/{sanitize_url_path(issue_key)}/transitions"
             payload = {"transition": {"id": transition_id}}
@@ -133,6 +161,9 @@ class JiraDCProvider:
     
     async def get_issue_transitions(self, issue_key: str) -> Dict[str, Any]:
         """Get available status transitions for an issue."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             url = f"{self.base_url}/rest/api/2/issue/{sanitize_url_path(issue_key)}/transitions"
             response = self.session.get(url, headers=self.auth.get_auth_headers(), timeout=self.timeout)
@@ -143,6 +174,9 @@ class JiraDCProvider:
     
     async def assign_issue(self, issue_key: str, account_id: str) -> Dict[str, Any]:
         """Assign an issue to a user."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             url = f"{self.base_url}/rest/api/2/issue/{sanitize_url_path(issue_key)}/assignee"
             payload = {"accountId": account_id}
@@ -154,6 +188,9 @@ class JiraDCProvider:
     
     async def delete_issue(self, issue_key: str) -> Dict[str, Any]:
         """Permanently delete an issue."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             url = f"{self.base_url}/rest/api/2/issue/{sanitize_url_path(issue_key)}"
             response = self.session.delete(url, headers=self.auth.get_auth_headers(), timeout=self.timeout)
@@ -164,6 +201,9 @@ class JiraDCProvider:
     
     async def list_projects(self) -> Dict[str, Any]:
         """List all accessible Jira projects."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             url = f"{self.base_url}/rest/api/2/project"
             response = self.session.get(url, headers=self.auth.get_auth_headers(), timeout=self.timeout)
@@ -174,6 +214,9 @@ class JiraDCProvider:
     
     async def get_project(self, project_key: str) -> Dict[str, Any]:
         """Get detailed information about a project."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_project_key(project_key)
         if not valid:
             return {'error': error}
@@ -187,6 +230,9 @@ class JiraDCProvider:
     
     async def get_issue_attachments(self, issue_key: str) -> Dict[str, Any]:
         """List all attachments on an issue."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             url = f"{self.base_url}/rest/api/2/issue/{sanitize_url_path(issue_key)}?fields=attachment"
             response = self.session.get(url, headers=self.auth.get_auth_headers(), timeout=self.timeout)
@@ -197,6 +243,9 @@ class JiraDCProvider:
     
     async def get_issue_watchers(self, issue_key: str) -> Dict[str, Any]:
         """Get list of users watching an issue."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             url = f"{self.base_url}/rest/api/2/issue/{sanitize_url_path(issue_key)}/watchers"
             response = self.session.get(url, headers=self.auth.get_auth_headers(), timeout=self.timeout)

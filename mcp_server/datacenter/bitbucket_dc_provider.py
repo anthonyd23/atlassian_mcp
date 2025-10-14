@@ -14,14 +14,21 @@ LIST_PAGE_SIZE = 50
 
 class BitbucketDCProvider:
     def __init__(self) -> None:
-        # Support separate Bitbucket token
-        self.bitbucket_token = os.getenv('BITBUCKET_PAT_TOKEN') or os.getenv('ATLASSIAN_PAT_TOKEN')
-        self.auth = DataCenterAuth(service='bitbucket', token=self.bitbucket_token)
-        self.base_url = self.auth.get_base_url()
+        self.auth = DataCenterAuth(service='bitbucket')
+        self.available = self.auth.is_available()
+        self.base_url = self.auth.get_base_url() if self.available else None
         self.project = os.getenv('BITBUCKET_PROJECT', 'PROJECT')
-        self.session = self._create_session()
+        self.session = self._create_session() if self.available else None
         self.timeout = 25
-        logger.info(f"BitbucketDCProvider initialized with base_url: {self.base_url}, project: {self.project}")
+        if self.available:
+            logger.info(f"BitbucketDCProvider initialized with base_url: {self.base_url}, project: {self.project}")
+        else:
+            logger.warning("BitbucketDCProvider not available - missing credentials")
+    
+    def _check_available(self) -> Dict[str, Any]:
+        if not self.available:
+            return {'error': 'Bitbucket Data Center not configured. Set: BITBUCKET_BASE_URL and BITBUCKET_PAT_TOKEN'}
+        return None
     
     def _create_session(self) -> requests.Session:
         session = requests.Session()
@@ -33,6 +40,9 @@ class BitbucketDCProvider:
     
     async def get_repository(self, repo_slug: str) -> Dict[str, Any]:
         """Get detailed repository information."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_repo_slug(repo_slug)
         if not valid:
             logger.warning(f"Invalid repo_slug: {repo_slug}")
@@ -50,6 +60,9 @@ class BitbucketDCProvider:
     
     async def list_repositories(self) -> Dict[str, Any]:
         """List all repositories in workspace."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos"
@@ -61,6 +74,9 @@ class BitbucketDCProvider:
     
     async def list_pull_requests(self, repo_slug: str, state: str = "OPEN") -> Dict[str, Any]:
         """List pull requests with optional state filter."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests"
@@ -73,6 +89,9 @@ class BitbucketDCProvider:
     
     async def get_pull_request(self, repo_slug: str, pr_id: int) -> Dict[str, Any]:
         """Get detailed pull request information."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_repo_slug(repo_slug)
         if not valid:
             return {'error': error}
@@ -90,6 +109,9 @@ class BitbucketDCProvider:
     
     async def create_pull_request(self, repo_slug: str, title: str, source_branch: str, dest_branch: str, description: str = "") -> Dict[str, Any]:
         """Create a new pull request."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_repo_slug(repo_slug)
         if not valid:
             return {'error': error}
@@ -119,6 +141,9 @@ class BitbucketDCProvider:
     
     async def get_file_content(self, repo_slug: str, file_path: str, branch: str = "main") -> Dict[str, Any]:
         """Get raw content of a file."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_path(file_path, "file_path")
         if not valid:
             return {'error': error}
@@ -139,6 +164,9 @@ class BitbucketDCProvider:
     
     async def list_commits(self, repo_slug: str, branch: str = "main") -> Dict[str, Any]:
         """List commits in a branch."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_branch_name(branch)
         if not valid:
             return {'error': error}
@@ -154,6 +182,9 @@ class BitbucketDCProvider:
     
     async def get_commit(self, repo_slug: str, commit_hash: str) -> Dict[str, Any]:
         """Get detailed information about a commit."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_commit_hash(commit_hash)
         if not valid:
             return {'error': error}
@@ -168,6 +199,9 @@ class BitbucketDCProvider:
     
     async def list_branches(self, repo_slug: str) -> Dict[str, Any]:
         """List all branches in a repository."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/branches"
@@ -179,6 +213,9 @@ class BitbucketDCProvider:
     
     async def get_pull_request_diff(self, repo_slug: str, pr_id: int) -> Dict[str, Any]:
         """Get the full diff for a pull request."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}/diff"
@@ -190,6 +227,9 @@ class BitbucketDCProvider:
     
     async def get_pull_request_comments(self, repo_slug: str, pr_id: int) -> Dict[str, Any]:
         """Retrieve all comments on a pull request."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}/activities"
@@ -201,6 +241,9 @@ class BitbucketDCProvider:
     
     async def add_pr_comment(self, repo_slug: str, pr_id: int, comment: str) -> Dict[str, Any]:
         """Add a comment to a pull request."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}/comments"
@@ -213,6 +256,9 @@ class BitbucketDCProvider:
     
     async def approve_pull_request(self, repo_slug: str, pr_id: int) -> Dict[str, Any]:
         """Approve a pull request."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}/approve"
@@ -224,6 +270,9 @@ class BitbucketDCProvider:
     
     async def merge_pull_request(self, repo_slug: str, pr_id: int) -> Dict[str, Any]:
         """Merge an approved pull request."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             pr_url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}"
@@ -240,6 +289,9 @@ class BitbucketDCProvider:
     
     async def get_commit_diff(self, repo_slug: str, commit_hash: str) -> Dict[str, Any]:
         """Get the diff/changes for a commit."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_commit_hash(commit_hash)
         if not valid:
             return {'error': error}
@@ -254,6 +306,9 @@ class BitbucketDCProvider:
     
     async def list_tags(self, repo_slug: str) -> Dict[str, Any]:
         """List all tags in a repository."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/tags"
@@ -265,6 +320,9 @@ class BitbucketDCProvider:
     
     async def list_directory(self, repo_slug: str, path: str = "", branch: str = "main") -> Dict[str, Any]:
         """List files and folders in a directory path."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_path(path, "path")
         if not valid:
             return {'error': error}
@@ -283,6 +341,9 @@ class BitbucketDCProvider:
     
     async def update_pull_request(self, repo_slug: str, pr_id: int, title: Optional[str] = None, description: Optional[str] = None) -> Dict[str, Any]:
         """Update pull request title or description."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             headers = self.auth.get_auth_headers()
             pr_url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}"
@@ -302,6 +363,9 @@ class BitbucketDCProvider:
     
     async def compare_commits(self, repo_slug: str, from_commit: str, to_commit: str) -> Dict[str, Any]:
         """Compare differences between two commits."""
+        check = self._check_available()
+        if check:
+            return check
         valid, error = validate_commit_hash(from_commit)
         if not valid:
             return {'error': error.replace('commit_hash', 'from_commit')}
@@ -320,6 +384,9 @@ class BitbucketDCProvider:
     
     async def search(self, query: str) -> Dict[str, Any]:
         """Search using query."""
+        check = self._check_available()
+        if check:
+            return check
         try:
             logger.info(f"Searching Bitbucket: {query}")
             headers = self.auth.get_auth_headers()

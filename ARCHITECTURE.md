@@ -31,7 +31,7 @@
                          ▼
                 ┌────────────────┐
                 │  router.py     │
-                │  (46 tools)    │
+                │  Tool Routing  │
                 └────────┬───────┘
                          │
         ┌────────────────┼────────────────┐
@@ -40,12 +40,13 @@
 ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
 │ Jira         │  │ Confluence   │  │ Bitbucket    │
 │ Provider     │  │ Provider     │  │ Provider     │
-│ (14 tools)   │  │ (12 tools)   │  │ (20 tools)   │
 └──────┬───────┘  └──────┬───────┘  └──────┬───────┘
        │                 │                 │
-       │  ┌──────────────┴──────────────┐  │
-       │  │                             │  │
-       ▼  ▼                             ▼  ▼
+       └─────────────────┼─────────────────┘
+                         │
+        ┌────────────────┴────────────────┐
+        │                                 │
+        ▼                                 ▼
 ┌─────────────────┐              ┌─────────────────┐
 │  validation.py  │              │    auth.py      │
 │  - Input checks │              │  - CloudAuth    │
@@ -67,7 +68,7 @@
         ▼               ▼               ▼
 ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
 │ Jira Cloud/  │ │ Confluence   │ │ Bitbucket    │
-│ Data Center  │ │ Cloud/DC     │ │ Cloud/Server │
+│ Data Center  │ │ Cloud/DC     │ │ Cloud/DC     │
 │ REST API     │ │ REST API     │ │ REST API     │
 └──────────────┘ └──────────────┘ └──────────────┘
 ```
@@ -91,12 +92,12 @@
 ### Core Components
 
 **router.py**
-- Central routing for all 46 tools
+- Central routing for all tools
 - Maps tool names to provider methods
 - Shared by both main.py and lambda_handler.py
 - Single source of truth for tool dispatch
 
-**Providers (6 total)**
+**Providers**
 - Cloud: jira_provider.py, confluence_provider.py, bitbucket_provider.py
 - Data Center: jira_dc_provider.py, confluence_dc_provider.py, bitbucket_dc_provider.py
 - Each implements service-specific API calls
@@ -111,7 +112,7 @@
 **auth.py**
 - CloudAuth: Basic auth with API tokens
 - DataCenterAuth: Bearer token with PAT
-- Platform auto-detection via ATLASSIAN_PAT_TOKEN
+- Platform auto-detection via service-specific PAT tokens
 
 ### Request Flow
 
@@ -127,7 +128,7 @@
 ## Platform Detection
 
 ```python
-if ATLASSIAN_PAT_TOKEN is set:
+if JIRA_PAT_TOKEN or CONFLUENCE_PAT_TOKEN or BITBUCKET_PAT_TOKEN:
     → Data Center mode
     → Use DataCenterAuth (Bearer token)
     → Use *_dc_provider.py classes

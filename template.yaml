@@ -3,79 +3,73 @@ Transform: AWS::Serverless-2016-10-31
 Description: Atlassian MCP Server with CloudWatch Monitoring
 
 Parameters:
-  Platform:
-    Type: String
-    Description: Choose your Atlassian platform
-    AllowedValues:
-      - cloud
-      - datacenter
-    Default: cloud
-  
+  # Cloud Jira/Confluence parameters (optional)
   AtlassianBaseUrl:
     Type: String
-    Description: Base URL for your Atlassian instance
-  
-  # Cloud parameters
+    Description: "Base URL for Atlassian Cloud (e.g., https://yourcompany.atlassian.net)"
+    Default: ""
   AtlassianUsername:
     Type: String
-    Description: Atlassian username/email (Cloud only)
+    Description: "Atlassian Cloud username/email"
     Default: ""
   AtlassianApiToken:
     Type: String
     NoEcho: true
-    Description: Atlassian API token (Cloud only)
+    Description: "Atlassian Cloud API token"
     Default: ""
+  
+  # Cloud Bitbucket parameters (optional)
   BitbucketWorkspace:
     Type: String
-    Description: Bitbucket workspace name (Cloud only)
+    Description: "Bitbucket Cloud workspace name"
     Default: ""
   BitbucketApiToken:
     Type: String
     NoEcho: true
-    Description: Bitbucket API token (Cloud only)
+    Description: "Bitbucket Cloud API token"
     Default: ""
   
-  # Data Center parameters
-  AtlassianPatToken:
-    Type: String
-    NoEcho: true
-    Description: Personal Access Token (Data Center only)
-    Default: ""
+  # Data Center Jira parameters (optional)
   JiraBaseUrl:
     Type: String
-    Description: Jira base URL (Data Center with separate URLs only)
-    Default: ""
-  ConfluenceBaseUrl:
-    Type: String
-    Description: Confluence base URL (Data Center with separate URLs only)
-    Default: ""
-  BitbucketBaseUrl:
-    Type: String
-    Description: Bitbucket base URL (Data Center with separate URLs only)
-    Default: ""
-  BitbucketProject:
-    Type: String
-    Description: Bitbucket project key (Data Center only)
+    Description: "Jira Data Center base URL"
     Default: ""
   JiraPatToken:
     Type: String
     NoEcho: true
-    Description: Separate Jira PAT token (Data Center only, optional)
+    Description: "Jira Data Center Personal Access Token"
+    Default: ""
+  
+  # Data Center Confluence parameters (optional)
+  ConfluenceBaseUrl:
+    Type: String
+    Description: "Confluence Data Center base URL"
     Default: ""
   ConfluencePatToken:
     Type: String
     NoEcho: true
-    Description: Separate Confluence PAT token (Data Center only, optional)
+    Description: "Confluence Data Center Personal Access Token"
+    Default: ""
+  
+  # Data Center Bitbucket parameters (optional)
+  BitbucketBaseUrl:
+    Type: String
+    Description: "Bitbucket Data Center base URL"
     Default: ""
   BitbucketPatToken:
     Type: String
     NoEcho: true
-    Description: Separate Bitbucket PAT token (Data Center only, optional)
+    Description: "Bitbucket Data Center Personal Access Token"
+    Default: ""
+  BitbucketProject:
+    Type: String
+    Description: "Bitbucket Data Center project key"
     Default: ""
   
+  # Monitoring
   AlertEmail:
     Type: String
-    Description: Email address for CloudWatch alerts (optional)
+    Description: "Email address for CloudWatch alerts (optional)"
     Default: ""
 
 Globals:
@@ -99,7 +93,6 @@ Resources:
           ATLASSIAN_BASE_URL: !Ref AtlassianBaseUrl
           ATLASSIAN_USERNAME: !Ref AtlassianUsername
           ATLASSIAN_API_TOKEN: !Ref AtlassianApiToken
-          ATLASSIAN_PAT_TOKEN: !Ref AtlassianPatToken
           JIRA_BASE_URL: !Ref JiraBaseUrl
           JIRA_PAT_TOKEN: !Ref JiraPatToken
           CONFLUENCE_BASE_URL: !Ref ConfluenceBaseUrl

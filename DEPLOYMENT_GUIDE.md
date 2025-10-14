@@ -8,11 +8,10 @@
 sam deploy --guided
 ```
 
-When prompted:
-- **Platform**: `cloud`
+When prompted, provide credentials for the services you need:
 - **AtlassianBaseUrl**: `https://yourcompany.atlassian.net`
 - **AtlassianUsername**: `your-email@company.com`
-- **AtlassianApiToken**: `your-api-token`
+- **AtlassianApiToken**: `your-api-token` (for Jira/Confluence)
 - **BitbucketWorkspace**: `your-workspace` (optional)
 - **BitbucketApiToken**: `your-bitbucket-token` (optional)
 - Leave Data Center parameters empty
@@ -23,20 +22,22 @@ When prompted:
 sam deploy --guided
 ```
 
-When prompted:
-- **Platform**: `datacenter`
-- **AtlassianBaseUrl**: `https://jira.yourcompany.com`
-- **AtlassianPatToken**: `your-personal-access-token`
+When prompted, provide credentials for the services you need:
+- **JiraBaseUrl**: `https://jira.yourcompany.com` (optional)
+- **JiraPatToken**: `your-jira-pat-token` (optional)
+- **ConfluenceBaseUrl**: `https://wiki.yourcompany.com` (optional)
+- **ConfluencePatToken**: `your-confluence-pat-token` (optional)
+- **BitbucketBaseUrl**: `https://git.yourcompany.com` (optional)
+- **BitbucketPatToken**: `your-bitbucket-pat-token` (optional)
 - **BitbucketProject**: `YOUR_PROJECT_KEY` (optional)
 - Leave Cloud parameters empty
 
 ## Non-Interactive Deployment
 
-### Cloud
+### Cloud (All Services)
 ```bash
 sam deploy \
   --parameter-overrides \
-    Platform=cloud \
     AtlassianBaseUrl=https://yourcompany.atlassian.net \
     AtlassianUsername=your-email@company.com \
     AtlassianApiToken=your-token \
@@ -44,20 +45,40 @@ sam deploy \
     BitbucketApiToken=your-bitbucket-token
 ```
 
-### Data Center
+### Cloud (Jira/Confluence Only)
 ```bash
 sam deploy \
   --parameter-overrides \
-    Platform=datacenter \
-    AtlassianBaseUrl=https://jira.yourcompany.com \
-    AtlassianPatToken=your-pat-token \
+    AtlassianBaseUrl=https://yourcompany.atlassian.net \
+    AtlassianUsername=your-email@company.com \
+    AtlassianApiToken=your-token
+```
+
+### Data Center (All Services)
+```bash
+sam deploy \
+  --parameter-overrides \
+    JiraBaseUrl=https://jira.yourcompany.com \
+    JiraPatToken=your-jira-token \
+    ConfluenceBaseUrl=https://wiki.yourcompany.com \
+    ConfluencePatToken=your-confluence-token \
+    BitbucketBaseUrl=https://git.yourcompany.com \
+    BitbucketPatToken=your-bitbucket-token \
     BitbucketProject=YOUR_PROJECT_KEY
+```
+
+### Data Center (Jira Only)
+```bash
+sam deploy \
+  --parameter-overrides \
+    JiraBaseUrl=https://jira.yourcompany.com \
+    JiraPatToken=your-jira-token
 ```
 
 ## Platform Detection
 
 The Lambda function automatically detects the platform:
-- If `ATLASSIAN_PAT_TOKEN` is set → Data Center mode
+- If any service-specific PAT token is set (JIRA_PAT_TOKEN, CONFLUENCE_PAT_TOKEN, or BITBUCKET_PAT_TOKEN) → Data Center mode
 - Otherwise → Cloud mode
 
-The `Platform` parameter is for documentation only - actual detection happens at runtime.
+Platform detection happens at runtime based on environment variables.
