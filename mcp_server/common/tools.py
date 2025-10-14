@@ -34,7 +34,11 @@ CONFLUENCE_TOOLS = [
     {"name": "list_spaces", "description": "List all Confluence spaces"},
     {"name": "get_page_comments", "description": "Get comments on Confluence page"},
     {"name": "add_page_comment", "description": "Add comment to Confluence page"},
-    {"name": "get_page_attachments", "description": "Get attachments on Confluence page"}
+    {"name": "get_page_attachments", "description": "Get attachments on Confluence page"},
+    {"name": "get_confluence_user", "description": "Get Confluence user details by account ID"},
+    {"name": "search_confluence_users", "description": "Search Confluence users by name or email"},
+    {"name": "add_page_label", "description": "Add a label to a Confluence page"},
+    {"name": "get_page_labels", "description": "Get all labels on a Confluence page"}
 ]
 
 BITBUCKET_TOOLS = [
@@ -57,5 +61,9 @@ BITBUCKET_TOOLS = [
     {"name": "list_tags", "description": "List tags in repository"},
     {"name": "list_directory", "description": "List files in directory"},
     {"name": "update_pull_request", "description": "Update pull request"},
-    {"name": "compare_commits", "description": "Compare two commits"}
+    {"name": "compare_commits", "description": "Compare two commits"},
+    {"name": "add_pr_reviewer", "description": "Add a reviewer to a pull request"},
+    {"name": "decline_pull_request", "description": "Decline a pull request"},
+    {"name": "create_branch", "description": "Create a new branch"},
+    {"name": "delete_branch", "description": "Delete a branch"}
 ]

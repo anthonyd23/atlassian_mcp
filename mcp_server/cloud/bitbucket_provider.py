@@ -360,6 +360,87 @@ class BitbucketProvider:
         except Exception as e:
             return {'error': str(e)}
     
+    async def add_pr_reviewer(self, repo_slug: str, pr_id: int, account_id: str) -> Dict[str, Any]:
+        """Add a reviewer to a pull request."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_pr_id(pr_id)
+        if not valid:
+            return {'error': error}
+        valid, error = validate_non_empty(account_id, "account_id")
+        if not valid:
+            return {'error': error}
+        try:
+            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/pullrequests/{pr_id}"
+            # Get current PR to add reviewer
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout)
+            response.raise_for_status()
+            pr_data = response.json()
+            reviewers = pr_data.get('reviewers', [])
+            reviewers.append({"account_id": account_id})
+            payload = {"reviewers": reviewers}
+            response = self.session.put(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout, json=payload)
+            response.raise_for_status()
+            return {'success': True}
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def decline_pull_request(self, repo_slug: str, pr_id: int) -> Dict[str, Any]:
+        """Decline a pull request."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_pr_id(pr_id)
+        if not valid:
+            return {'error': error}
+        try:
+            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/pullrequests/{pr_id}/decline"
+            response = self.session.post(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout)
+            response.raise_for_status()
+            return {'success': True}
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def create_branch(self, repo_slug: str, branch_name: str, from_branch: str = "main") -> Dict[str, Any]:
+        """Create a new branch from an existing branch."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_branch_name(branch_name, "branch_name")
+        if not valid:
+            return {'error': error}
+        valid, error = validate_branch_name(from_branch, "from_branch")
+        if not valid:
+            return {'error': error}
+        try:
+            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/refs/branches"
+            payload = {
+                "name": branch_name,
+                "target": {"hash": from_branch}
+            }
+            response = self.session.post(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout, json=payload)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def delete_branch(self, repo_slug: str, branch_name: str) -> Dict[str, Any]:
+        """Delete a branch from the repository."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_branch_name(branch_name)
+        if not valid:
+            return {'error': error}
+        try:
+            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/refs/branches/{sanitize_url_path(branch_name)}"
+            response = self.session.delete(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout)
+            response.raise_for_status()
+            return {'success': True}
+        except Exception as e:
+            return {'error': str(e)}
+    
     async def search(self, query: str) -> Dict[str, Any]:
         """Search using query."""
         check = self._check_available()

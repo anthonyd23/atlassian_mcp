@@ -235,6 +235,78 @@ class ConfluenceProvider:
         except Exception as e:
             return {'error': str(e)}
     
+    async def get_user(self, account_id: str) -> Dict[str, Any]:
+        """Get user details by account ID."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_non_empty(account_id, "account_id")
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/user?accountId={sanitize_url_path(account_id)}"
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def search_users(self, query: str) -> Dict[str, Any]:
+        """Search for users by name or email."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_non_empty(query, "query")
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/search/user?cql=user.fullname~\"{sanitize_url_path(query)}\""
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            return {'users': response.json().get('results', [])}
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def add_label(self, page_id: str, label: str) -> Dict[str, Any]:
+        """Add a label to a page."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_page_id(page_id)
+        if not valid:
+            return {'error': error}
+        valid, error = validate_non_empty(label, "label")
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}/label"
+            payload = {"prefix": "global", "name": label}
+            response = self.session.post(url, headers=headers, json=payload, timeout=self.timeout)
+            response.raise_for_status()
+            return {'success': True}
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def get_labels(self, page_id: str) -> Dict[str, Any]:
+        """Get all labels on a page."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_page_id(page_id)
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}/label"
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
     async def search(self, query: str) -> Dict[str, Any]:
         """Search using query."""
         check = self._check_available()

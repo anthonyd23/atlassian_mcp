@@ -382,6 +382,91 @@ class BitbucketDCProvider:
         except Exception as e:
             return {'error': str(e)}
     
+    async def add_pr_reviewer(self, repo_slug: str, pr_id: int, account_id: str) -> Dict[str, Any]:
+        """Add a reviewer to a pull request."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_pr_id(pr_id)
+        if not valid:
+            return {'error': error}
+        valid, error = validate_non_empty(account_id, "account_id")
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}/participants"
+            payload = {"user": {"name": account_id}, "role": "REVIEWER"}
+            response = self.session.post(url, headers=headers, json=payload, timeout=self.timeout)
+            response.raise_for_status()
+            return {'success': True}
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def decline_pull_request(self, repo_slug: str, pr_id: int) -> Dict[str, Any]:
+        """Decline a pull request."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_pr_id(pr_id)
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            pr_url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}"
+            pr_response = self.session.get(pr_url, headers=headers, timeout=self.timeout)
+            pr_response.raise_for_status()
+            version = pr_response.json().get('version')
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests/{pr_id}/decline"
+            payload = {"version": version}
+            response = self.session.post(url, headers=headers, json=payload, timeout=self.timeout)
+            response.raise_for_status()
+            return {'success': True}
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def create_branch(self, repo_slug: str, branch_name: str, from_branch: str = "main") -> Dict[str, Any]:
+        """Create a new branch from an existing branch."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_branch_name(branch_name, "branch_name")
+        if not valid:
+            return {'error': error}
+        valid, error = validate_branch_name(from_branch, "from_branch")
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/branches"
+            payload = {
+                "name": branch_name,
+                "startPoint": from_branch
+            }
+            response = self.session.post(url, headers=headers, json=payload, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def delete_branch(self, repo_slug: str, branch_name: str) -> Dict[str, Any]:
+        """Delete a branch from the repository."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_branch_name(branch_name)
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.base_url}/rest/branch-utils/1.0/projects/{self.project}/repos/{repo_slug}/branches"
+            payload = {"name": f"refs/heads/{branch_name}"}
+            response = self.session.delete(url, headers=headers, json=payload, timeout=self.timeout)
+            response.raise_for_status()
+            return {'success': True}
+        except Exception as e:
+            return {'error': str(e)}
+    
     async def search(self, query: str) -> Dict[str, Any]:
         """Search using query."""
         check = self._check_available()

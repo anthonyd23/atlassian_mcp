@@ -73,6 +73,14 @@ async def route_tool_call(name: str, arguments: Dict[str, Any], jira, confluence
         return await confluence.add_page_comment(arguments["page_id"], arguments["comment"])
     elif name == "get_page_attachments":
         return await confluence.get_page_attachments(arguments["page_id"])
+    elif name == "get_confluence_user":
+        return await confluence.get_user(arguments["account_id"])
+    elif name == "search_confluence_users":
+        return await confluence.search_users(arguments["query"])
+    elif name == "add_page_label":
+        return await confluence.add_label(arguments["page_id"], arguments["label"])
+    elif name == "get_page_labels":
+        return await confluence.get_labels(arguments["page_id"])
     
     # Bitbucket tools
     elif name == "search_bitbucket":
@@ -115,6 +123,14 @@ async def route_tool_call(name: str, arguments: Dict[str, Any], jira, confluence
         return await bitbucket.update_pull_request(arguments["repo_slug"], arguments["pr_id"], arguments.get("title"), arguments.get("description"))
     elif name == "compare_commits":
         return await bitbucket.compare_commits(arguments["repo_slug"], arguments["from_commit"], arguments["to_commit"])
+    elif name == "add_pr_reviewer":
+        return await bitbucket.add_pr_reviewer(arguments["repo_slug"], arguments["pr_id"], arguments["account_id"])
+    elif name == "decline_pull_request":
+        return await bitbucket.decline_pull_request(arguments["repo_slug"], arguments["pr_id"])
+    elif name == "create_branch":
+        return await bitbucket.create_branch(arguments["repo_slug"], arguments["branch_name"], arguments.get("from_branch", "main"))
+    elif name == "delete_branch":
+        return await bitbucket.delete_branch(arguments["repo_slug"], arguments["branch_name"])
     
     else:
         raise ValueError(f"Unknown tool: {name}")
