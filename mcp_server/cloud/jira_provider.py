@@ -565,7 +565,7 @@ class JiraProvider:
         try:
             logger.info(f"Searching Jira with JQL: {jql}")
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/3/search/jql"
+            url = f"{self.auth.get_base_url()}/rest/api/2/search"
             
             payload = {
                 'jql': jql,
@@ -614,7 +614,7 @@ class JiraProvider:
     async def _get_issues(self, project_key: str) -> str:
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/rest/api/3/search/jql"
+            url = f"{self.auth.get_base_url()}/rest/api/2/search"
             
             payload = {
                 'jql': f'project = {project_key}',
