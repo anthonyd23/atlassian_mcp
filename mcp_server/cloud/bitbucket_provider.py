@@ -441,6 +441,54 @@ class BitbucketProvider:
         except Exception as e:
             return {'error': str(e)}
     
+    async def get_user(self, username: str) -> Dict[str, Any]:
+        """Get user details."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_non_empty(username, "username")
+        if not valid:
+            return {'error': error}
+        try:
+            url = f"https://api.bitbucket.org/2.0/users/{sanitize_url_path(username)}"
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def get_pr_activity(self, repo_slug: str, pr_id: int) -> Dict[str, Any]:
+        """Get PR activity/timeline."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_pr_id(pr_id)
+        if not valid:
+            return {'error': error}
+        try:
+            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/pullrequests/{pr_id}/activity"
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def get_default_reviewers(self, repo_slug: str) -> Dict[str, Any]:
+        """Get default reviewers for repository."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_repo_slug(repo_slug)
+        if not valid:
+            return {'error': error}
+        try:
+            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{repo_slug}/default-reviewers"
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
     async def search(self, query: str) -> Dict[str, Any]:
         """Search using query."""
         check = self._check_available()

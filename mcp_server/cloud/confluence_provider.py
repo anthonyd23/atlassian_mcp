@@ -307,6 +307,80 @@ class ConfluenceProvider:
         except Exception as e:
             return {'error': str(e)}
     
+    async def get_page_history(self, page_id: str) -> Dict[str, Any]:
+        """Get page version history."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_page_id(page_id)
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}/history"
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def get_page_restrictions(self, page_id: str) -> Dict[str, Any]:
+        """View page permissions."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_page_id(page_id)
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}/restriction"
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def set_page_restrictions(self, page_id: str, restrictions: Dict[str, Any]) -> Dict[str, Any]:
+        """Update page permissions."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_page_id(page_id)
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}/restriction"
+            response = self.session.put(url, headers=headers, json=restrictions, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def copy_page(self, page_id: str, new_title: str, space_key: str = "") -> Dict[str, Any]:
+        """Duplicate a page."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_page_id(page_id)
+        if not valid:
+            return {'error': error}
+        valid, error = validate_non_empty(new_title, "new_title")
+        if not valid:
+            return {'error': error}
+        try:
+            # Get original page
+            page = await self.get_page(page_id)
+            if 'error' in page:
+                return page
+            # Create copy
+            target_space = space_key if space_key else page.get('space', {}).get('key')
+            content = page.get('body', {}).get('storage', {}).get('value', '')
+            return await self.create_page(target_space, new_title, content)
+        except Exception as e:
+            return {'error': str(e)}
+    
     async def search(self, query: str) -> Dict[str, Any]:
         """Search using query."""
         check = self._check_available()

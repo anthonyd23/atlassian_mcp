@@ -37,6 +37,71 @@ class JiraDCProvider:
         session.mount('https://', adapter)
         return session
     
+    async def search_by_assignee(self, assignee: str, project_key: str = "") -> Dict[str, Any]:
+        """Find issues assigned to a specific user."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_non_empty(assignee, "assignee")
+        if not valid:
+            return {'error': error}
+        try:
+            jql = f"assignee = '{assignee}'"
+            if project_key:
+                jql += f" AND project = '{project_key}'"
+            return await self.search(jql)
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def search_by_reporter(self, reporter: str, project_key: str = "") -> Dict[str, Any]:
+        """Find issues reported by a specific user."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_non_empty(reporter, "reporter")
+        if not valid:
+            return {'error': error}
+        try:
+            jql = f"reporter = '{reporter}'"
+            if project_key:
+                jql += f" AND project = '{project_key}'"
+            return await self.search(jql)
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def get_recent_issues(self, days: int = 7, project_key: str = "") -> Dict[str, Any]:
+        """Get recently updated issues."""
+        check = self._check_available()
+        if check:
+            return check
+        try:
+            jql = f"updated >= -{days}d ORDER BY updated DESC"
+            if project_key:
+                jql = f"project = '{project_key}' AND " + jql
+            return await self.search(jql)
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def set_priority(self, issue_key: str, priority: str) -> Dict[str, Any]:
+        """Change issue priority."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_issue_key(issue_key)
+        if not valid:
+            return {'error': error}
+        valid, error = validate_non_empty(priority, "priority")
+        if not valid:
+            return {'error': error}
+        try:
+            url = f"{self.base_url}/rest/api/2/issue/{sanitize_url_path(issue_key)}"
+            payload = {"fields": {"priority": {"name": priority}}}
+            response = self.session.put(url, headers=self.auth.get_auth_headers(), json=payload, timeout=self.timeout)
+            response.raise_for_status()
+            return {'success': True}
+        except Exception as e:
+            return {'error': str(e)}
+    
     async def search(self, jql: str) -> Dict[str, Any]:
         """Search using query."""
         check = self._check_available()

@@ -19,7 +19,11 @@ JIRA_TOOLS = [
     {"name": "link_issues", "description": "Create a link between two Jira issues"},
     {"name": "add_worklog", "description": "Log time spent on a Jira issue"},
     {"name": "get_worklogs", "description": "Get time tracking data for a Jira issue"},
-    {"name": "add_label", "description": "Add a label to a Jira issue"}
+    {"name": "add_label", "description": "Add a label to a Jira issue"},
+    {"name": "search_by_assignee", "description": "Find Jira issues by assignee"},
+    {"name": "search_by_reporter", "description": "Find Jira issues by reporter"},
+    {"name": "get_recent_issues", "description": "Get recently updated Jira issues"},
+    {"name": "set_priority", "description": "Change Jira issue priority"}
 ]
 
 CONFLUENCE_TOOLS = [
@@ -38,7 +42,11 @@ CONFLUENCE_TOOLS = [
     {"name": "get_confluence_user", "description": "Get Confluence user details by account ID"},
     {"name": "search_confluence_users", "description": "Search Confluence users by name or email"},
     {"name": "add_page_label", "description": "Add a label to a Confluence page"},
-    {"name": "get_page_labels", "description": "Get all labels on a Confluence page"}
+    {"name": "get_page_labels", "description": "Get all labels on a Confluence page"},
+    {"name": "get_page_history", "description": "Get Confluence page version history"},
+    {"name": "get_page_restrictions", "description": "View Confluence page permissions"},
+    {"name": "set_page_restrictions", "description": "Update Confluence page permissions"},
+    {"name": "copy_page", "description": "Duplicate a Confluence page"}
 ]
 
 BITBUCKET_TOOLS = [
@@ -65,5 +73,8 @@ BITBUCKET_TOOLS = [
     {"name": "add_pr_reviewer", "description": "Add a reviewer to a pull request"},
     {"name": "decline_pull_request", "description": "Decline a pull request"},
     {"name": "create_branch", "description": "Create a new branch"},
-    {"name": "delete_branch", "description": "Delete a branch"}
+    {"name": "delete_branch", "description": "Delete a branch"},
+    {"name": "get_bitbucket_user", "description": "Get Bitbucket user details"},
+    {"name": "get_pr_activity", "description": "Get pull request activity/timeline"},
+    {"name": "get_default_reviewers", "description": "Get default reviewers for repository"}
 ]

@@ -47,6 +47,14 @@ async def route_tool_call(name: str, arguments: Dict[str, Any], jira, confluence
         return await jira.get_worklogs(arguments["issue_key"])
     elif name == "add_label":
         return await jira.add_label(arguments["issue_key"], arguments["label"])
+    elif name == "search_by_assignee":
+        return await jira.search_by_assignee(arguments["assignee"], arguments.get("project_key", ""))
+    elif name == "search_by_reporter":
+        return await jira.search_by_reporter(arguments["reporter"], arguments.get("project_key", ""))
+    elif name == "get_recent_issues":
+        return await jira.get_recent_issues(arguments.get("days", 7), arguments.get("project_key", ""))
+    elif name == "set_priority":
+        return await jira.set_priority(arguments["issue_key"], arguments["priority"])
     
     # Confluence tools
     elif name == "search_confluence":
@@ -81,6 +89,14 @@ async def route_tool_call(name: str, arguments: Dict[str, Any], jira, confluence
         return await confluence.add_label(arguments["page_id"], arguments["label"])
     elif name == "get_page_labels":
         return await confluence.get_labels(arguments["page_id"])
+    elif name == "get_page_history":
+        return await confluence.get_page_history(arguments["page_id"])
+    elif name == "get_page_restrictions":
+        return await confluence.get_page_restrictions(arguments["page_id"])
+    elif name == "set_page_restrictions":
+        return await confluence.set_page_restrictions(arguments["page_id"], arguments["restrictions"])
+    elif name == "copy_page":
+        return await confluence.copy_page(arguments["page_id"], arguments["new_title"], arguments.get("space_key", ""))
     
     # Bitbucket tools
     elif name == "search_bitbucket":
@@ -131,6 +147,12 @@ async def route_tool_call(name: str, arguments: Dict[str, Any], jira, confluence
         return await bitbucket.create_branch(arguments["repo_slug"], arguments["branch_name"], arguments.get("from_branch", "main"))
     elif name == "delete_branch":
         return await bitbucket.delete_branch(arguments["repo_slug"], arguments["branch_name"])
+    elif name == "get_bitbucket_user":
+        return await bitbucket.get_user(arguments["username"])
+    elif name == "get_pr_activity":
+        return await bitbucket.get_pr_activity(arguments["repo_slug"], arguments["pr_id"])
+    elif name == "get_default_reviewers":
+        return await bitbucket.get_default_reviewers(arguments["repo_slug"])
     
     else:
         raise ValueError(f"Unknown tool: {name}")
