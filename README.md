@@ -8,7 +8,7 @@ Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and B
 - [Features](#features)
 - [Prerequisites](#prerequisites)
 - [Configuration](#configuration)
-- [Amazon Q Integration](#amazon-q-integration)
+- [AI Agent Integration](#ai-agent-integration)
 - [AWS Deployment](#aws-deployment)
 - [Testing](#testing)
 - [Monitoring](#monitoring)
