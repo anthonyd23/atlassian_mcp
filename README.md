@@ -150,7 +150,6 @@ python tests/datacenter/test_all_dc_tools.py
 **Test Features:**
 - Comprehensive unit test coverage
 - Integration tests for core workflows
-- Automatic cleanup after tests
 - Verbose output showing results
 
 ## Monitoring

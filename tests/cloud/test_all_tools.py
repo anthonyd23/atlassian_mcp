@@ -66,10 +66,8 @@ async def test_all_jira_tools():
     current_user = await jira.get_current_user()
     account_id = current_user.get('accountId')
     
-    created_issue = None
-    try:
-        # 1-7: Read operations
-        for name, func in [
+    # 1-7: Read operations
+    for name, func in [
             ("list_projects", lambda: jira.list_projects()),
             ("search_jira", lambda: jira.search("created >= -30d order by created DESC")),
             ("get_current_user", lambda: jira.get_current_user()),
@@ -86,13 +84,39 @@ async def test_all_jira_tools():
             else:
                 print(f"  [PASS] {name}")
                 passed += 1
-        
-        if project_key:
-            # 8-10: Project operations
-            for name, func in [
+    
+    if project_key:
+        # 8-10: Project operations
+        for name, func in [
                 ("get_project", lambda: jira.get_project(project_key)),
                 ("search_by_assignee", lambda: jira.search_by_assignee("currentUser()", project_key)),
                 ("search_by_reporter", lambda: jira.search_by_reporter("currentUser()", project_key)),
+        ]:
+            result = await func()
+            if 'error' in result:
+                print(f"  [FAIL] {name}: {result['error']}")
+                failed += 1
+            else:
+                print(f"  [PASS] {name}")
+                passed += 1
+        
+        # 11: Create issue - skip to avoid modifying production
+        print(f"  [SKIP] create_issue (would create test data)")
+        skipped += 1
+        
+        # Use existing issue for read-only tests
+        search_result = await jira.search(f"project = {project_key} order by created DESC")
+        if search_result.get('issues'):
+            test_issue = search_result['issues'][0]['key']
+            
+            # 12-17: Read-only issue operations
+            for name, func in [
+                ("get_issue", lambda: jira.get_issue(test_issue)),
+                ("get_issue_comments", lambda: jira.get_issue_comments(test_issue)),
+                ("get_issue_transitions", lambda: jira.get_issue_transitions(test_issue)),
+                ("get_issue_attachments", lambda: jira.get_issue_attachments(test_issue)),
+                ("get_issue_watchers", lambda: jira.get_issue_watchers(test_issue)),
+                ("get_worklogs", lambda: jira.get_worklogs(test_issue)),
             ]:
                 result = await func()
                 if 'error' in result:
@@ -102,84 +126,56 @@ async def test_all_jira_tools():
                     print(f"  [PASS] {name}")
                     passed += 1
             
-            # 11: Create issue - skip to avoid modifying production
-            print(f"  [SKIP] create_issue (would create test data)")
-            skipped += 1
+            # Skip write operations
+            print(f"  [SKIP] Skipping 9 write operations (would modify existing issue)")
+            skipped += 9
             
-            # Use existing issue for read-only tests
-            search_result = await jira.search(f"project = {project_key} order by created DESC")
-            if search_result.get('issues'):
-                test_issue = search_result['issues'][0]['key']
+            # Get user for link_issues test
+            if account_id:
+                result = await jira.get_user(account_id)
+                if 'error' in result:
+                    print(f"  [FAIL] get_user: {result['error']}")
+                    failed += 1
+                else:
+                    print(f"  [PASS] get_user")
+                    passed += 1
+            
+            # Boards/sprints (may not be available)
+            boards = await jira.list_boards()
+            if boards.get('values'):
+                board_id = boards['values'][0]['id']
+                result = await jira.get_board_issues(board_id)
+                if 'error' in result:
+                    print(f"  [FAIL] get_board_issues: {result['error']}")
+                    failed += 1
+                else:
+                    print(f"  [PASS] get_board_issues")
+                    passed += 1
                 
-                # 12-17: Read-only issue operations
-                for name, func in [
-                    ("get_issue", lambda: jira.get_issue(test_issue)),
-                    ("get_issue_comments", lambda: jira.get_issue_comments(test_issue)),
-                    ("get_issue_transitions", lambda: jira.get_issue_transitions(test_issue)),
-                    ("get_issue_attachments", lambda: jira.get_issue_attachments(test_issue)),
-                    ("get_issue_watchers", lambda: jira.get_issue_watchers(test_issue)),
-                    ("get_worklogs", lambda: jira.get_worklogs(test_issue)),
-                ]:
-                    result = await func()
+                result = await jira.list_sprints(board_id)
+                if 'error' in result:
+                    if '400' in str(result['error']) or 'not found' in str(result['error']).lower():
+                        print(f"  [EXCEPT] list_sprints: Board doesn't support sprints")
+                        exceptions += 1
+                    else:
+                        print(f"  [FAIL] list_sprints: {result['error']}")
+                        failed += 1
+                else:
+                    print(f"  [PASS] list_sprints")
+                    passed += 1
+                
+                if result.get('values'):
+                    sprint_id = result['values'][0]['id']
+                    result = await jira.get_sprint_issues(sprint_id)
                     if 'error' in result:
-                        print(f"  [FAIL] {name}: {result['error']}")
+                        print(f"  [FAIL] get_sprint_issues: {result['error']}")
                         failed += 1
                     else:
-                        print(f"  [PASS] {name}")
+                        print(f"  [PASS] get_sprint_issues")
                         passed += 1
-                
-                # Skip write operations
-                print(f"  [SKIP] Skipping 9 write operations (would modify existing issue)")
-                skipped += 9
-                
-                # Get user for link_issues test
-                if account_id:
-                    result = await jira.get_user(account_id)
-                    if 'error' in result:
-                        print(f"  [FAIL] get_user: {result['error']}")
-                        failed += 1
-                    else:
-                        print(f"  [PASS] get_user")
-                        passed += 1
-                
-                # Boards/sprints (may not be available)
-                boards = await jira.list_boards()
-                if boards.get('values'):
-                    board_id = boards['values'][0]['id']
-                    result = await jira.get_board_issues(board_id)
-                    if 'error' in result:
-                        print(f"  [FAIL] get_board_issues: {result['error']}")
-                        failed += 1
-                    else:
-                        print(f"  [PASS] get_board_issues")
-                        passed += 1
-                    
-                    result = await jira.list_sprints(board_id)
-                    if 'error' in result:
-                        if '400' in str(result['error']) or 'not found' in str(result['error']).lower():
-                            print(f"  [EXCEPT] list_sprints: Board doesn't support sprints")
-                            exceptions += 1
-                        else:
-                            print(f"  [FAIL] list_sprints: {result['error']}")
-                            failed += 1
-                    else:
-                        print(f"  [PASS] list_sprints")
-                        passed += 1
-                    
-                    if result.get('values'):
-                        sprint_id = result['values'][0]['id']
-                        result = await jira.get_sprint_issues(sprint_id)
-                        if 'error' in result:
-                            print(f"  [FAIL] get_sprint_issues: {result['error']}")
-                            failed += 1
-                        else:
-                            print(f"  [PASS] get_sprint_issues")
-                            passed += 1
-            else:
-                print(f"  [SKIP] No existing issues found - skipping 15 issue-dependent tests")
-                skipped += 15
-    finally:
-        pass
+        else:
+            print(f"  [SKIP] No existing issues found - skipping 15 issue-dependent tests")
+            skipped += 15
     
     return passed, failed, exceptions, skipped
 
@@ -197,107 +193,103 @@ async def test_all_confluence_tools():
     current_user_result = await confluence.search_users("a")
     account_id = current_user_result.get('users', [{}])[0].get('accountId') if current_user_result.get('users') else None
     
-    created_page = None
-    try:
-        # 1-5: Read operations
-        for name, func in [
+    # 1-5: Read operations
+    for name, func in [
             ("list_spaces", lambda: confluence.list_spaces()),
             ("search_confluence", lambda: confluence.search("type=page")),
             ("search_confluence_users", lambda: confluence.search_users("a")),
             ("get_recent_content", lambda: confluence.get_recent_content(7)),
             ("search_by_label", lambda: confluence.search_by_label("test")),
+    ]:
+        result = await func()
+        if 'error' in result:
+            error_msg = format_error(name, result['error'])
+            print(f"  [FAIL] {name}: {error_msg}")
+            failed += 1
+        else:
+            print(f"  [PASS] {name}")
+            passed += 1
+    
+    if not space_key:
+        print(f"  [SKIP] No valid space keys found - skipping 18 space-dependent tests")
+        skipped += 18
+    else:
+        # 6-7: Space operations
+        for name, func in [
+                ("get_space", lambda: confluence.get_space(space_key)),
+                ("list_pages", lambda: confluence.list_pages(space_key)),
         ]:
             result = await func()
             if 'error' in result:
-                error_msg = format_error(name, result['error'])
-                print(f"  [FAIL] {name}: {error_msg}")
+                print(f"  [FAIL] {name}: {result['error']}")
                 failed += 1
             else:
                 print(f"  [PASS] {name}")
                 passed += 1
         
-        if not space_key:
-            print(f"  [SKIP] No valid space keys found - skipping 18 space-dependent tests")
-            skipped += 18
-        else:
-            # 6-7: Space operations
+        # 8: Create page - skip to avoid modifying production
+        print(f"  [SKIP] create_page (would create test data)")
+        skipped += 1
+        
+        # Use existing page for read-only tests
+        pages_result = await confluence.list_pages(space_key)
+        if pages_result.get('results'):
+            test_page = pages_result['results'][0]['id']
+            
+            # 9-16: Read-only page operations
             for name, func in [
-                ("get_space", lambda: confluence.get_space(space_key)),
-                ("list_pages", lambda: confluence.list_pages(space_key)),
+                ("get_page", lambda: confluence.get_page(test_page)),
+                ("get_page_comments", lambda: confluence.get_page_comments(test_page)),
+                ("get_page_attachments", lambda: confluence.get_page_attachments(test_page)),
+                ("get_page_labels", lambda: confluence.get_labels(test_page)),
+                ("get_page_history", lambda: confluence.get_page_history(test_page)),
+                ("get_page_restrictions", lambda: confluence.get_page_restrictions(test_page)),
+                ("get_recent_content", lambda: confluence.get_recent_content(7, space_key)),
+                ("search_by_label", lambda: confluence.search_by_label("test", space_key)),
             ]:
                 result = await func()
                 if 'error' in result:
-                    print(f"  [FAIL] {name}: {result['error']}")
-                    failed += 1
+                    if 'search_by_label' in name and '400' in str(result['error']):
+                        print(f"  [EXCEPT] {name}: CQL query format issue")
+                        exceptions += 1
+                    else:
+                        print(f"  [FAIL] {name}: {result['error']}")
+                        failed += 1
                 else:
                     print(f"  [PASS] {name}")
                     passed += 1
             
-            # 8: Create page - skip to avoid modifying production
-            print(f"  [SKIP] create_page (would create test data)")
-            skipped += 1
+            # Skip write operations
+            print(f"  [SKIP] Skipping 7 write operations (would modify existing page)")
+            skipped += 7
             
-            # Use existing page for read-only tests
-            pages_result = await confluence.list_pages(space_key)
-            if pages_result.get('results'):
-                test_page = pages_result['results'][0]['id']
+            if account_id:
+                result = await confluence.get_user(account_id)
+                if 'error' in result:
+                    print(f"  [FAIL] get_confluence_user: {result['error']}")
+                    failed += 1
+                else:
+                    print(f"  [PASS] get_confluence_user")
+                    passed += 1
                 
-                # 9-16: Read-only page operations
-                for name, func in [
-                    ("get_page", lambda: confluence.get_page(test_page)),
-                    ("get_page_comments", lambda: confluence.get_page_comments(test_page)),
-                    ("get_page_attachments", lambda: confluence.get_page_attachments(test_page)),
-                    ("get_page_labels", lambda: confluence.get_labels(test_page)),
-                    ("get_page_history", lambda: confluence.get_page_history(test_page)),
-                    ("get_page_restrictions", lambda: confluence.get_page_restrictions(test_page)),
-                    ("get_recent_content", lambda: confluence.get_recent_content(7, space_key)),
-                    ("search_by_label", lambda: confluence.search_by_label("test", space_key)),
-                ]:
-                    result = await func()
-                    if 'error' in result:
-                        if 'search_by_label' in name and '400' in str(result['error']):
-                            print(f"  [EXCEPT] {name}: CQL query format issue")
-                            exceptions += 1
-                        else:
-                            print(f"  [FAIL] {name}: {result['error']}")
-                            failed += 1
-                    else:
-                        print(f"  [PASS] {name}")
-                        passed += 1
+                result = await confluence.get_user_content(account_id)
+                if 'error' in result:
+                    print(f"  [FAIL] get_user_content: {result['error']}")
+                    failed += 1
+                else:
+                    print(f"  [PASS] get_user_content")
+                    passed += 1
                 
-                # Skip write operations
-                print(f"  [SKIP] Skipping 7 write operations (would modify existing page)")
-                skipped += 7
-                
-                if account_id:
-                    result = await confluence.get_user(account_id)
-                    if 'error' in result:
-                        print(f"  [FAIL] get_confluence_user: {result['error']}")
-                        failed += 1
-                    else:
-                        print(f"  [PASS] get_confluence_user")
-                        passed += 1
-                    
-                    result = await confluence.get_user_content(account_id)
-                    if 'error' in result:
-                        print(f"  [FAIL] get_user_content: {result['error']}")
-                        failed += 1
-                    else:
-                        print(f"  [PASS] get_user_content")
-                        passed += 1
-                    
-                    result = await confluence.search_by_author(account_id, space_key)
-                    if 'error' in result:
-                        print(f"  [FAIL] search_by_author: {result['error']}")
-                        failed += 1
-                    else:
-                        print(f"  [PASS] search_by_author")
-                        passed += 1
-            else:
-                print(f"  [SKIP] No existing pages found - skipping 15 page-dependent tests")
-                skipped += 15
-    finally:
-        pass
+                result = await confluence.search_by_author(account_id, space_key)
+                if 'error' in result:
+                    print(f"  [FAIL] search_by_author: {result['error']}")
+                    failed += 1
+                else:
+                    print(f"  [PASS] search_by_author")
+                    passed += 1
+        else:
+            print(f"  [SKIP] No existing pages found - skipping 15 page-dependent tests")
+            skipped += 15
     
     return passed, failed, exceptions, skipped
 
@@ -311,28 +303,26 @@ async def test_all_bitbucket_tools():
     repos = await bitbucket.list_repositories()
     repo_slug = repos.get('values', [{}])[0].get('slug') if repos.get('values') else None
     
-    created_branch = None
-    try:
-        # 1-2: Repository operations
-        for name, func in [
+    # 1-2: Repository operations
+    for name, func in [
             ("list_repositories", lambda: bitbucket.list_repositories()),
             ("search_bitbucket", lambda: bitbucket.search("test")),
-        ]:
-            result = await func()
-            if 'error' in result:
-                error_msg = format_error(name, result['error'])
-                print(f"  [FAIL] {name}: {error_msg}")
-                failed += 1
-            else:
-                print(f"  [PASS] {name}")
-                passed += 1
-        
-        if not repo_slug:
-            print(f"  [SKIP] No accessible repositories found - skipping 29 repo-dependent tests")
-            skipped += 29
+    ]:
+        result = await func()
+        if 'error' in result:
+            error_msg = format_error(name, result['error'])
+            print(f"  [FAIL] {name}: {error_msg}")
+            failed += 1
         else:
-            # 3-10: Read operations
-            for name, func in [
+            print(f"  [PASS] {name}")
+            passed += 1
+    
+    if not repo_slug:
+        print(f"  [SKIP] No accessible repositories found - skipping 29 repo-dependent tests")
+        skipped += 29
+    else:
+        # 3-10: Read operations
+        for name, func in [
                 ("get_repository", lambda: bitbucket.get_repository(repo_slug)),
                 ("list_branches", lambda: bitbucket.list_branches(repo_slug)),
                 ("list_tags", lambda: bitbucket.list_tags(repo_slug)),
@@ -341,18 +331,47 @@ async def test_all_bitbucket_tools():
                 ("get_default_reviewers", lambda: bitbucket.get_default_reviewers(repo_slug)),
                 ("get_branch_restrictions", lambda: bitbucket.get_branch_restrictions(repo_slug)),
                 ("list_directory", lambda: bitbucket.list_directory(repo_slug)),
+        ]:
+            result = await func()
+            if 'error' in result:
+                # Handle expected exceptions for cloud
+                if 'get_default_reviewers' in name and ('404' in str(result['error']) or '403' in str(result['error'])):
+                    print(f"  [EXCEPT] {name}: Feature not configured or insufficient permissions")
+                    exceptions += 1
+                elif 'get_branch_restrictions' in name and ('404' in str(result['error']) or '403' in str(result['error'])):
+                    print(f"  [EXCEPT] {name}: Feature not configured or insufficient permissions")
+                    exceptions += 1
+                elif 'list_directory' in name and '404' in str(result['error']):
+                    print(f"  [EXCEPT] {name}: Path doesn't exist")
+                    exceptions += 1
+                else:
+                    print(f"  [FAIL] {name}: {result['error']}")
+                    failed += 1
+            else:
+                print(f"  [PASS] {name}")
+                passed += 1
+        
+        # Get branch and commit for further tests
+        branches = await bitbucket.list_branches(repo_slug)
+        if branches.get('values'):
+            branch_name = branches['values'][0]['name']
+            commit_hash = branches['values'][0]['target']['hash']
+            
+            # 11-15: Commit operations
+            for name, func in [
+                ("get_commit", lambda: bitbucket.get_commit(repo_slug, commit_hash)),
+                ("get_commit_diff", lambda: bitbucket.get_commit_diff(repo_slug, commit_hash)),
+                ("get_build_status", lambda: bitbucket.get_build_status(repo_slug, commit_hash)),
+                ("list_commits_by_author", lambda: bitbucket.list_commits_by_author(repo_slug, "author")),
+                ("get_file_content", lambda: bitbucket.get_file_content(repo_slug, "README.md", branch_name)),
             ]:
                 result = await func()
                 if 'error' in result:
-                    # Handle expected exceptions for cloud
-                    if 'get_default_reviewers' in name and ('404' in str(result['error']) or '403' in str(result['error'])):
-                        print(f"  [EXCEPT] {name}: Feature not configured or insufficient permissions")
+                    if 'list_commits_by_author' in name and '404' in str(result['error']):
+                        print(f"  [EXCEPT] {name}: Author filter not supported")
                         exceptions += 1
-                    elif 'get_branch_restrictions' in name and ('404' in str(result['error']) or '403' in str(result['error'])):
-                        print(f"  [EXCEPT] {name}: Feature not configured or insufficient permissions")
-                        exceptions += 1
-                    elif 'list_directory' in name and '404' in str(result['error']):
-                        print(f"  [EXCEPT] {name}: Path doesn't exist")
+                    elif 'get_file_content' in name and '404' in str(result['error']):
+                        print(f"  [EXCEPT] {name}: File doesn't exist")
                         exceptions += 1
                     else:
                         print(f"  [FAIL] {name}: {result['error']}")
@@ -361,81 +380,50 @@ async def test_all_bitbucket_tools():
                     print(f"  [PASS] {name}")
                     passed += 1
             
-            # Get branch and commit for further tests
-            branches = await bitbucket.list_branches(repo_slug)
-            if branches.get('values'):
-                branch_name = branches['values'][0]['name']
-                commit_hash = branches['values'][0]['target']['hash']
+            # 16: Create branch - skip to avoid modifying production
+            print(f"  [SKIP] create_branch (would create test branch)")
+            skipped += 1
+            
+            # PR read operations
+            prs = await bitbucket.list_pull_requests(repo_slug, "OPEN")
+            if prs.get('values'):
+                pr_id = prs['values'][0]['id']
                 
-                # 11-15: Commit operations
+                # 17-21: PR read operations
                 for name, func in [
-                    ("get_commit", lambda: bitbucket.get_commit(repo_slug, commit_hash)),
-                    ("get_commit_diff", lambda: bitbucket.get_commit_diff(repo_slug, commit_hash)),
-                    ("get_build_status", lambda: bitbucket.get_build_status(repo_slug, commit_hash)),
-                    ("list_commits_by_author", lambda: bitbucket.list_commits_by_author(repo_slug, "author")),
-                    ("get_file_content", lambda: bitbucket.get_file_content(repo_slug, "README.md", branch_name)),
+                    ("get_pull_request", lambda: bitbucket.get_pull_request(repo_slug, pr_id)),
+                    ("get_pull_request_diff", lambda: bitbucket.get_pull_request_diff(repo_slug, pr_id)),
+                    ("get_pull_request_comments", lambda: bitbucket.get_pull_request_comments(repo_slug, pr_id)),
+                    ("get_pr_activity", lambda: bitbucket.get_pr_activity(repo_slug, pr_id)),
+                    ("list_pull_requests_by_author", lambda: bitbucket.list_pull_requests_by_author(repo_slug, "author")),
                 ]:
                     result = await func()
                     if 'error' in result:
-                        if 'list_commits_by_author' in name and '404' in str(result['error']):
-                            print(f"  [EXCEPT] {name}: Author filter not supported")
-                            exceptions += 1
-                        elif 'get_file_content' in name and '404' in str(result['error']):
-                            print(f"  [EXCEPT] {name}: File doesn't exist")
-                            exceptions += 1
-                        else:
-                            print(f"  [FAIL] {name}: {result['error']}")
-                            failed += 1
+                        print(f"  [FAIL] {name}: {result['error']}")
+                        failed += 1
                     else:
                         print(f"  [PASS] {name}")
                         passed += 1
-                
-                # 16: Create branch - skip to avoid modifying production
-                print(f"  [SKIP] create_branch (would create test branch)")
-                skipped += 1
-                
-                # PR read operations
-                prs = await bitbucket.list_pull_requests(repo_slug, "OPEN")
-                if prs.get('values'):
-                    pr_id = prs['values'][0]['id']
-                    
-                    # 17-21: PR read operations
-                    for name, func in [
-                        ("get_pull_request", lambda: bitbucket.get_pull_request(repo_slug, pr_id)),
-                        ("get_pull_request_diff", lambda: bitbucket.get_pull_request_diff(repo_slug, pr_id)),
-                        ("get_pull_request_comments", lambda: bitbucket.get_pull_request_comments(repo_slug, pr_id)),
-                        ("get_pr_activity", lambda: bitbucket.get_pr_activity(repo_slug, pr_id)),
-                        ("list_pull_requests_by_author", lambda: bitbucket.list_pull_requests_by_author(repo_slug, "author")),
-                    ]:
-                        result = await func()
-                        if 'error' in result:
-                            print(f"  [FAIL] {name}: {result['error']}")
-                            failed += 1
-                        else:
-                            print(f"  [PASS] {name}")
-                            passed += 1
-                
-                # Skip write operations
-                print(f"  [SKIP] Skipping 9 write operations (would modify PRs or require permissions)")
-                skipped += 9
-                
-                # Compare commits
-                commits = await bitbucket.list_commits(repo_slug)
-                if len(commits.get('values', [])) >= 2:
-                    from_commit = commits['values'][1]['hash']
-                    to_commit = commits['values'][0]['hash']
-                    result = await bitbucket.compare_commits(repo_slug, from_commit, to_commit)
-                    if 'error' in result:
-                        print(f"  [FAIL] compare_commits: {result['error']}")
-                        failed += 1
-                    else:
-                        print(f"  [PASS] compare_commits")
-                        passed += 1
-                # Skip delete_branch since we didn't create one
-                print(f"  [SKIP] delete_branch (no test branch created)")
-                skipped += 1
-    finally:
-        pass
+            
+            # Skip write operations
+            print(f"  [SKIP] Skipping 9 write operations (would modify PRs or require permissions)")
+            skipped += 9
+            
+            # Compare commits
+            commits = await bitbucket.list_commits(repo_slug)
+            if len(commits.get('values', [])) >= 2:
+                from_commit = commits['values'][1]['hash']
+                to_commit = commits['values'][0]['hash']
+                result = await bitbucket.compare_commits(repo_slug, from_commit, to_commit)
+                if 'error' in result:
+                    print(f"  [FAIL] compare_commits: {result['error']}")
+                    failed += 1
+                else:
+                    print(f"  [PASS] compare_commits")
+                    passed += 1
+            # Skip delete_branch since we didn't create one
+            print(f"  [SKIP] delete_branch (no test branch created)")
+            skipped += 1
     
     return passed, failed, exceptions, skipped
 
