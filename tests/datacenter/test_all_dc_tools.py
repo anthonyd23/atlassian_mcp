@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Comprehensive test for all 89 Data Center tools"""
+"""Comprehensive test for all 94 Data Center tools"""
 import asyncio
 import os
 import sys
@@ -190,10 +190,10 @@ async def test_all_jira_dc_tools():
     return passed, failed, exceptions, skipped
 
 async def test_all_confluence_dc_tools():
-    """Test all 25 Confluence DC tools"""
+    """Test all 30 Confluence DC tools"""
     confluence = ConfluenceDCProvider()
     if not confluence.available:
-        return 0, 0, 0, 25
+        return 0, 0, 0, 30
     
     passed = failed = exceptions = skipped = 0
     spaces = await confluence.list_spaces()
@@ -289,9 +289,27 @@ async def test_all_confluence_dc_tools():
         else:
             print(f"  [FAIL] create_page: {result['error']}")
             failed += 1
+            # New hierarchy tools
+            for name, func in [
+                ("get_child_pages", lambda: confluence.get_child_pages(created_page)),
+                ("get_descendants", lambda: confluence.get_descendants(created_page)),
+                ("get_ancestors", lambda: confluence.get_ancestors(created_page)),
+                ("cql_search", lambda: confluence.cql_search(f"type=page AND space={space_key}")),
+                ("move_page", lambda: confluence.move_page(created_page, space_key)),
+            ]:
+                result = await func()
+                if 'error' in result:
+                    print(f"  [FAIL] {name}: {result['error']}")
+                    failed += 1
+                else:
+                    print(f"  [PASS] {name}")
+                    passed += 1
+        else:
+            print(f"  [FAIL] create_page: {result['error']}")
+            failed += 1
     else:
-        print(f"  [SKIP] No valid space keys found - skipping 18 space-dependent tests")
-        skipped += 18
+        print(f"  [SKIP] No valid space keys found - skipping 23 space-dependent tests")
+        skipped += 23
     
     return passed, failed, exceptions, skipped
 
@@ -468,7 +486,7 @@ async def test_all_bitbucket_dc_tools():
 async def main():
     print("=" * 60)
     print("ATLASSIAN DATA CENTER INTEGRATION TEST")
-    print("Testing 89 available tools (31 Jira + 25 Confluence + 33 Bitbucket)")
+    print("Testing 94 available tools (31 Jira + 30 Confluence + 33 Bitbucket)")
     print("=" * 60)
     
     print("\n" + "=" * 60)
@@ -478,10 +496,10 @@ async def main():
     print(f"  Tested: {jira_p + jira_f + jira_e} of 31 Jira tools")
     
     print("\n" + "=" * 60)
-    print("CONFLUENCE DATA CENTER (25 tools available)")
+    print("CONFLUENCE DATA CENTER (30 tools available)")
     print("=" * 60)
     conf_p, conf_f, conf_e, conf_s = await test_all_confluence_dc_tools()
-    print(f"  Tested: {conf_p + conf_f + conf_e} of 25 Confluence tools")
+    print(f"  Tested: {conf_p + conf_f + conf_e} of 30 Confluence tools")
     
     print("\n" + "=" * 60)
     print("BITBUCKET DATA CENTER (33 tools available)")
@@ -497,7 +515,7 @@ async def main():
     print("\n" + "=" * 60)
     print("SUMMARY")
     print("=" * 60)
-    print(f"Tools tested: {total_p + total_f + total_e} of 89 available")
+    print(f"Tools tested: {total_p + total_f + total_e} of 94 available")
     print(f"Passed:       {total_p}")
     print(f"Failed:       {total_f}")
     print(f"Exceptions:   {total_e} (expected failures due to server config)")

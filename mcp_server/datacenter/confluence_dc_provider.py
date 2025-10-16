@@ -502,3 +502,103 @@ class ConfluenceDCProvider:
             return {'results': formatted_results}
         except Exception as e:
             return {'error': str(e)}
+    
+    async def move_page(self, page_id: str, target_space_key: str, target_parent_id: Optional[str] = None) -> Dict[str, Any]:
+        """Move a page to a different space or parent."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_page_id(page_id)
+        if not valid:
+            return {'error': error}
+        valid, error = validate_space_key(target_space_key)
+        if not valid:
+            return {'error': error}
+        try:
+            page = await self.get_page(page_id)
+            if 'error' in page:
+                return page
+            headers = self.auth.get_auth_headers()
+            url = f"{self.base_url}/rest/api/content/{sanitize_url_path(page_id)}"
+            payload = {
+                "version": {"number": page['version']['number'] + 1},
+                "title": page['title'],
+                "type": "page",
+                "space": {"key": target_space_key}
+            }
+            if target_parent_id:
+                payload["ancestors"] = [{"id": target_parent_id}]
+            response = self.session.put(url, headers=headers, json=payload, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def get_child_pages(self, page_id: str) -> Dict[str, Any]:
+        """Get direct child pages of a page."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_page_id(page_id)
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.base_url}/rest/api/content/{sanitize_url_path(page_id)}/child/page"
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def get_descendants(self, page_id: str) -> Dict[str, Any]:
+        """Get all descendant pages of a page."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_page_id(page_id)
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.base_url}/rest/api/content/{sanitize_url_path(page_id)}/descendant/page"
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def get_ancestors(self, page_id: str) -> Dict[str, Any]:
+        """Get ancestor pages of a page."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_page_id(page_id)
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.base_url}/rest/api/content/{sanitize_url_path(page_id)}?expand=ancestors"
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            return {'ancestors': response.json().get('ancestors', [])}
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def cql_search(self, cql: str, limit: int = DEFAULT_PAGE_SIZE) -> Dict[str, Any]:
+        """Search using CQL (Confluence Query Language)."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_non_empty(cql, "cql")
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.base_url}/rest/api/search"
+            params = {'cql': cql, 'limit': limit}
+            response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}

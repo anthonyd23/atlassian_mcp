@@ -119,6 +119,16 @@ async def route_tool_call(name: str, arguments: Dict[str, Any], jira, confluence
         return await confluence.search_by_author(arguments["account_id"], arguments.get("space_key", ""))
     elif name == "search_by_label":
         return await confluence.search_by_label(arguments["label"], arguments.get("space_key", ""))
+    elif name == "move_page":
+        return await confluence.move_page(arguments["page_id"], arguments["target_space_key"], arguments.get("target_parent_id"))
+    elif name == "get_child_pages":
+        return await confluence.get_child_pages(arguments["page_id"])
+    elif name == "get_descendants":
+        return await confluence.get_descendants(arguments["page_id"])
+    elif name == "get_ancestors":
+        return await confluence.get_ancestors(arguments["page_id"])
+    elif name == "cql_search":
+        return await confluence.cql_search(arguments["cql"], arguments.get("limit", 25))
     
     # Bitbucket tools
     elif name == "search_bitbucket":

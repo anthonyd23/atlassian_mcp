@@ -177,3 +177,59 @@ async def test_search_by_label_success(confluence_provider, mock_response):
     
     assert "results" in result
     confluence_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_move_page_success(confluence_provider, mock_response):
+    from unittest.mock import AsyncMock
+    confluence_provider.get_page = AsyncMock(return_value={"title": "Test", "version": {"number": 1}})
+    confluence_provider.session.put = Mock(return_value=mock_response)
+    
+    result = await confluence_provider.move_page("12345", "NEWSPACE")
+    
+    assert result == {"id": "12345", "title": "Test Page"}
+    confluence_provider.session.put.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_child_pages_success(confluence_provider, mock_response):
+    mock_response.json = Mock(return_value={"results": [{"id": "123", "title": "Child"}]})
+    confluence_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await confluence_provider.get_child_pages("12345")
+    
+    assert "results" in result
+    confluence_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_descendants_success(confluence_provider, mock_response):
+    mock_response.json = Mock(return_value={"results": [{"id": "123", "title": "Descendant"}]})
+    confluence_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await confluence_provider.get_descendants("12345")
+    
+    assert "results" in result
+    confluence_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_ancestors_success(confluence_provider, mock_response):
+    mock_response.json = Mock(return_value={"ancestors": [{"id": "123", "title": "Parent"}]})
+    confluence_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await confluence_provider.get_ancestors("12345")
+    
+    assert "ancestors" in result
+    confluence_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_cql_search_success(confluence_provider, mock_response):
+    mock_response.json = Mock(return_value={"results": [{"id": "123", "title": "Page"}]})
+    confluence_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await confluence_provider.cql_search("parent=12345")
+    
+    assert "results" in result
+    confluence_provider.session.get.assert_called_once()
