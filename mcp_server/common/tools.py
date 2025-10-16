@@ -57,7 +57,12 @@ CONFLUENCE_TOOLS = [
     {"name": "get_recent_content", "description": "Get recently updated content"},
     {"name": "restore_page_version", "description": "Restore previous version"},
     {"name": "search_by_author", "description": "Find content by author"},
-    {"name": "search_by_label", "description": "Find content by label"}
+    {"name": "search_by_label", "description": "Find content by label"},
+    {"name": "move_page", "description": "Move a page to a different space or parent"},
+    {"name": "get_child_pages", "description": "Get direct child pages of a page"},
+    {"name": "get_descendants", "description": "Get all descendant pages of a page"},
+    {"name": "get_ancestors", "description": "Get ancestor pages of a page"},
+    {"name": "cql_search", "description": "Search using CQL (Confluence Query Language)"}
 ]
 
 BITBUCKET_TOOLS = [

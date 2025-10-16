@@ -71,8 +71,40 @@ async def test_confluence_tools():
             result = await confluence.search("MCP Test")
             print(f"   Result: {result}\n")
             
-            # 12. Delete page
-            print("12. delete_page")
+            # 12. Add label
+            print("12. add_page_label")
+            result = await confluence.add_label(page_id, "test-label")
+            print(f"   Result: {result}\n")
+            
+            # 13. Get child pages
+            print("13. get_child_pages")
+            result = await confluence.get_child_pages(page_id)
+            print(f"   Result: {result}\n")
+            
+            # 14. Get descendants
+            print("14. get_descendants")
+            result = await confluence.get_descendants(page_id)
+            print(f"   Result: {result}\n")
+            
+            # 15. Get ancestors
+            print("15. get_ancestors")
+            result = await confluence.get_ancestors(page_id)
+            print(f"   Result: {result}\n")
+            
+            # 16. CQL search
+            print("16. cql_search")
+            result = await confluence.cql_search(f"type=page AND space={space_key}")
+            print(f"   Result: {result}\n")
+            
+            # 17. Move page (if multiple spaces exist)
+            if len(spaces) > 1:
+                print("17. move_page")
+                target_space = spaces[1]['key']
+                result = await confluence.move_page(page_id, target_space)
+                print(f"   Result: {result}\n")
+            
+            # 18. Delete page
+            print("18. delete_page")
             result = await confluence.delete_page(page_id)
             print(f"   Result: {result}\n")
     else:

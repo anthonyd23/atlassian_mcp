@@ -193,6 +193,44 @@ TOOL_SCHEMAS = {
         },
         "required": ["page_id"]
     },
+    "move_page": {
+        "type": "object",
+        "properties": {
+            "page_id": {"type": "string"},
+            "target_space_key": {"type": "string"},
+            "target_parent_id": {"type": "string"}
+        },
+        "required": ["page_id", "target_space_key"]
+    },
+    "get_child_pages": {
+        "type": "object",
+        "properties": {
+            "page_id": {"type": "string"}
+        },
+        "required": ["page_id"]
+    },
+    "get_descendants": {
+        "type": "object",
+        "properties": {
+            "page_id": {"type": "string"}
+        },
+        "required": ["page_id"]
+    },
+    "get_ancestors": {
+        "type": "object",
+        "properties": {
+            "page_id": {"type": "string"}
+        },
+        "required": ["page_id"]
+    },
+    "cql_search": {
+        "type": "object",
+        "properties": {
+            "cql": {"type": "string", "description": "CQL query string (e.g., 'parent=123456' or 'type=page AND space=DEV')"},
+            "limit": {"type": "integer"}
+        },
+        "required": ["cql"]
+    },
     
     # Bitbucket tools
     "search_bitbucket": {
