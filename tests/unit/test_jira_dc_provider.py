@@ -68,6 +68,22 @@ async def test_create_issue_invalid_project(jira_dc_provider):
 
 
 @pytest.mark.asyncio
+async def test_create_issue_with_custom_fields(jira_dc_provider, mock_response):
+    mock_response.json = Mock(return_value={"key": "TEST-125"})
+    jira_dc_provider.session.post = Mock(return_value=mock_response)
+    
+    custom_fields = {"customfield_10001": "Sprint 1", "customfield_10002": {"value": "High"}}
+    result = await jira_dc_provider.create_issue("TEST", "Summary", "Description", "Task", custom_fields)
+    
+    assert result == {"key": "TEST-125"}
+    call_args = jira_dc_provider.session.post.call_args
+    payload = call_args.kwargs["json"]
+    assert "customfield_10001" in payload["fields"]
+    assert payload["fields"]["customfield_10001"] == "Sprint 1"
+    assert "customfield_10002" in payload["fields"]
+
+
+@pytest.mark.asyncio
 async def test_search_success(jira_dc_provider, mock_response):
     mock_response.json = Mock(return_value={
         "total": 1,

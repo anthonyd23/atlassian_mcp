@@ -21,7 +21,8 @@ TOOL_SCHEMAS = {
             "project_key": {"type": "string"},
             "summary": {"type": "string"},
             "description": {"type": "string"},
-            "issue_type": {"type": "string"}
+            "issue_type": {"type": "string"},
+            "custom_fields": {"type": "object", "description": "Optional custom fields as key-value pairs (e.g., {'customfield_10001': 'value'})"}
         },
         "required": ["project_key", "summary", "issue_type"]
     },

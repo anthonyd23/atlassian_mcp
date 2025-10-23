@@ -229,8 +229,8 @@ class JiraDCProvider:
             logger.error(f"Error fetching issue {issue_key}: {e}")
             return {'error': str(e)}
     
-    async def create_issue(self, project_key: str, summary: str, description: str, issue_type: str = "Task") -> Dict[str, Any]:
-        """Create a new Jira issue."""
+    async def create_issue(self, project_key: str, summary: str, description: str, issue_type: str = "Task", custom_fields: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Create a new Jira issue with optional custom fields."""
         check = self._check_available()
         if check:
             return check
@@ -246,13 +246,19 @@ class JiraDCProvider:
                 "fields": {
                     "project": {"key": project_key},
                     "summary": summary,
-                    "description": description,
                     "issuetype": {"name": issue_type}
                 }
             }
+            if description:
+                payload["fields"]["description"] = description
+            if custom_fields:
+                payload["fields"].update(custom_fields)
             response = self.session.post(url, headers=self.auth.get_auth_headers(), timeout=self.timeout, json=payload)
             response.raise_for_status()
             return response.json()
+        except requests.exceptions.HTTPError as e:
+            error_detail = e.response.text if hasattr(e.response, 'text') else str(e)
+            return {'error': f"{str(e)} - {error_detail}"}
         except Exception as e:
             return {'error': str(e)}
     

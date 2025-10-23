@@ -10,7 +10,7 @@ async def route_tool_call(name: str, arguments: Dict[str, Any], jira, confluence
     elif name == "get_issue":
         return await jira.get_issue(arguments["issue_key"])
     elif name == "create_issue":
-        return await jira.create_issue(arguments["project_key"], arguments["summary"], arguments["description"], arguments.get("issue_type", "Task"))
+        return await jira.create_issue(arguments["project_key"], arguments["summary"], arguments["description"], arguments.get("issue_type", "Task"), arguments.get("custom_fields"))
     elif name == "update_issue":
         return await jira.update_issue(arguments["issue_key"], arguments["fields"])
     elif name == "add_comment":
