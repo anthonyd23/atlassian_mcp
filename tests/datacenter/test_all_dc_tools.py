@@ -3,13 +3,13 @@
 import asyncio
 import os
 import sys
+import yaml
+import re
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from mcp_server.datacenter.jira_dc_provider import JiraDCProvider
 from mcp_server.datacenter.confluence_dc_provider import ConfluenceDCProvider
 from mcp_server.datacenter.bitbucket_dc_provider import BitbucketDCProvider
-import getpass
-import re
 
 def is_connection_error(error_msg):
     """Check if error is a connection/DNS issue"""
@@ -34,29 +34,32 @@ def format_error(name, error_msg):
         return "Connection failed (check URL/network/VPN)"
     return str(error_msg)
 
-def prompt_credentials():
-    """Prompt for missing credentials"""
-    if not os.getenv('JIRA_BASE_URL'):
-        print("\n[PROMPT] Jira Data Center credentials not found")
-        response = input("Configure now? (y/n): ").lower()
-        if response == 'y':
-            os.environ['JIRA_BASE_URL'] = input("  Jira Base URL (e.g., https://jira.company.com): ")
-            os.environ['JIRA_PAT_TOKEN'] = getpass.getpass("  Jira PAT: ")
+def load_config():
+    """Load credentials from config.yaml"""
+    config_path = os.path.join(os.path.dirname(__file__), '..', '..', 'config.yaml')
     
-    if not os.getenv('CONFLUENCE_BASE_URL'):
-        print("\n[PROMPT] Confluence Data Center credentials not found")
-        response = input("Configure now? (y/n): ").lower()
-        if response == 'y':
-            os.environ['CONFLUENCE_BASE_URL'] = input("  Confluence Base URL (e.g., https://wiki.company.com): ")
-            os.environ['CONFLUENCE_PAT_TOKEN'] = getpass.getpass("  Confluence PAT: ")
+    if not os.path.exists(config_path):
+        print("\nError: config.yaml not found!")
+        print("Please create config.yaml from config.template.yaml and configure your credentials.")
+        sys.exit(1)
     
-    if not os.getenv('BITBUCKET_BASE_URL'):
-        print("\n[PROMPT] Bitbucket Data Center credentials not found")
-        response = input("Configure now? (y/n): ").lower()
-        if response == 'y':
-            os.environ['BITBUCKET_BASE_URL'] = input("  Bitbucket Base URL (e.g., https://git.company.com): ")
-            os.environ['BITBUCKET_PAT_TOKEN'] = getpass.getpass("  Bitbucket PAT: ")
-            os.environ['BITBUCKET_PROJECT'] = input("  Bitbucket Project Key: ")
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f)
+    
+    if config.get('deployment_type') != 'datacenter':
+        print("\nError: config.yaml must have deployment_type: datacenter for Data Center tests")
+        sys.exit(1)
+    
+    dc = config.get('datacenter', {})
+    os.environ['JIRA_BASE_URL'] = dc.get('jira_base_url', '')
+    os.environ['JIRA_PAT_TOKEN'] = dc.get('jira_pat_token', '')
+    os.environ['CONFLUENCE_BASE_URL'] = dc.get('confluence_base_url', '')
+    os.environ['CONFLUENCE_PAT_TOKEN'] = dc.get('confluence_pat_token', '')
+    os.environ['BITBUCKET_BASE_URL'] = dc.get('bitbucket_base_url', '')
+    os.environ['BITBUCKET_PAT_TOKEN'] = dc.get('bitbucket_pat_token', '')
+    os.environ['BITBUCKET_PROJECT'] = dc.get('bitbucket_project', '')
+    
+    print(f"Loaded Data Center credentials from config.yaml")
 
 async def test_all_jira_dc_tools():
     """Test all 31 Jira DC tools"""
@@ -536,7 +539,7 @@ if __name__ == "__main__":
     print("ATLASSIAN DATA CENTER INTEGRATION TEST")
     print("=" * 60)
     
-    prompt_credentials()
+    load_config()
     
     exit_code = asyncio.run(main())
     sys.exit(exit_code)

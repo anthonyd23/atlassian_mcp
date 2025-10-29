@@ -2,109 +2,129 @@
 
 ## Quick Start
 
-### For Cloud Deployment
+### 1. Copy Configuration Template
 
 ```bash
-sam deploy --guided
+cp config.template.yaml config.yaml
 ```
 
-When prompted, provide credentials for the services you need:
-- **AtlassianBaseUrl**: `https://yourcompany.atlassian.net`
-- **AtlassianUsername**: `your-email@company.com`
-- **AtlassianApiToken**: `your-api-token` (for Jira/Confluence)
-- **BitbucketWorkspace**: `your-workspace` (optional)
-- **BitbucketApiToken**: `your-bitbucket-token` (optional)
-- Leave Data Center parameters empty
+### 2. Edit config.yaml
 
-### For Data Center Deployment
+**For Cloud Deployment:**
+```yaml
+stack_name: atlassian-mcp-stack
+deployment_type: cloud
+
+cloud:
+  atlassian_base_url: https://yourcompany.atlassian.net
+  atlassian_username: your-email@company.com
+  atlassian_api_token: your-api-token
+  
+  # Bitbucket Cloud (optional)
+  bitbucket_workspace: your-workspace
+  bitbucket_api_token: your-bitbucket-token
+```
+
+**For Data Center Deployment:**
+```yaml
+stack_name: atlassian-mcp-stack
+deployment_type: datacenter
+
+datacenter:
+  # Configure only the services you need
+  jira_base_url: https://jira.company.com
+  jira_pat_token: your-jira-pat-token
+  
+  confluence_base_url: https://wiki.company.com
+  confluence_pat_token: your-confluence-pat-token
+  
+  bitbucket_base_url: https://git.company.com
+  bitbucket_pat_token: your-bitbucket-pat-token
+  bitbucket_project: YOUR_PROJECT_KEY
+```
+
+### 3. Deploy
 
 ```bash
-sam deploy --guided
+python deploy.py
 ```
 
-When prompted, provide credentials for the services you need:
-- **JiraBaseUrl**: `https://jira.yourcompany.com` (optional)
-- **JiraPatToken**: `your-jira-pat-token` (optional)
-- **ConfluenceBaseUrl**: `https://wiki.yourcompany.com` (optional)
-- **ConfluencePatToken**: `your-confluence-pat-token` (optional)
-- **BitbucketBaseUrl**: `https://git.yourcompany.com` (optional)
-- **BitbucketPatToken**: `your-bitbucket-pat-token` (optional)
-- **BitbucketProject**: `YOUR_PROJECT_KEY` (optional)
-- Leave Cloud parameters empty
+The script will:
+- Validate your configuration
+- Build the SAM application
+- Deploy to AWS
+- Display the MCP API URL
 
-## Non-Interactive Deployment
+## Configuration Examples
 
-### Cloud (All Services)
-```bash
-sam deploy \
-  --parameter-overrides \
-    AtlassianBaseUrl=https://yourcompany.atlassian.net \
-    AtlassianUsername=your-email@company.com \
-    AtlassianApiToken=your-token \
-    BitbucketWorkspace=your-workspace \
-    BitbucketApiToken=your-bitbucket-token
+### Cloud - Jira and Confluence Only
+```yaml
+deployment_type: cloud
+cloud:
+  atlassian_base_url: https://yourcompany.atlassian.net
+  atlassian_username: your-email@company.com
+  atlassian_api_token: your-token
+  bitbucket_workspace: ""  # Leave empty if not using
+  bitbucket_api_token: ""
 ```
 
-### Cloud (Jira/Confluence Only)
-```bash
-sam deploy \
-  --parameter-overrides \
-    AtlassianBaseUrl=https://yourcompany.atlassian.net \
-    AtlassianUsername=your-email@company.com \
-    AtlassianApiToken=your-token
+### Cloud - All Services
+```yaml
+deployment_type: cloud
+cloud:
+  atlassian_base_url: https://yourcompany.atlassian.net
+  atlassian_username: your-email@company.com
+  atlassian_api_token: your-token
+  bitbucket_workspace: your-workspace
+  bitbucket_api_token: your-bitbucket-token
 ```
 
-### Data Center (All Services)
-```bash
-sam deploy \
-  --parameter-overrides \
-    JiraBaseUrl=https://jira.yourcompany.com \
-    JiraPatToken=your-jira-token \
-    ConfluenceBaseUrl=https://wiki.yourcompany.com \
-    ConfluencePatToken=your-confluence-token \
-    BitbucketBaseUrl=https://git.yourcompany.com \
-    BitbucketPatToken=your-bitbucket-token \
-    BitbucketProject=YOUR_PROJECT_KEY
+### Data Center - Jira Only
+```yaml
+deployment_type: datacenter
+datacenter:
+  jira_base_url: https://jira.company.com
+  jira_pat_token: your-token
+  confluence_base_url: ""
+  confluence_pat_token: ""
+  bitbucket_base_url: ""
+  bitbucket_pat_token: ""
+  bitbucket_project: ""
 ```
 
-### Data Center (Jira Only)
-```bash
-sam deploy \
-  --parameter-overrides \
-    JiraBaseUrl=https://jira.yourcompany.com \
-    JiraPatToken=your-jira-token
+### Data Center - All Services
+```yaml
+deployment_type: datacenter
+datacenter:
+  jira_base_url: https://jira.company.com
+  jira_pat_token: your-jira-token
+  confluence_base_url: https://wiki.company.com
+  confluence_pat_token: your-confluence-token
+  bitbucket_base_url: https://git.company.com
+  bitbucket_pat_token: your-bitbucket-token
+  bitbucket_project: YOUR_PROJECT_KEY
 ```
 
-## Configuration File (samconfig.toml)
+## Updating Configuration
 
-The `samconfig.toml` file stores your deployment settings. After running `sam deploy --guided` once, your choices are saved here:
+To update credentials or settings:
 
-```toml
-version = 0.1
+1. Edit `config.yaml`
+2. Run `python deploy.py`
 
-[default.deploy.parameters]
-stack_name = "atlassian-mcp-stack"
-resolve_s3 = true
-s3_prefix = "atlassian-mcp-stack"
-region = "us-east-1"
-confirm_changeset = false
-capabilities = "CAPABILITY_IAM"
-parameter_overrides = "AtlassianBaseUrl=\"https://yourcompany.atlassian.net\" AtlassianUsername=\"your-email@company.com\""
-```
+The deployment script will update the Lambda environment variables with your new configuration.
 
-**Note:** API tokens are NOT stored in `samconfig.toml` for security. You must provide them on each deployment via:
-- Command line: `--parameter-overrides AtlassianApiToken=your-token`
-- Interactive prompt: `sam deploy --guided`
+## Security Notes
 
-After initial setup, subsequent deployments only need:
-```bash
-sam build && sam deploy
-```
+- `config.yaml` is gitignored - safe to store credentials locally
+- Credentials are passed to CloudFormation as parameters
+- Lambda environment variables are encrypted at rest
+- Never commit `config.yaml` to version control
 
 ## Platform Detection
 
-The Lambda function automatically detects the platform:
-- If any service-specific PAT token is set (JIRA_PAT_TOKEN, CONFLUENCE_PAT_TOKEN, or BITBUCKET_PAT_TOKEN) → Data Center mode
-- Otherwise → Cloud mode
+The Lambda function automatically detects the platform based on `deployment_type` in config.yaml:
+- `deployment_type: cloud` → Uses Cloud credentials (ATLASSIAN_API_TOKEN)
+- `deployment_type: datacenter` → Uses Data Center credentials (PAT tokens)
 
-Platform detection happens at runtime based on environment variables.
+Platform detection happens at runtime based on Lambda environment variables set during deployment.

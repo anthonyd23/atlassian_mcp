@@ -28,7 +28,9 @@ python mcp_server/main.py
 
 **AWS Deployment:**
 ```bash
-sam build && sam deploy --guided
+cp config.template.yaml config.yaml
+# Edit config.yaml with your credentials
+python deploy.py
 ```
 
 ## Features
@@ -58,32 +60,59 @@ sam build && sam deploy --guided
 
 ## Configuration
 
-### Cloud (Jira/Confluence)
+### AWS Deployment
+
+1. Copy the template:
+```bash
+cp config.template.yaml config.yaml
+```
+
+2. Edit `config.yaml` with your credentials:
+
+**For Cloud:**
+```yaml
+deployment_type: cloud
+cloud:
+  atlassian_base_url: https://yourcompany.atlassian.net
+  atlassian_username: your-email@company.com
+  atlassian_api_token: your-token
+  bitbucket_workspace: your-workspace  # optional
+  bitbucket_api_token: your-token      # optional
+```
+
+**For Data Center:**
+```yaml
+deployment_type: datacenter
+datacenter:
+  jira_base_url: https://jira.company.com
+  jira_pat_token: your-token
+  confluence_base_url: https://wiki.company.com
+  confluence_pat_token: your-token
+  bitbucket_base_url: https://git.company.com
+  bitbucket_pat_token: your-token
+  bitbucket_project: PROJECT_KEY
+```
+
+3. Deploy:
+```bash
+python deploy.py
+```
+
+### Local Development (Environment Variables)
+
+**Cloud:**
 ```bash
 export ATLASSIAN_BASE_URL="https://yourcompany.atlassian.net"
 export ATLASSIAN_USERNAME="your-email@company.com"
 export ATLASSIAN_API_TOKEN="your-token"
 ```
 
-### Cloud (Bitbucket)
+**Data Center:**
 ```bash
-export BITBUCKET_WORKSPACE="your-workspace"
-export BITBUCKET_API_TOKEN="your-token"
-export ATLASSIAN_USERNAME="your-email@company.com"
-```
-
-### Data Center
-```bash
-# Per service
 export JIRA_BASE_URL="https://jira.company.com"
 export JIRA_PAT_TOKEN="your-token"
-
 export CONFLUENCE_BASE_URL="https://wiki.company.com"
 export CONFLUENCE_PAT_TOKEN="your-token"
-
-export BITBUCKET_BASE_URL="https://git.company.com"
-export BITBUCKET_PAT_TOKEN="your-token"
-export BITBUCKET_PROJECT="PROJECT_KEY"
 ```
 
 ## AI Agent Integration
@@ -113,19 +142,23 @@ See [AGENT_INTEGRATION.md](AGENT_INTEGRATION.md) for complete setup instructions
 
 ## AWS Deployment
 
-Deploy to Lambda with API Gateway:
-
+1. **Configure credentials:**
 ```bash
-sam build
-sam deploy --guided
+cp config.template.yaml config.yaml
+# Edit config.yaml with your Atlassian credentials
 ```
 
-Retrieve API key:
+2. **Deploy:**
 ```bash
-aws apigateway get-api-key --api-key <API_KEY_ID> --include-value --query "value" --output text
+python deploy.py
 ```
 
-See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for platform-specific deployment instructions.
+The script will:
+- Build the SAM application
+- Deploy to AWS with your credentials
+- Display the MCP API URL
+
+See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for detailed instructions.
 
 ## Testing
 
@@ -180,10 +213,11 @@ See [MONITORING.md](MONITORING.md) for setup and configuration.
 
 ## Security
 
-- API Gateway authentication with API keys
+- IAM authentication for same-account access
 - Rate limiting (100 req/sec, 200 burst)
 - Encrypted credentials in Lambda environment variables
 - HTTPS-only traffic
+- config.yaml gitignored (credentials not in version control)
 
 ## License
 

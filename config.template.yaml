@@ -1,0 +1,37 @@
+# Atlassian MCP Server Configuration Template
+# Copy this to config.yaml and fill in your values
+
+# Stack naming
+stack_name: atlassian-mcp-stack
+
+# Deployment type: 'cloud' or 'datacenter'
+deployment_type: cloud
+
+# Atlassian Cloud Configuration (if deployment_type: cloud)
+cloud:
+  atlassian_base_url: https://yourcompany.atlassian.net
+  atlassian_username: your-email@company.com
+  atlassian_api_token: your-atlassian-api-token
+  
+  # Bitbucket Cloud (optional)
+  bitbucket_workspace: your-workspace
+  bitbucket_api_token: your-bitbucket-api-token
+
+# Atlassian Data Center Configuration (if deployment_type: datacenter)
+datacenter:
+  # Jira Data Center
+  jira_base_url: https://jira.company.com
+  jira_pat_token: your-jira-pat-token
+  
+  # Confluence Data Center
+  confluence_base_url: https://wiki.company.com
+  confluence_pat_token: your-confluence-pat-token
+  
+  # Bitbucket Data Center
+  bitbucket_base_url: https://git.company.com
+  bitbucket_pat_token: your-bitbucket-pat-token
+  bitbucket_project: YOUR_PROJECT
+
+# Monitoring (optional)
+monitoring:
+  alert_email: ""  # Leave empty to disable email alerts

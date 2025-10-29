@@ -176,9 +176,10 @@ python mcp_server/main.py
 
 ### AWS Lambda
 ```
-sam build
-sam deploy --guided
-→ API Gateway URL + API Key
+cp config.template.yaml config.yaml
+# Edit config.yaml with credentials
+python deploy.py
+→ API Gateway URL (IAM authenticated)
 ```
 
 ## Monitoring (AWS Only)

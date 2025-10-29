@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Comprehensive test attempting all 94 tools"""
 import asyncio
-import getpass
 import os
 import re
 import sys
+import yaml
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from mcp_server.cloud.jira_provider import JiraProvider
@@ -34,23 +34,30 @@ def format_error(name, error_msg):
         return "Connection failed (check URL/network/VPN)"
     return str(error_msg)
 
-def prompt_credentials():
-    """Prompt for missing credentials"""
-    if not os.getenv('ATLASSIAN_BASE_URL'):
-        print("\n[PROMPT] Atlassian Cloud (Jira/Confluence) credentials not found")
-        response = input("Configure now? (y/n): ").lower()
-        if response == 'y':
-            os.environ['ATLASSIAN_BASE_URL'] = input("  Atlassian Base URL (e.g., https://yourcompany.atlassian.net): ")
-            os.environ['ATLASSIAN_USERNAME'] = input("  Atlassian Email: ")
-            os.environ['ATLASSIAN_API_TOKEN'] = getpass.getpass("  Atlassian API Token: ")
+def load_config():
+    """Load credentials from config.yaml"""
+    config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'config.yaml')
     
-    if not os.getenv('BITBUCKET_WORKSPACE'):
-        print("\n[PROMPT] Bitbucket Cloud credentials not found")
-        response = input("Configure now? (y/n): ").lower()
-        if response == 'y':
-            os.environ['BITBUCKET_WORKSPACE'] = input("  Bitbucket Workspace: ")
-            os.environ['ATLASSIAN_USERNAME'] = input("  Bitbucket Email (for auth): ")
-            os.environ['BITBUCKET_API_TOKEN'] = getpass.getpass("  Bitbucket API Token: ")
+    if not os.path.exists(config_path):
+        print("\nError: config.yaml not found!")
+        print("Please create config.yaml from config.template.yaml and configure your credentials.")
+        sys.exit(1)
+    
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f)
+    
+    if config.get('deployment_type') != 'cloud':
+        print("\nError: config.yaml must have deployment_type: cloud for Cloud tests")
+        sys.exit(1)
+    
+    cloud = config.get('cloud', {})
+    os.environ['ATLASSIAN_BASE_URL'] = cloud.get('atlassian_base_url', '')
+    os.environ['ATLASSIAN_USERNAME'] = cloud.get('atlassian_username', '')
+    os.environ['ATLASSIAN_API_TOKEN'] = cloud.get('atlassian_api_token', '')
+    os.environ['BITBUCKET_WORKSPACE'] = cloud.get('bitbucket_workspace', '')
+    os.environ['BITBUCKET_API_TOKEN'] = cloud.get('bitbucket_api_token', '')
+    
+    print(f"Loaded Cloud credentials from config.yaml")
 
 async def test_all_jira_tools():
     """Test all 31 Jira tools"""
@@ -495,7 +502,7 @@ if __name__ == "__main__":
     print("ATLASSIAN CLOUD INTEGRATION TEST")
     print("=" * 60)
     
-    prompt_credentials()
+    load_config()
     
     exit_code = asyncio.run(main())
     sys.exit(exit_code)

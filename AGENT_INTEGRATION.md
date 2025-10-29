@@ -378,4 +378,4 @@ Configure different servers for different Atlassian instances:
 - **Features:** See [README.md](README.md) for complete feature list
 - **Configuration:** [QUICK_START.md](QUICK_START.md)
 - **Deployment:** [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
-- **Issues:** [GitHub Issues](https://github.com/anthonyd23/atlassian_mcp/issues)
+- **Issues:** GitHub Issues
