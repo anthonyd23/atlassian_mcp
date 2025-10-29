@@ -408,7 +408,11 @@ class JiraProvider:
         if not valid:
             return {'error': error}
         try:
-            jql = f"assignee = '{assignee}'"
+            # Don't quote JQL functions like currentUser()
+            if assignee.endswith('()'):
+                jql = f"assignee = {assignee}"
+            else:
+                jql = f"assignee = '{assignee}'"
             if project_key:
                 jql += f" AND project = '{project_key}'"
             return await self.search(jql)
@@ -562,7 +566,7 @@ class JiraProvider:
             return {'error': str(e)}
     
     async def search(self, jql: str) -> Dict[str, Any]:
-        """Search using query."""
+        """Search using JQL query via Jira API v3."""
         check = self._check_available()
         if check:
             return check
@@ -572,7 +576,8 @@ class JiraProvider:
             url = f"{self.auth.get_base_url()}/rest/api/3/search/jql"
             
             params = {
-                'jql': jql
+                'jql': jql,
+                'fields': 'summary,status,assignee,priority,created,issuetype,description'
             }
             
             response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)

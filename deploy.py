@@ -140,7 +140,7 @@ def main():
         api_url = next((o['OutputValue'] for o in outputs if o['OutputKey'] == 'MCPApiUrl'), None)
         if api_url:
             print(f"\nMCP Server URL: {api_url}")
-            print("\nAdd this to Agent Audrey's config.yaml:")
+            print("\nTo integrate with an MCP client, add this configuration:")
             print(f"  mcp_servers:")
             print(f"    - id: atlassian")
             print(f"      url: {api_url}")

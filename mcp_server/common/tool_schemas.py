@@ -6,7 +6,8 @@ TOOL_SCHEMAS = {
         "type": "object",
         "properties": {
             "jql": {"type": "string", "description": "JQL query string"}
-        }
+        },
+        "required": ["jql"]
     },
     "get_issue": {
         "type": "object",
@@ -103,6 +104,13 @@ TOOL_SCHEMAS = {
             "issue_key": {"type": "string"}
         },
         "required": ["issue_key"]
+    },
+    "search_by_assignee": {
+        "type": "object",
+        "properties": {
+            "assignee": {"type": "string", "description": "Jira account ID or email address of the assignee. For current user, use 'currentUser()'."}
+        },
+        "required": ["assignee"]
     },
     
     # Confluence tools

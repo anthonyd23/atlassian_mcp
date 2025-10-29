@@ -6,6 +6,7 @@ import logging
 import boto3
 from datetime import datetime
 from mcp_server.common.tools import JIRA_TOOLS, CONFLUENCE_TOOLS, BITBUCKET_TOOLS
+from mcp_server.common.tool_schemas import TOOL_SCHEMAS
 from mcp_server.common.router import route_tool_call
 
 # Setup structured logging
@@ -34,7 +35,15 @@ else:
     confluence = ConfluenceProvider()
     bitbucket = BitbucketProvider()
 
-ALL_TOOLS = JIRA_TOOLS + CONFLUENCE_TOOLS + BITBUCKET_TOOLS
+# Merge tools with their schemas
+ALL_TOOLS = []
+for tool in (JIRA_TOOLS + CONFLUENCE_TOOLS + BITBUCKET_TOOLS):
+    tool_with_schema = tool.copy()
+    if tool['name'] in TOOL_SCHEMAS:
+        tool_with_schema['inputSchema'] = TOOL_SCHEMAS[tool['name']]
+    else:
+        tool_with_schema['inputSchema'] = {"type": "object", "properties": {}}
+    ALL_TOOLS.append(tool_with_schema)
 
 async def call_tool(name: str, arguments: dict):
     return await route_tool_call(name, arguments, jira, confluence, bitbucket)
@@ -98,7 +107,7 @@ def lambda_handler(event, context):
             return {
                 'statusCode': 200,
                 'headers': {'Content-Type': 'application/json'},
-                'body': json.dumps({'tools': [{'name': t['name'], 'description': t['description']} for t in ALL_TOOLS]})
+                'body': json.dumps({'tools': ALL_TOOLS})
             }
         
         # Call tool
