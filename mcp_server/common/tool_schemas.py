@@ -112,6 +112,14 @@ TOOL_SCHEMAS = {
         },
         "required": ["assignee"]
     },
+    "set_priority": {
+        "type": "object",
+        "properties": {
+            "issue_key": {"type": "string", "description": "Issue key (e.g., PROJ-123)"},
+            "priority": {"type": "string", "description": "Priority name (e.g., High, Medium, Low, Highest, Lowest)"}
+        },
+        "required": ["issue_key", "priority"]
+    },
     
     # Confluence tools
     "search_confluence": {
@@ -131,10 +139,10 @@ TOOL_SCHEMAS = {
     "get_page_by_title": {
         "type": "object",
         "properties": {
-            "title": {"type": "string"},
-            "space_key": {"type": "string"}
+            "space_key": {"type": "string"},
+            "title": {"type": "string"}
         },
-        "required": ["title", "space_key"]
+        "required": ["space_key", "title"]
     },
     "create_page": {
         "type": "object",
@@ -402,5 +410,319 @@ TOOL_SCHEMAS = {
             "to_commit": {"type": "string"}
         },
         "required": ["repo_slug", "from_commit", "to_commit"]
+    },
+    
+    # Additional Jira schemas
+    "get_user": {
+        "type": "object",
+        "properties": {
+            "account_id": {"type": "string"}
+        },
+        "required": ["account_id"]
+    },
+    "search_users": {
+        "type": "object",
+        "properties": {
+            "query": {"type": "string"}
+        },
+        "required": ["query"]
+    },
+    "get_current_user": {
+        "type": "object",
+        "properties": {}
+    },
+    "link_issues": {
+        "type": "object",
+        "properties": {
+            "inward_issue": {"type": "string"},
+            "outward_issue": {"type": "string"},
+            "link_type": {"type": "string"}
+        },
+        "required": ["inward_issue", "outward_issue"]
+    },
+    "add_worklog": {
+        "type": "object",
+        "properties": {
+            "issue_key": {"type": "string"},
+            "time_spent": {"type": "string", "description": "Time in Jira format (e.g., '2h 30m', '1d')"},
+            "comment": {"type": "string"}
+        },
+        "required": ["issue_key", "time_spent"]
+    },
+    "get_worklogs": {
+        "type": "object",
+        "properties": {
+            "issue_key": {"type": "string"}
+        },
+        "required": ["issue_key"]
+    },
+    "add_label": {
+        "type": "object",
+        "properties": {
+            "issue_key": {"type": "string"},
+            "label": {"type": "string"}
+        },
+        "required": ["issue_key", "label"]
+    },
+    "search_by_reporter": {
+        "type": "object",
+        "properties": {
+            "reporter": {"type": "string"},
+            "project_key": {"type": "string"}
+        },
+        "required": ["reporter"]
+    },
+    "get_recent_issues": {
+        "type": "object",
+        "properties": {
+            "days": {"type": "integer"},
+            "project_key": {"type": "string"}
+        }
+    },
+    "list_boards": {
+        "type": "object",
+        "properties": {}
+    },
+    "get_board_issues": {
+        "type": "object",
+        "properties": {
+            "board_id": {"type": "integer"}
+        },
+        "required": ["board_id"]
+    },
+    "list_sprints": {
+        "type": "object",
+        "properties": {
+            "board_id": {"type": "integer"}
+        },
+        "required": ["board_id"]
+    },
+    "get_sprint_issues": {
+        "type": "object",
+        "properties": {
+            "sprint_id": {"type": "integer"}
+        },
+        "required": ["sprint_id"]
+    },
+    "get_user_permissions": {
+        "type": "object",
+        "properties": {
+            "project_key": {"type": "string"}
+        }
+    },
+    "add_attachment": {
+        "type": "object",
+        "properties": {
+            "issue_key": {"type": "string"},
+            "filename": {"type": "string"},
+            "content": {"type": "string", "description": "File content (will be converted to bytes)"}
+        },
+        "required": ["issue_key", "filename", "content"]
+    },
+    
+    # Additional Confluence schemas
+    "get_confluence_user": {
+        "type": "object",
+        "properties": {
+            "account_id": {"type": "string"}
+        },
+        "required": ["account_id"]
+    },
+    "search_confluence_users": {
+        "type": "object",
+        "properties": {
+            "query": {"type": "string"}
+        },
+        "required": ["query"]
+    },
+    "add_page_label": {
+        "type": "object",
+        "properties": {
+            "page_id": {"type": "string"},
+            "label": {"type": "string"}
+        },
+        "required": ["page_id", "label"]
+    },
+    "get_page_labels": {
+        "type": "object",
+        "properties": {
+            "page_id": {"type": "string"}
+        },
+        "required": ["page_id"]
+    },
+    "get_page_history": {
+        "type": "object",
+        "properties": {
+            "page_id": {"type": "string"}
+        },
+        "required": ["page_id"]
+    },
+    "get_page_restrictions": {
+        "type": "object",
+        "properties": {
+            "page_id": {"type": "string"}
+        },
+        "required": ["page_id"]
+    },
+    "set_page_restrictions": {
+        "type": "object",
+        "properties": {
+            "page_id": {"type": "string"},
+            "restrictions": {"type": "object"}
+        },
+        "required": ["page_id", "restrictions"]
+    },
+    "copy_page": {
+        "type": "object",
+        "properties": {
+            "page_id": {"type": "string"},
+            "new_title": {"type": "string"},
+            "space_key": {"type": "string"}
+        },
+        "required": ["page_id", "new_title"]
+    },
+    "get_user_content": {
+        "type": "object",
+        "properties": {
+            "account_id": {"type": "string"}
+        },
+        "required": ["account_id"]
+    },
+    "get_recent_content": {
+        "type": "object",
+        "properties": {
+            "limit": {"type": "integer"}
+        }
+    },
+    "restore_page_version": {
+        "type": "object",
+        "properties": {
+            "page_id": {"type": "string"},
+            "version": {"type": "integer"}
+        },
+        "required": ["page_id", "version"]
+    },
+    "search_by_author": {
+        "type": "object",
+        "properties": {
+            "account_id": {"type": "string"},
+            "space_key": {"type": "string"}
+        },
+        "required": ["account_id"]
+    },
+    "search_by_label": {
+        "type": "object",
+        "properties": {
+            "label": {"type": "string"}
+        },
+        "required": ["label"]
+    },
+    
+    # Additional Bitbucket schemas
+    "add_pr_reviewer": {
+        "type": "object",
+        "properties": {
+            "repo_slug": {"type": "string"},
+            "pr_id": {"type": "integer"},
+            "account_id": {"type": "string"}
+        },
+        "required": ["repo_slug", "pr_id", "account_id"]
+    },
+    "decline_pull_request": {
+        "type": "object",
+        "properties": {
+            "repo_slug": {"type": "string"},
+            "pr_id": {"type": "integer"}
+        },
+        "required": ["repo_slug", "pr_id"]
+    },
+    "create_branch": {
+        "type": "object",
+        "properties": {
+            "repo_slug": {"type": "string"},
+            "branch_name": {"type": "string", "description": "New branch name"},
+            "from_branch": {"type": "string", "description": "Source branch (default: main)"}
+        },
+        "required": ["repo_slug", "branch_name"]
+    },
+    "delete_branch": {
+        "type": "object",
+        "properties": {
+            "repo_slug": {"type": "string"},
+            "branch_name": {"type": "string"}
+        },
+        "required": ["repo_slug", "branch_name"]
+    },
+    "get_bitbucket_user": {
+        "type": "object",
+        "properties": {
+            "username": {"type": "string"}
+        },
+        "required": ["username"]
+    },
+    "get_pr_activity": {
+        "type": "object",
+        "properties": {
+            "repo_slug": {"type": "string"},
+            "pr_id": {"type": "integer"}
+        },
+        "required": ["repo_slug", "pr_id"]
+    },
+    "get_default_reviewers": {
+        "type": "object",
+        "properties": {
+            "repo_slug": {"type": "string"}
+        },
+        "required": ["repo_slug"]
+    },
+    "list_pull_requests_by_author": {
+        "type": "object",
+        "properties": {
+            "repo_slug": {"type": "string"},
+            "author": {"type": "string"}
+        },
+        "required": ["repo_slug", "author"]
+    },
+    "list_commits_by_author": {
+        "type": "object",
+        "properties": {
+            "repo_slug": {"type": "string"},
+            "author": {"type": "string"},
+            "branch": {"type": "string"}
+        },
+        "required": ["repo_slug", "author"]
+    },
+    "request_changes": {
+        "type": "object",
+        "properties": {
+            "repo_slug": {"type": "string"},
+            "pr_id": {"type": "integer"},
+            "comment": {"type": "string"}
+        },
+        "required": ["repo_slug", "pr_id"]
+    },
+    "get_branch_restrictions": {
+        "type": "object",
+        "properties": {
+            "repo_slug": {"type": "string"}
+        },
+        "required": ["repo_slug"]
+    },
+    "get_build_status": {
+        "type": "object",
+        "properties": {
+            "repo_slug": {"type": "string"},
+            "commit_hash": {"type": "string"}
+        },
+        "required": ["repo_slug", "commit_hash"]
+    },
+    "create_webhook": {
+        "type": "object",
+        "properties": {
+            "repo_slug": {"type": "string"},
+            "url": {"type": "string"},
+            "events": {"type": "array", "items": {"type": "string"}}
+        },
+        "required": ["repo_slug", "url", "events"]
     }
 }

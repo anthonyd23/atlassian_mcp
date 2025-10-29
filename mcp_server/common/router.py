@@ -188,9 +188,9 @@ async def route_tool_call(name: str, arguments: Dict[str, Any], jira, confluence
     elif name == "list_pull_requests_by_author":
         return await bitbucket.list_pull_requests_by_author(arguments["repo_slug"], arguments["author"])
     elif name == "list_commits_by_author":
-        return await bitbucket.list_commits_by_author(arguments["repo_slug"], arguments["author"])
+        return await bitbucket.list_commits_by_author(arguments["repo_slug"], arguments["author"], arguments.get("branch", "main"))
     elif name == "request_changes":
-        return await bitbucket.request_changes(arguments["repo_slug"], arguments["pr_id"])
+        return await bitbucket.request_changes(arguments["repo_slug"], arguments["pr_id"], arguments.get("comment", ""))
     elif name == "get_branch_restrictions":
         return await bitbucket.get_branch_restrictions(arguments["repo_slug"])
     elif name == "get_build_status":
