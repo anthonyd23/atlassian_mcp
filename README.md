@@ -138,7 +138,7 @@ Integrate with popular AI agents and development tools:
 
 **Also supports:** Claude Desktop, Cline (VS Code), Cursor, Continue, Zed Editor
 
-See [AGENT_INTEGRATION.md](AGENT_INTEGRATION.md) for complete setup instructions.
+See [AGENT_INTEGRATION.md](docs/AGENT_INTEGRATION.md) for complete setup instructions.
 
 ## AWS Deployment
 
@@ -158,7 +158,7 @@ The script will:
 - Deploy to AWS with your credentials
 - Display the MCP API URL
 
-See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for detailed instructions.
+See [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) for detailed instructions.
 
 ## Testing
 
@@ -193,14 +193,14 @@ CloudWatch integration with:
 - Automatic alarms (errors, throttles, slow responses)
 - Dashboard for visualization
 
-See [MONITORING.md](MONITORING.md) for setup and configuration.
+See [MONITORING.md](docs/MONITORING.md) for setup and configuration.
 
 ## Documentation
 
-- [AGENT_INTEGRATION.md](AGENT_INTEGRATION.md) - AI agent integration (Claude, Cursor, Cline, etc.)
-- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - AWS deployment and configuration
-- [MONITORING.md](MONITORING.md) - CloudWatch setup and alerts
-- [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture and design
+- [AGENT_INTEGRATION.md](docs/AGENT_INTEGRATION.md) - AI agent integration (Claude, Cursor, Cline, etc.)
+- [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) - AWS deployment and configuration
+- [MONITORING.md](docs/MONITORING.md) - CloudWatch setup and alerts
+- [ARCHITECTURE.md](docs/ARCHITECTURE.md) - System architecture and design
 
 ## API Documentation
 
