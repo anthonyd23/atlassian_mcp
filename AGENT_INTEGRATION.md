@@ -241,40 +241,49 @@ async with stdio_client(server_params) as (read, write):
         })
 ```
 
-### Using HTTP API (AWS Deployment)
+### AWS Lambda Deployment
 
+**Note:** Most AI agents only support stdio MCP servers (local mode). AWS deployment is primarily for custom integrations requiring HTTP access.
+
+**Deploy to AWS:**
+```bash
+cp config.template.yaml config.yaml
+# Edit config.yaml with your credentials
+python deploy.py
+```
+
+**HTTP API Usage (requires IAM authentication):**
 ```python
+import boto3
 import requests
+from botocore.auth import SigV4Auth
+from botocore.awsrequest import AWSRequest
+
+# AWS IAM authentication required
+session = boto3.Session()
+credentials = session.get_credentials()
+region = 'us-east-1'  # Your AWS region
 
 API_URL = "https://your-api-gateway-url.amazonaws.com/Prod/mcp"
-API_KEY = "your-api-key"
 
-headers = {
-    "x-api-key": API_KEY,
-    "Content-Type": "application/json"
-}
+def make_signed_request(method, url, data=None):
+    request = AWSRequest(method=method, url=url, data=data)
+    SigV4Auth(credentials, 'execute-api', region).add_auth(request)
+    return requests.request(method, url, headers=dict(request.headers), data=data)
 
 # List tools
-response = requests.post(
-    API_URL,
-    headers=headers,
-    json={"method": "tools/list"}
-)
+response = make_signed_request('POST', API_URL, 
+    json.dumps({"method": "tools/list"}))
 
-# Call a tool
-response = requests.post(
-    API_URL,
-    headers=headers,
-    json={
+# Call a tool  
+response = make_signed_request('POST', API_URL,
+    json.dumps({
         "method": "tools/call",
         "params": {
-            "name": "search_jira",
-            "arguments": {
-                "jql": "project = PROJ"
-            }
+            "name": "search_jira", 
+            "arguments": {"jql": "project = PROJ"}
         }
-    }
-)
+    }))
 ```
 
 ---
@@ -293,8 +302,9 @@ Use the correct Python command for your system:
 - Virtual env: `/path/to/venv/bin/python`
 - Windows venv: `C:\path\to\venv\Scripts\python.exe`
 
-### 3. Environment Variables
-You can also use system environment variables instead of inline `env`:
+### 3. Configuration Options
+
+**Option A: Environment Variables**
 ```bash
 # Set once in your shell profile
 export ATLASSIAN_BASE_URL="https://yourcompany.atlassian.net"
@@ -302,7 +312,19 @@ export ATLASSIAN_USERNAME="your-email@company.com"
 export ATLASSIAN_API_TOKEN="your-token"
 ```
 
-Then simplify config:
+**Option B: config.yaml File**
+Create `config.yaml` in the project root:
+```yaml
+deployment_type: cloud
+cloud:
+  atlassian_base_url: https://yourcompany.atlassian.net
+  atlassian_username: your-email@company.com
+  atlassian_api_token: your-token
+  bitbucket_workspace: your-workspace
+  bitbucket_api_token: your-bb-token
+```
+
+With either option, simplify agent config:
 ```json
 {
   "mcpServers": {

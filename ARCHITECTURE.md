@@ -19,7 +19,7 @@
 │   (stdio)     │                        │   (HTTP)      │
 ├───────────────┤                        ├───────────────┤
 │   main.py     │                        │ API Gateway   │
-│               │                        │  + API Key    │
+│               │                        │ + IAM Auth    │
 │  MCP Server   │                        │      │        │
 └───────┬───────┘                        │      ▼        │
         │                                │   Lambda      │
@@ -29,10 +29,10 @@
         └────────────────┬───────────────────────┘
                          │
                          ▼
-                ┌────────────────┐
-                │  router.py     │
-                │  Tool Routing  │
-                └────────┬───────┘
+        ┌────────────────┬────────────────┐
+        │   router.py    │ tool_schemas.py│
+        │ Tool Routing   │  MCP Schemas   │
+        └────────┬───────┴────────────────┘
                          │
         ┌────────────────┼────────────────┐
         │                │                │
@@ -44,28 +44,31 @@
        │                 │                 │
        └─────────────────┼─────────────────┘
                          │
-        ┌────────────────┴────────────────┐
-        │                                 │
-        ▼                                 ▼
-┌─────────────────┐              ┌─────────────────┐
-│  validation.py  │              │    auth.py      │
-│  - Input checks │              │  - CloudAuth    │
-│  - URL encoding │              │  - DCAuth       │
-└─────────────────┘              └─────────────────┘
-       │                                │
-       └────────────────┬───────────────┘
-                        │
-                        ▼
-              ┌──────────────────┐
-              │  requests.Session│
-              │  - Retry logic   │
-              │  - Timeouts      │
-              │  - Pooling       │
-              └─────────┬────────┘
-                        │
-        ┌───────────────┼───────────────┐
-        │               │               │
-        ▼               ▼               ▼
+                         ▼
+                ┌─────────────────┐
+                │  validation.py  │
+                │  - Input checks │
+                │  - URL encoding │
+                └────────┬────────┘
+                         │
+                         ▼
+                ┌─────────────────┐
+                │    auth.py      │
+                │  - CloudAuth    │
+                │  - DCAuth       │
+                └────────┬────────┘
+                         │
+                         ▼
+                ┌──────────────────┐
+                │  requests.Session│
+                │  - Retry logic   │
+                │  - Timeouts      │
+                │  - Pooling       │
+                └────────┬─────────┘
+                         │
+         ┌───────────────┼───────────────┐
+         │               │               │
+         ▼               ▼               ▼
 ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
 │ Jira Cloud/  │ │ Confluence   │ │ Bitbucket    │
 │ Data Center  │ │ Cloud/DC     │ │ Cloud/DC     │
@@ -85,9 +88,9 @@
 
 **AWS Mode (lambda_handler.py)**
 - Runs as HTTP endpoint via Lambda
-- API Gateway with API key authentication
+- API Gateway with IAM authentication
 - Environment variables from Lambda config
-- Rate limiting: 100 req/sec, 200 burst
+- CloudWatch monitoring and structured logging
 
 ### Core Components
 
@@ -97,10 +100,17 @@
 - Shared by both main.py and lambda_handler.py
 - Single source of truth for tool dispatch
 
+**tool_schemas.py**
+- MCP tool schema definitions
+- Input validation schemas for each tool
+- Used by both local and AWS modes
+- Works with router.py to provide complete tool functionality
+
 **Providers**
 - Cloud: jira_provider.py, confluence_provider.py, bitbucket_provider.py
 - Data Center: jira_dc_provider.py, confluence_dc_provider.py, bitbucket_dc_provider.py
 - Each implements service-specific API calls
+- Auto-detect availability based on environment variables
 - Automatic platform detection via auth classes
 
 **validation.py**
@@ -114,16 +124,39 @@
 - DataCenterAuth: Bearer token with PAT
 - Platform auto-detection via service-specific PAT tokens
 
-### Request Flow
+### Tool Processing Flow
 
+**Tool Registration (Startup):**
+1. `tools.py` provides tool names and descriptions
+2. `tool_schemas.py` provides JSON schemas for input validation
+3. Combined into MCP Tool objects with validation rules
+
+**Tool Execution (Runtime):**
 1. **User request** → Amazon Q Developer
 2. **MCP protocol** → main.py (local) or API Gateway (AWS)
-3. **Tool routing** → router.py dispatches to provider
-4. **Validation** → Input checked and sanitized
-5. **Authentication** → Headers added by auth class
-6. **HTTP request** → requests.Session with retry logic
-7. **API call** → Atlassian REST API
-8. **Response** → Returned through MCP protocol
+3. **Schema validation** → Arguments validated against tool_schemas.py
+4. **Tool routing** → router.py dispatches to provider method
+5. **Input validation** → Additional checks in validation.py
+6. **Authentication** → Headers added by auth class
+7. **HTTP request** → requests.Session with retry logic
+8. **API call** → Atlassian REST API
+9. **Response** → Returned through MCP protocol
+
+### router.py ↔ tool_schemas.py Integration
+
+```python
+# Tool registration combines both components:
+Tool(name=tool["name"], 
+     description=tool["description"],
+     inputSchema=TOOL_SCHEMAS.get(tool["name"], {}))
+
+# Execution flow:
+User Input → Schema Validation → Router Dispatch → Provider Method
+```
+
+- **tool_schemas.py**: Defines what inputs are valid (JSON Schema)
+- **router.py**: Defines what happens when tool is called (execution logic)
+- Together they provide complete tool functionality: validation + execution
 
 ## Platform Detection
 
@@ -140,7 +173,7 @@ else:
 
 ## Security Layers
 
-1. **API Gateway** - API key required, rate limiting
+1. **API Gateway** - IAM authentication required
 2. **Input Validation** - All inputs validated before use
 3. **URL Encoding** - Path parameters sanitized
 4. **HTTPS** - All traffic encrypted in transit
