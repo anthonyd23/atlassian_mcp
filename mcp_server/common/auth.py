@@ -1,5 +1,6 @@
 import os
 import base64
+import requests
 from typing import Optional, Tuple
 
 class BaseAuth:
@@ -48,6 +49,7 @@ class DataCenterAuth(BaseAuth):
         self.pat_token = os.getenv(f'{service.upper()}_PAT_TOKEN')
         self.service_url = os.getenv(f'{service.upper()}_BASE_URL')
         self.available = bool(self.pat_token and self.service_url)
+        self._username = None
     
     def get_base_url(self) -> str:
         if not self.service_url:
@@ -62,3 +64,29 @@ class DataCenterAuth(BaseAuth):
             'Authorization': f'Bearer {self.pat_token}',
             'Content-Type': 'application/json'
         }
+    
+    def get_current_username(self) -> Optional[str]:
+        """Fetch current authenticated username from API (cached after first call)"""
+        if self._username:
+            return self._username
+        if not self.available:
+            return None
+        try:
+            headers = self.get_auth_headers()
+            if self.service == 'bitbucket':
+                # Bitbucket DC: No direct current user endpoint, must be provided by caller
+                return None
+            elif self.service == 'jira':
+                url = f"{self.service_url}/rest/api/2/myself"
+                response = requests.get(url, headers=headers, timeout=10)
+                response.raise_for_status()
+                self._username = response.json().get('name')
+            elif self.service == 'confluence':
+                url = f"{self.service_url}/rest/api/user/current"
+                response = requests.get(url, headers=headers, timeout=10)
+                response.raise_for_status()
+                self._username = response.json().get('username')
+            return self._username
+        except Exception as e:
+            pass
+        return None

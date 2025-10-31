@@ -526,17 +526,18 @@ class BitbucketDCProvider:
         try:
             # Default to current user if not specified
             if not author:
-                author = self.auth.username
+                author = self.auth.get_current_username()
             headers = self.auth.get_auth_headers()
             url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests"
             params = {'limit': LIST_PAGE_SIZE}
             response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
             data = response.json()
-            # Filter by author client-side since Bitbucket DC API doesn't support author filtering
-            filtered_values = [pr for pr in data.get('values', []) if pr.get('author', {}).get('user', {}).get('name') == author]
-            data['values'] = filtered_values
-            data['size'] = len(filtered_values)
+            # Filter by author client-side if specified (Bitbucket DC API doesn't support author filtering)
+            if author:
+                filtered_values = [pr for pr in data.get('values', []) if pr.get('author', {}).get('user', {}).get('name') == author]
+                data['values'] = filtered_values
+                data['size'] = len(filtered_values)
             return data
         except Exception as e:
             return {'error': str(e)}

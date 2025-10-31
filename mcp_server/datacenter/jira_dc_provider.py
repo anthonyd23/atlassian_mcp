@@ -46,7 +46,11 @@ class JiraDCProvider:
         if not valid:
             return {'error': error}
         try:
-            jql = f"assignee = '{assignee}'"
+            # Don't quote if it's a JQL function like currentUser()
+            if '(' in assignee and ')' in assignee:
+                jql = f"assignee = {assignee}"
+            else:
+                jql = f"assignee = '{assignee}'"
             if project_key:
                 jql += f" AND project = '{project_key}'"
             return await self.search(jql)
