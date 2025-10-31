@@ -10,9 +10,7 @@ Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and B
 
 > **Enterprise-grade MCP server providing 94 production-ready tools for Jira, Confluence, and Bitbucket**
 > 
-> - ✨ Works with Amazon Q Developer, Claude, Cursor, and more
-> - 🚀 Deploy locally or to AWS Lambda
-> - 🔒 Enterprise security built-in
+> ✨ Works with Amazon Q Developer, Claude, Cursor, and more | 🚀 Deploy locally or to AWS Lambda | 🔒 Enterprise security built-in
 
 ## Quick Links
 
@@ -22,21 +20,6 @@ Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and B
 - ☁️ [AWS Deployment](docs/DEPLOYMENT_GUIDE.md) - Deploy to Lambda
 - 📊 [Monitoring](docs/MONITORING.md) - CloudWatch metrics and alerts
 - 🏗️ [Architecture](docs/ARCHITECTURE.md) - System design and components
-
-## Table of Contents
-
-- [Quick Start](#quick-start)
-- [Features](#features)
-- [Prerequisites](#prerequisites)
-- [Configuration](#configuration)
-- [AI Agent Integration](#ai-agent-integration)
-- [AWS Deployment](#aws-deployment)
-- [Testing](#testing)
-- [Monitoring](#monitoring)
-- [Documentation](#documentation)
-- [API Documentation](#api-documentation)
-- [Security](#security)
-- [License](#license)
 
 ## Quick Start
 
