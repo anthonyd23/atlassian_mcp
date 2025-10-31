@@ -577,7 +577,8 @@ class JiraProvider:
             
             params = {
                 'jql': jql,
-                'fields': 'summary,status,assignee,priority,created,issuetype,description'
+                'maxResults': 50,
+                'fields': 'summary'
             }
             
             response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
@@ -585,23 +586,13 @@ class JiraProvider:
             
             data = response.json()
             issues = data.get('issues', [])
+            total = data.get('total', 0)
+            results = [{'key': i.get('key'), 'summary': i.get('fields', {}).get('summary', '')} for i in issues]
             
-            formatted_results = []
-            for issue in issues:
-                fields = issue.get('fields', {})
-                formatted_results.append({
-                    'key': issue.get('key'),
-                    'summary': fields.get('summary'),
-                    'status': fields.get('status', {}).get('name'),
-                    'assignee': fields.get('assignee', {}).get('displayName') if fields.get('assignee') else None,
-                    'priority': fields.get('priority', {}).get('name'),
-                    'created': fields.get('created')
-                })
-            
-            return {
-                'total': data.get('total', 0),
-                'results': formatted_results
-            }
+            result = {'total': total, 'results': results}
+            if total > len(results):
+                result['message'] = f'Showing {len(results)} of {total} results. Results limited to prevent response size exceeding 100K character limit.'
+            return result
         except Exception as e:
             return {'error': str(e)}
     

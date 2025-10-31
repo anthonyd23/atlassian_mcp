@@ -203,10 +203,18 @@ class JiraDCProvider:
         try:
             logger.info(f"Searching Jira with JQL: {jql}")
             url = f"{self.base_url}/rest/api/2/search"
-            response = self.session.get(url, headers=self.auth.get_auth_headers(), timeout=self.timeout, params={'jql': jql})
+            params = {'jql': jql, 'maxResults': 50}
+            response = self.session.get(url, headers=self.auth.get_auth_headers(), timeout=self.timeout, params=params)
             response.raise_for_status()
             data = response.json()
-            return {'total': data.get('total', 0), 'results': data.get('issues', [])}
+            issues = data.get('issues', [])
+            total = data.get('total', 0)
+            results = [{'key': i.get('key'), 'summary': i.get('fields', {}).get('summary', '')} for i in issues]
+            
+            result = {'total': total, 'results': results}
+            if total > len(results):
+                result['message'] = f'Showing {len(results)} of {total} results. Results limited to prevent response size exceeding 100K character limit.'
+            return result
         except Exception as e:
             return {'error': str(e)}
     
