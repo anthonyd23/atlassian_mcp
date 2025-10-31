@@ -1,6 +1,16 @@
 # Atlassian MCP Server
 
+[![Tests](https://github.com/anthonyd23/atlassian_mcp/actions/workflows/tests.yml/badge.svg)](https://github.com/anthonyd23/atlassian_mcp/actions/workflows/tests.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![MCP](https://img.shields.io/badge/MCP-Compatible-green.svg)](https://modelcontextprotocol.io)
+[![AWS SAM](https://img.shields.io/badge/AWS-SAM-orange.svg)](https://aws.amazon.com/serverless/sam/)
+
 Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and Bitbucket). Works with both Atlassian Cloud and Data Center deployments.
+
+> **Enterprise-grade MCP server providing 94 production-ready tools for Jira, Confluence, and Bitbucket**
+> 
+> ✨ Works with Amazon Q Developer, Claude, Cursor, and more | 🚀 Deploy locally or to AWS Lambda | 🔒 Enterprise security built-in
 
 ## Quick Links
 
@@ -231,4 +241,10 @@ See [MONITORING.md](docs/MONITORING.md) for setup and configuration.
 
 ## License
 
-MIT
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Built on the [Model Context Protocol](https://modelcontextprotocol.io) specification
+- Integrates with [Atlassian Cloud](https://www.atlassian.com/cloud) and Data Center APIs
+- Designed for [Amazon Q Developer](https://aws.amazon.com/q/developer/) and other MCP-compatible AI assistants
