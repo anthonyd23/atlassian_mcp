@@ -252,7 +252,7 @@ async def test_all_confluence_tools():
                 ("get_page_history", lambda: confluence.get_page_history(test_page)),
                 ("get_page_restrictions", lambda: confluence.get_page_restrictions(test_page)),
                 ("get_recent_content", lambda: confluence.get_recent_content(7, space_key)),
-                ("search_by_label", lambda: confluence.search_by_label("test", space_key)),
+                ("search_by_label", lambda: confluence.search_by_label("test")),
             ]:
                 result = await func()
                 if 'error' in result:
@@ -299,7 +299,7 @@ async def test_all_confluence_tools():
                 ("get_child_pages", lambda: confluence.get_child_pages(test_page)),
                 ("get_descendants", lambda: confluence.get_descendants(test_page)),
                 ("get_ancestors", lambda: confluence.get_ancestors(test_page)),
-                ("cql_search", lambda: confluence.cql_search(f"type=page AND space={space_key}")),
+                ("cql_search", lambda: confluence.cql_search(f'type=page AND space="{space_key}"')),
                 ("move_page", lambda: confluence.move_page(test_page, space_key)),
             ]:
                 result = await func()

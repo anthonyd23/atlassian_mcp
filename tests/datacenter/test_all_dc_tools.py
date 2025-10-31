@@ -289,9 +289,7 @@ async def test_all_confluence_dc_tools():
             for skip_name in ["get_user", "set_page_restrictions", "restore_page_version"]:
                 print(f"  [SKIP] {skip_name} (requires specific user/version data)")
                 skipped += 1
-        else:
-            print(f"  [FAIL] create_page: {result['error']}")
-            failed += 1
+            
             # New hierarchy tools
             for name, func in [
                 ("get_child_pages", lambda: confluence.get_child_pages(created_page)),
@@ -310,6 +308,7 @@ async def test_all_confluence_dc_tools():
         else:
             print(f"  [FAIL] create_page: {result['error']}")
             failed += 1
+            skipped += 23
     else:
         print(f"  [SKIP] No valid space keys found - skipping 23 space-dependent tests")
         skipped += 23
