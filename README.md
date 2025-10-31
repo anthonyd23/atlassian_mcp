@@ -6,11 +6,13 @@
 [![MCP](https://img.shields.io/badge/MCP-Compatible-green.svg)](https://modelcontextprotocol.io)
 [![AWS SAM](https://img.shields.io/badge/AWS-SAM-orange.svg)](https://aws.amazon.com/serverless/sam/)
 
-Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and Bitbucket). Works with both Atlassian Cloud and Data Center deployments.
+Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and Bitbucket).
 
 > **Enterprise-grade MCP server providing 94 production-ready tools for Jira, Confluence, and Bitbucket**
 > 
-> ✨ Works with Amazon Q Developer, Claude, Cursor, and more | 🚀 Deploy locally or to AWS Lambda | 🔒 Enterprise security built-in
+> - ✨ Works with Amazon Q Developer, Claude, Cursor, and more
+> - 🚀 Deploy locally or to AWS Lambda
+> - 🔒 Enterprise security built-in
 
 ## Quick Links
 
