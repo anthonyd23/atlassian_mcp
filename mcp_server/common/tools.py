@@ -53,8 +53,8 @@ CONFLUENCE_TOOLS = [
     {"name": "get_page_restrictions", "description": "View Confluence page permissions"},
     {"name": "set_page_restrictions", "description": "Update Confluence page permissions"},
     {"name": "copy_page", "description": "Duplicate a Confluence page"},
-    {"name": "get_user_content", "description": "Get pages created by a user"},
-    {"name": "get_recent_content", "description": "Get recently updated content"},
+    {"name": "get_user_content", "description": "Get Confluence pages created by a specific user (requires account_id)"},
+    {"name": "get_recent_content", "description": "Get recently updated Confluence content (by any user)"},
     {"name": "restore_page_version", "description": "Restore previous version"},
     {"name": "search_by_author", "description": "Find content by author"},
     {"name": "search_by_label", "description": "Find content by label"},
@@ -62,7 +62,7 @@ CONFLUENCE_TOOLS = [
     {"name": "get_child_pages", "description": "Get direct child pages of a page"},
     {"name": "get_descendants", "description": "Get all descendant pages of a page"},
     {"name": "get_ancestors", "description": "Get ancestor pages of a page"},
-    {"name": "cql_search", "description": "Search using CQL (Confluence Query Language)"}
+    {"name": "cql_search", "description": "Search Confluence using CQL (Confluence Query Language). Use 'creator = currentUser()' to find pages you created"}
 ]
 
 BITBUCKET_TOOLS = [

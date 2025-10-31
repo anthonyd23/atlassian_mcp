@@ -591,7 +591,8 @@ TOOL_SCHEMAS = {
     "get_recent_content": {
         "type": "object",
         "properties": {
-            "limit": {"type": "integer"}
+            "days": {"type": "integer", "description": "Number of days to look back (default: 7)"},
+            "space_key": {"type": "string", "description": "Optional: Filter by space key"}
         }
     },
     "restore_page_version": {
