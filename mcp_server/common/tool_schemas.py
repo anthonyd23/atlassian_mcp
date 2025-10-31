@@ -416,20 +416,21 @@ TOOL_SCHEMAS = {
     "get_user": {
         "type": "object",
         "properties": {
-            "account_id": {"type": "string"}
+            "account_id": {"type": "string", "description": "Jira user account ID"}
         },
         "required": ["account_id"]
     },
     "search_users": {
         "type": "object",
         "properties": {
-            "query": {"type": "string"}
+            "query": {"type": "string", "description": "Search Jira users by name or email"}
         },
         "required": ["query"]
     },
     "get_current_user": {
         "type": "object",
-        "properties": {}
+        "properties": {},
+        "description": "Get authenticated Jira user information"
     },
     "link_issues": {
         "type": "object",
@@ -657,7 +658,7 @@ TOOL_SCHEMAS = {
     "get_bitbucket_user": {
         "type": "object",
         "properties": {
-            "username": {"type": "string"}
+            "username": {"type": "string", "description": "Bitbucket username"}
         },
         "required": ["username"]
     },
@@ -680,15 +681,15 @@ TOOL_SCHEMAS = {
         "type": "object",
         "properties": {
             "repo_slug": {"type": "string"},
-            "author": {"type": "string"}
+            "author": {"type": "string", "description": "Bitbucket username. Optional - defaults to current authenticated user if not provided."}
         },
-        "required": ["repo_slug", "author"]
+        "required": ["repo_slug"]
     },
     "list_commits_by_author": {
         "type": "object",
         "properties": {
             "repo_slug": {"type": "string"},
-            "author": {"type": "string"},
+            "author": {"type": "string", "description": "Bitbucket username to filter commits"},
             "branch": {"type": "string"}
         },
         "required": ["repo_slug", "author"]

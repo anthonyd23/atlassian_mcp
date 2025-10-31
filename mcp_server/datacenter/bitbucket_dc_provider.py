@@ -518,15 +518,15 @@ class BitbucketDCProvider:
         except Exception as e:
             return {'error': str(e)}
     
-    async def list_pull_requests_by_author(self, repo_slug: str, author: str) -> Dict[str, Any]:
-        """Get PRs by specific user."""
+    async def list_pull_requests_by_author(self, repo_slug: str, author: Optional[str] = None) -> Dict[str, Any]:
+        """Get PRs by specific user. Defaults to current user if author not specified."""
         check = self._check_available()
         if check:
             return check
-        valid, error = validate_non_empty(author, "author")
-        if not valid:
-            return {'error': error}
         try:
+            # Default to current user if not specified
+            if not author:
+                author = self.auth.username
             headers = self.auth.get_auth_headers()
             url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests"
             params = {'limit': LIST_PAGE_SIZE}
