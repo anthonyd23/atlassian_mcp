@@ -5,7 +5,7 @@ import logging
 from typing import Dict, Any, Optional
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from ..common.auth import Auth
+from ..common.auth import CloudAuth
 from ..common.validation import validate_repo_slug, validate_pr_id, validate_non_empty, validate_path, validate_branch_name, validate_commit_hash, sanitize_url_path
 
 logger = logging.getLogger(__name__)
@@ -15,7 +15,7 @@ LIST_PAGE_SIZE = 50
 
 class BitbucketProvider:
     def __init__(self) -> None:
-        self.auth = Auth()
+        self.auth = CloudAuth()
         self.bitbucket_token = os.getenv('BITBUCKET_API_TOKEN')
         self.workspace = os.getenv('BITBUCKET_WORKSPACE')
         self.available = bool(self.bitbucket_token and self.workspace and self.auth.username)

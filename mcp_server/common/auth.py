@@ -62,6 +62,3 @@ class DataCenterAuth(BaseAuth):
             'Authorization': f'Bearer {self.pat_token}',
             'Content-Type': 'application/json'
         }
-
-# Legacy Auth class for backward compatibility
-Auth = CloudAuth

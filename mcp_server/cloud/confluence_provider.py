@@ -4,7 +4,7 @@ import logging
 from typing import Dict, Any, Optional
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from ..common.auth import Auth
+from ..common.auth import CloudAuth
 from ..common.validation import sanitize_url_path,  validate_page_id, validate_space_key, validate_non_empty
 
 logger = logging.getLogger(__name__)
@@ -14,7 +14,7 @@ LIST_PAGE_SIZE = 50
 
 class ConfluenceProvider:
     def __init__(self) -> None:
-        self.auth = Auth()
+        self.auth = CloudAuth()
         self.available = self.auth.is_available()
         self.session = self._create_session() if self.available else None
         self.timeout = 25

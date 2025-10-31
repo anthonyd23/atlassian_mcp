@@ -4,7 +4,7 @@ import logging
 from typing import Dict, Any
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from ..common.auth import Auth
+from ..common.auth import CloudAuth
 from ..common.validation import validate_issue_key, validate_project_key, validate_non_empty, sanitize_url_path
 
 logger = logging.getLogger(__name__)
@@ -13,7 +13,7 @@ DEFAULT_PAGE_SIZE = 25
 
 class JiraProvider:
     def __init__(self) -> None:
-        self.auth = Auth()
+        self.auth = CloudAuth()
         self.available = self.auth.is_available()
         self.session = self._create_session() if self.available else None
         self.timeout = 25
