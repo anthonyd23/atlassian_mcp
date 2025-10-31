@@ -6,7 +6,7 @@ from mcp_server.cloud.jira_provider import JiraProvider
 
 @pytest.fixture
 def jira_provider():
-    with patch('mcp_server.cloud.jira_provider.Auth'):
+    with patch('mcp_server.cloud.jira_provider.CloudAuth'):
         provider = JiraProvider()
         provider.auth.get_base_url = Mock(return_value="https://test.atlassian.net")
         provider.auth.get_auth_headers = Mock(return_value={"Authorization": "Bearer token"})

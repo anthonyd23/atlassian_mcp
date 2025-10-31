@@ -5,7 +5,7 @@ from mcp_server.cloud.bitbucket_provider import BitbucketProvider
 
 @pytest.fixture
 def bitbucket_provider():
-    with patch('mcp_server.cloud.bitbucket_provider.Auth'):
+    with patch('mcp_server.cloud.bitbucket_provider.CloudAuth'):
         with patch.dict('os.environ', {'BITBUCKET_API_TOKEN': 'token', 'BITBUCKET_WORKSPACE': 'workspace'}):
             provider = BitbucketProvider()
             provider.auth.username = "user@test.com"

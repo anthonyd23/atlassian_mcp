@@ -5,7 +5,7 @@ from mcp_server.cloud.confluence_provider import ConfluenceProvider
 
 @pytest.fixture
 def confluence_provider():
-    with patch('mcp_server.cloud.confluence_provider.Auth'):
+    with patch('mcp_server.cloud.confluence_provider.CloudAuth'):
         provider = ConfluenceProvider()
         provider.auth.get_base_url = Mock(return_value="https://test.atlassian.net")
         provider.auth.get_auth_headers = Mock(return_value={"Authorization": "Bearer token"})
