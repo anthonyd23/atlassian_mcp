@@ -529,10 +529,15 @@ class BitbucketDCProvider:
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{repo_slug}/pull-requests"
-            params = {'filterText': f'author:{author}', 'limit': LIST_PAGE_SIZE}
+            params = {'limit': LIST_PAGE_SIZE}
             response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+            # Filter by author client-side since Bitbucket DC API doesn't support author filtering
+            filtered_values = [pr for pr in data.get('values', []) if pr.get('author', {}).get('user', {}).get('name') == author]
+            data['values'] = filtered_values
+            data['size'] = len(filtered_values)
+            return data
         except Exception as e:
             return {'error': str(e)}
     
