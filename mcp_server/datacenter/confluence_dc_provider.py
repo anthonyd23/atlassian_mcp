@@ -255,10 +255,10 @@ class ConfluenceDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/rest/api/search/user?cql=user.fullname~\"{sanitize_url_path(query)}\""
+            url = f"{self.base_url}/rest/api/user/search?username={sanitize_url_path(query)}"
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
-            return {'users': response.json().get('results', [])}
+            return {'users': response.json()}
         except Exception as e:
             return {'error': str(e)}
     

@@ -243,7 +243,7 @@ TOOL_SCHEMAS = {
     "cql_search": {
         "type": "object",
         "properties": {
-            "cql": {"type": "string", "description": "CQL query string (e.g., 'parent=123456' or 'type=page AND space=DEV')"},
+            "cql": {"type": "string", "description": "CQL query string. Examples: 'creator = currentUser()' to find pages you created, 'parent=123456', 'type=page AND space=DEV', 'label = mylabel'"},
             "limit": {"type": "integer"}
         },
         "required": ["cql"]
@@ -531,7 +531,7 @@ TOOL_SCHEMAS = {
     "search_confluence_users": {
         "type": "object",
         "properties": {
-            "query": {"type": "string"}
+            "query": {"type": "string", "description": "Username or email to search. Note: May not work in some Data Center versions - use cql_search with 'creator = username' instead."}
         },
         "required": ["query"]
     },
