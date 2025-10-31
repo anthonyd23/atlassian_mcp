@@ -2,6 +2,15 @@
 
 Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and Bitbucket). Works with both Atlassian Cloud and Data Center deployments.
 
+## Quick Links
+
+- 🚀 [Quick Start](#quick-start) - Get running in 5 minutes
+- 📖 [Understanding MCP](docs/MCP_OVERVIEW.md) - Learn how MCP works
+- 🤖 [AI Agent Setup](docs/AGENT_INTEGRATION.md) - Connect to Amazon Q, Claude, Cursor, etc.
+- ☁️ [AWS Deployment](docs/DEPLOYMENT_GUIDE.md) - Deploy to Lambda
+- 📊 [Monitoring](docs/MONITORING.md) - CloudWatch metrics and alerts
+- 🏗️ [Architecture](docs/ARCHITECTURE.md) - System design and components
+
 ## Table of Contents
 
 - [Quick Start](#quick-start)
@@ -197,6 +206,7 @@ See [MONITORING.md](docs/MONITORING.md) for setup and configuration.
 
 ## Documentation
 
+- [MCP_OVERVIEW.md](docs/MCP_OVERVIEW.md) - Understanding MCP and how this server works
 - [AGENT_INTEGRATION.md](docs/AGENT_INTEGRATION.md) - AI agent integration (Claude, Cursor, Cline, etc.)
 - [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) - AWS deployment and configuration
 - [MONITORING.md](docs/MONITORING.md) - CloudWatch setup and alerts

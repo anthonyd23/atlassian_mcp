@@ -397,7 +397,7 @@ Configure different servers for different Atlassian instances:
 
 ## Need Help?
 
-- **Features:** See [README.md](README.md) for complete feature list
-- **Configuration:** [QUICK_START.md](QUICK_START.md)
+- **Features:** See [README.md](../README.md) for complete feature list
+- **Configuration:** [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
 - **Deployment:** [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
 - **Issues:** GitHub Issues
