@@ -8,11 +8,12 @@
 
 Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and Bitbucket).
 
-> **Enterprise-grade MCP server providing 94 production-ready tools for Jira, Confluence, and Bitbucket**
+> **Enterprise-grade MCP server providing 98 production-ready tools for Jira, Confluence, and Bitbucket**
 > 
 > - ✨ Works with Amazon Q Developer, Claude, Cursor, and more
 > - 🚀 Deploy locally or to AWS Lambda
 > - 🔒 Enterprise security built-in
+> - 🎫 Ticket Support Agent with 4 specialized tools
 
 ## Quick Links
 
@@ -28,7 +29,8 @@ Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and B
 **Local Development:**
 ```bash
 pip install -r mcp_server/requirements.txt
-# Set credentials (see Configuration section)
+cp config.template.yaml config.yaml
+# Edit config.yaml with your credentials
 python mcp_server/main.py
 ```
 
@@ -41,9 +43,10 @@ python deploy.py
 
 ## Features
 
-- **Jira**: Issues, comments, transitions, attachments, attachment upload, users, worklogs, labels, issue linking, advanced search, priority management, agile boards, sprints, user permissions
-- **Confluence**: Pages, spaces, comments, attachments, search, users, labels, page history, permissions, page copying, user content, recent content, version restore, search by author/label, page hierarchy (move, children, descendants, ancestors), CQL search
-- **Bitbucket**: Repositories, pull requests, commits, branches, diffs, reviewers, branch management, PR activity, default reviewers, author filtering, change requests, branch restrictions, build status, webhooks
+- **Jira** (31 tools): Issues, comments, transitions, attachments, attachment upload, users, worklogs, labels, issue linking, advanced search, priority management, agile boards, sprints, user permissions
+- **Confluence** (30 tools): Pages, spaces, comments, attachments, search, users, labels, page history, permissions, page copying, user content, recent content, version restore, search by author/label, page hierarchy (move, children, descendants, ancestors), CQL search
+- **Bitbucket** (33 tools): Repositories, pull requests, commits, branches, diffs, reviewers, branch management, PR activity, default reviewers, author filtering, change requests, branch restrictions, build status, webhooks
+- **Ticket Support Agent** (4 tools): Open ticket triage, template validation, assignee suggestions, team workload analysis
 - **Flexible Credentials**: Configure only the services you need
 - **Dual Platform**: Supports both Cloud and Data Center deployments
 - **AWS Ready**: Deploy as Lambda function with API Gateway
@@ -104,22 +107,23 @@ datacenter:
 python deploy.py
 ```
 
-### Local Development (Environment Variables)
+### Local Development
 
-**Cloud:**
+For local development, use `config.yaml` (same format as AWS deployment):
+
 ```bash
-export ATLASSIAN_BASE_URL="https://yourcompany.atlassian.net"
-export ATLASSIAN_USERNAME="your-email@company.com"
-export ATLASSIAN_API_TOKEN="your-token"
+cp config.template.yaml config.yaml
+# Edit config.yaml with your credentials and optional ticket support agent config
+python mcp_server/main.py
 ```
 
-**Data Center:**
-```bash
-export JIRA_BASE_URL="https://jira.company.com"
-export JIRA_PAT_TOKEN="your-token"
-export CONFLUENCE_BASE_URL="https://wiki.company.com"
-export CONFLUENCE_PAT_TOKEN="your-token"
-```
+**Note**: The server loads configuration from `config.yaml` automatically. Environment variables can be used as an alternative if `config.yaml` is not present, but using `config.yaml` is the recommended approach for consistency with AWS deployment.
+
+**Platform Detection**: The server automatically detects whether to use Cloud or Data Center APIs in this order:
+1. `DEPLOYMENT_TYPE` environment variable (`cloud` or `datacenter`)
+2. `deployment_type` field in `config.yaml`
+3. Presence of Data Center credentials (PAT tokens)
+4. Defaults to Cloud if none of the above
 
 ## AI Agent Integration
 
