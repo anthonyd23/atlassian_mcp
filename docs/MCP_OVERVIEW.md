@@ -93,7 +93,7 @@ When an AI assistant connects to an MCP server, it goes through a discovery proc
 
 ### Comprehensive Business Tool Integration
 
-The Atlassian MCP Server provides 98 distinct tools across three major platforms plus specialized agent tools:
+The Atlassian MCP Server provides 100 distinct tools across three major platforms plus specialized agent tools:
 
 **Jira Integration (31 tools)**
 - Issue lifecycle management (create, update, transition, close)
@@ -119,11 +119,13 @@ The Atlassian MCP Server provides 98 distinct tools across three major platforms
 - CI/CD integration and build monitoring
 - User and team collaboration features
 
-**Ticket Support Agent (4 tools)**
+**Ticket Support Agent (6 tools)**
 - Intelligent ticket assignment based on team workload
 - Template compliance validation for support requests
 - Team capacity analysis and workload distribution
 - Alert vs. standard ticket categorization
+- Expertise JQL construction for finding similar resolved tickets
+- Troubleshooting documentation and code lookup for alerts
 
 ### Real-World Business Scenarios
 

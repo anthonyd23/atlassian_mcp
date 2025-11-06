@@ -8,7 +8,7 @@
 
 Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and Bitbucket).
 
-> **Enterprise-grade MCP server providing 99 production-ready tools for Jira, Confluence, and Bitbucket**
+> **Enterprise-grade MCP server providing 100 production-ready tools for Jira, Confluence, and Bitbucket**
 > 
 > - ✨ Works with Amazon Q Developer, Claude, Cursor, and more
 > - 🚀 Deploy locally or to AWS Lambda

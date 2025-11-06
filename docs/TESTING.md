@@ -52,7 +52,7 @@ Integration tests connect to real Atlassian instances and require valid credenti
 
 #### Cloud Integration Tests
 
-Tests all 94 Cloud tools (31 Jira + 30 Confluence + 33 Bitbucket):
+Tests all 94 Atlassian Cloud tools (31 Jira + 30 Confluence + 33 Bitbucket):
 
 ```bash
 python tests/cloud/test_all_cloud_tools.py
@@ -73,7 +73,7 @@ python tests/cloud/test_all_cloud_tools.py
 
 #### Data Center Integration Tests
 
-Tests all 94 Data Center tools (31 Jira + 30 Confluence + 33 Bitbucket):
+Tests all 94 Atlassian Data Center tools (31 Jira + 30 Confluence + 33 Bitbucket):
 
 ```bash
 python tests/datacenter/test_all_dc_tools.py
@@ -109,7 +109,7 @@ python tests/datacenter/test_all_dc_tools.py --bitbucket-repo my-repo
 
 #### Common Agent Tests
 
-Tests 4 ticket support agent tools (platform-agnostic):
+Tests 6 ticket support agent tools (platform-agnostic):
 
 ```bash
 python tests/common/test_all_common_tools.py
@@ -128,6 +128,8 @@ python tests/common/test_all_common_tools.py
 - ✅ check_ticket_template
 - ✅ suggest_assignee
 - ✅ get_team_workload
+- ✅ get_expertise_jql
+- ✅ check_troubleshooting
 
 ## Platform Detection Logic
 
@@ -186,7 +188,7 @@ JIRA CLOUD (31 tools available)
 ============================================================
 SUMMARY
 ============================================================
-Tools tested: 80 of 94 available
+Tools tested: 80 of 100 available
 Passed:       77
 Failed:       0
 Exceptions:   3 (expected failures due to server config)
