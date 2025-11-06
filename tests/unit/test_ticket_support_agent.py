@@ -234,3 +234,127 @@ async def test_get_team_workload_tool():
     assert len(result['primary_team']) == 1
     assert len(result['secondary_team']) == 1
     assert result['primary_team'][0]['issue_count'] == 1
+
+
+@pytest.mark.asyncio
+async def test_get_expertise_jql_tool():
+    from mcp_server.common.ticket_support_tools import initialize_agent, get_expertise_jql
+    
+    # Initialize agent with expertise JQL config
+    template_mapping = {
+        'Support Request': {
+            'parent_page': 'Templates',
+            'custom_field': 'customfield_10001'
+        }
+    }
+    initialize_agent(
+        [{"account_id": "u1", "name": "Alice"}],
+        [],
+        template_mapping,
+        None,
+        [],
+        None,
+        None,
+        None,
+        'assignee = "{account_id}" AND status = Closed AND issuetype = "{issue_type}" AND "Work Type" = "{custom_field_value}" AND summary ~ "{summary_prefix}*"',
+        'assignee = "{account_id}" AND status = Closed AND issuetype = "{issue_type}" AND "Work Type" = "{custom_field_value}"'
+    )
+    
+    # Mock Jira
+    class MockJira:
+        async def get_issue(self, key):
+            return {
+                "key": key,
+                "fields": {
+                    "issuetype": {"name": "Support Request"},
+                    "customfield_10001": [{"selectedOptionLabel": "Data"}, {"selectedOptionLabel": "Analysis"}],
+                    "summary": "Daily Report: 2024-01-01"
+                }
+            }
+    
+    result = await get_expertise_jql("TEST-1", "u1", True, MockJira())
+    
+    assert 'jql' in result
+    assert 'extracted_values' in result
+    assert 'u1' in result['jql']
+    assert 'Support Request' in result['jql']
+    assert 'Data - Analysis' in result['jql']
+    assert 'Daily Report' in result['jql']
+    assert result['extracted_values']['custom_field_value'] == 'Data - Analysis'
+    assert result['extracted_values']['summary_prefix'] == 'Daily Report'
+
+
+@pytest.mark.asyncio
+async def test_check_troubleshooting_tool():
+    from mcp_server.common.ticket_support_tools import initialize_agent, check_troubleshooting
+    
+    # Initialize agent with troubleshooting config
+    template_mapping = {
+        'Alert': {
+            'parent_page': 'Templates',
+            'custom_field': 'customfield_10001'
+        }
+    }
+    
+    # Mock Confluence
+    class MockConfluence:
+        available = True
+        
+        async def cql_search(self, cql, limit=25):
+            return {
+                'results': [{
+                    'content': {
+                        'id': '12345',
+                        'title': 'Troubleshooting Docs'
+                    }
+                }]
+            }
+        
+        async def get_descendants(self, page_id):
+            return {
+                'results': [
+                    {'id': '12346', 'title': 'Alert Guide 1'},
+                    {'id': '12347', 'title': 'Alert Guide 2'}
+                ]
+            }
+    
+    initialize_agent(
+        [{"account_id": "u1", "name": "Alice"}],
+        [],
+        template_mapping,
+        MockConfluence(),
+        [],
+        None,
+        None,
+        'Troubleshooting Docs'
+    )
+    
+    # Mock Jira
+    class MockJira:
+        async def get_issue(self, key):
+            return {
+                "key": key,
+                "fields": {
+                    "summary": "Database Alert",
+                    "description": "Alert triggered. Git URL: https://git.company.com/projects/PROJ/repos/alerts/browse/sql/check.sql"
+                }
+            }
+    
+    # Mock Bitbucket
+    class MockBitbucket:
+        available = True
+        
+        async def get_repository(self, repo_slug):
+            return {'defaultBranch': {'displayId': 'main'}}
+    
+    result = await check_troubleshooting("TEST-1", MockJira(), MockBitbucket())
+    
+    assert 'ticket' in result
+    assert 'bitbucket_url' in result
+    assert 'repo_slug' in result
+    assert 'file_path' in result
+    assert 'troubleshooting_docs' in result
+    assert result['repo_slug'] == 'alerts'
+    assert result['file_path'] == 'sql/check.sql'
+    assert result['branch'] == 'main'
+    assert len(result['troubleshooting_docs']) == 2

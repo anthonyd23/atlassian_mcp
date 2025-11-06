@@ -105,5 +105,7 @@ TICKET_SUPPORT_TOOLS = [
     {"name": "get_open_support_tickets", "description": "Get list of open support tickets needing assignment, separated by type. Returns: alert_tickets (list of tickets with Alert in custom field), other_tickets (list of non-alert tickets), total counts."},
     {"name": "check_ticket_template", "description": "Check if Jira ticket follows defined template"},
     {"name": "suggest_assignee", "description": "Suggest who should be assigned to ticket based on team workload"},
-    {"name": "get_team_workload", "description": "Get current workload for all team members"}
+    {"name": "get_team_workload", "description": "Get current workload for all team members"},
+    {"name": "get_expertise_jql", "description": "Construct expertise JQL query for a member. Automatically extracts ticket fields and builds proper JQL. Returns: jql (ready to use with search_jira), extracted_values (shows what was extracted)."},
+    {"name": "check_troubleshooting", "description": "Get troubleshooting documentation for alert ticket. Returns: ticket details (summary, description), Bitbucket URL extracted from description, list of Confluence troubleshooting docs. AI can then read code and supplement docs with code/SQL analysis."}
 ]

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Ticket Support Agent is a specialized set of 4 MCP tools designed to help AI assistants intelligently manage support ticket workflows. Unlike the standard Atlassian tools that provide direct API access, these agent tools expose structured data and context that enable AI to make informed decisions about ticket assignment, template compliance, and team workload management.
+The Ticket Support Agent is a specialized set of 6 MCP tools designed to help AI assistants intelligently manage support ticket workflows. Unlike the standard Atlassian tools that provide direct API access, these agent tools expose structured data and context that enable AI to make informed decisions about ticket assignment, template compliance, and team workload management.
 
 ## Philosophy: Data Exposure vs. Decision Making
 
@@ -217,6 +217,114 @@ ticket_support_agent:
 - Planning new ticket assignments
 - Workload balancing analysis
 
+### 5. get_expertise_jql
+
+**Purpose**: Construct JQL query to find member's expertise with similar tickets
+
+**Input**: 
+- `issue_key` (e.g., "PROJ-123")
+- `member_account_id` (team member to check)
+- `is_alert` (true for alert tickets, false for others)
+
+**Returns**:
+```json
+{
+  "jql": "assignee = 'user1' AND status = Closed AND issuetype = 'Support Request' AND 'Requested Work' = 'Data Analysis' AND summary ~ 'Daily Report*'",
+  "extracted_values": {
+    "account_id": "user1",
+    "issue_type": "Support Request",
+    "custom_field_value": "Data Analysis",
+    "summary_prefix": "Daily Report"
+  }
+}
+```
+
+**How It Works**:
+1. Extracts ticket fields (issue type, custom field value, summary prefix)
+2. Handles cascading select fields (joins with " - ")
+3. Replaces placeholders in configured JQL template
+4. Returns ready-to-use JQL for `search_jira()`
+
+**Configuration**:
+```yaml
+ticket_support_agent:
+  # Custom field to extract (from template_mapping)
+  template_mapping:
+    "Support Request":
+      custom_field: "customfield_10001"
+  
+  # JQL templates with placeholders
+  alert_expertise_jql: 'assignee = "{account_id}" AND status = Closed AND issuetype = "{issue_type}" AND "Requested Work" = "{custom_field_value}" AND summary ~ "{summary_prefix}*"'
+  other_expertise_jql: 'assignee = "{account_id}" AND status = Closed AND issuetype = "{issue_type}" AND "Requested Work" = "{custom_field_value}"'
+```
+
+**AI Workflow**:
+1. Call `get_expertise_jql(issue_key, member_account_id, is_alert)`
+2. Use returned JQL with `search_jira(jql)`
+3. Count results to determine expertise level
+4. Factor into assignment decision
+
+### 6. check_troubleshooting
+
+**Purpose**: Get troubleshooting documentation and code for alert tickets
+
+**Input**: `issue_key` (e.g., "PROJ-123")
+
+**Returns**:
+```json
+{
+  "ticket": {
+    "key": "PROJ-123",
+    "summary": "Database Connection Alert",
+    "description": "Alert triggered at 3am..."
+  },
+  "bitbucket_url": "https://git.company.com/projects/PROJ/repos/alerts/browse/sql/db_check.sql",
+  "repo_slug": "alerts",
+  "file_path": "sql/db_check.sql",
+  "branch": "master",
+  "troubleshooting_docs": [
+    {"id": "12345", "title": "Database Alert Troubleshooting"},
+    {"id": "12346", "title": "Connection Issues Guide"}
+  ],
+  "troubleshooting_parent": {
+    "id": "12340",
+    "title": "Alert Troubleshooting"
+  },
+  "doc_count": 2,
+  "_ai_hints": {
+    "workflow": [
+      "1. FIRST: Review the 2 troubleshooting docs already provided",
+      "2. Call get_page(page_id) on relevant docs to get full steps",
+      "3. THEN: Use repo_slug, file_path, and branch to call get_file_content()",
+      "4. Analyze code/SQL to understand alert logic",
+      "5. Provide comprehensive guidance combining docs + code analysis"
+    ]
+  }
+}
+```
+
+**Features**:
+- **Bitbucket URL Extraction**: Parses Git URLs from ticket description (Cloud & Data Center formats)
+- **URL Decoding**: Handles HTML entities and URL encoding automatically
+- **Troubleshooting Docs**: Fetches all child pages recursively from configured parent
+- **Branch Detection**: Auto-detects default branch from repository
+
+**Configuration**:
+```yaml
+ticket_support_agent:
+  # Confluence parent page containing troubleshooting docs
+  troubleshooting_parent: "Alert Troubleshooting"  # Page title or ID
+```
+
+**AI Workflow**:
+1. Call `check_troubleshooting(issue_key)`
+2. Review `troubleshooting_docs` list
+3. Call `get_page(page_id)` for relevant docs
+4. Call `get_file_content(repo_slug, file_path, branch)` to read alert code
+5. Analyze SQL/code logic
+6. Combine documentation + code insights
+7. Provide comprehensive troubleshooting guidance
+
 ## Configuration
 
 ### Complete Example
@@ -403,7 +511,7 @@ Tests agent logic with mocked Jira/Confluence providers.
 python tests/common/test_all_common_tools.py
 ```
 
-Tests all 4 tools with real Atlassian credentials:
+Tests all 6 tools with real Atlassian credentials:
 - Platform-agnostic (works with Cloud or Data Center)
 - Auto-detects platform from config.yaml
 - Requires `ticket_support_agent` configuration

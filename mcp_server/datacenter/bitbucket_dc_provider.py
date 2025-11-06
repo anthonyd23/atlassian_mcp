@@ -141,6 +141,7 @@ class BitbucketDCProvider:
     
     async def get_file_content(self, repo_slug: str, file_path: str, branch: str = "main") -> Dict[str, Any]:
         """Get raw content of a file."""
+        from urllib.parse import quote
         check = self._check_available()
         if check:
             return check
@@ -152,7 +153,9 @@ class BitbucketDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{sanitize_url_path(repo_slug)}/browse/{sanitize_url_path(file_path)}"
+            # Encode file_path but preserve forward slashes
+            encoded_path = quote(file_path, safe='/')
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{sanitize_url_path(repo_slug)}/browse/{encoded_path}"
             params = {'at': branch}
             response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()

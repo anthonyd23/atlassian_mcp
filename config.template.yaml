@@ -41,11 +41,14 @@ ticket_support_agent:
   primary_team_members:
     - account_id: "712020:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
       name: "John Doe"
+      title: "Senior Engineer"  # Optional: Senior, Lead, Principal, Engineer, etc.
     - account_id: "712020:yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy"
       name: "Jane Smith"
+      title: "Lead Engineer"
   secondary_team_members:
     - account_id: "712020:zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz"
       name: "Bob Wilson"
+      title: "Engineer"
   excluded_issue_types:
     - "Example Issue Type"
   workload_statuses:
@@ -60,6 +63,12 @@ ticket_support_agent:
       custom_field: "customfield_xxxxx"  # Custom field containing ticket type
   # JQL query to find unassigned support tickets (optional)
   support_jql: 'assignee is EMPTY AND status = Open ORDER BY created DESC'
+  # Confluence parent page containing troubleshooting docs (optional)
+  troubleshooting_parent: "Troubleshooting Guides"  # Page title or ID
+  # JQL queries for expertise checking (placeholders: {account_id}, {issue_type}, {custom_field_value}, {summary_prefix})
+  # Note: {custom_field_value} is extracted from the custom_field defined in template_mapping
+  alert_expertise_jql: 'assignee = "{account_id}" AND status = Done AND issuetype = "{issue_type}" AND "Your Custom Field" = "{custom_field_value}" AND summary ~ "{summary_prefix}*"'
+  other_expertise_jql: 'assignee = "{account_id}" AND status = Done AND issuetype = "{issue_type}" AND "Your Custom Field" = "{custom_field_value}"'
 
 # Monitoring (optional)
 monitoring:

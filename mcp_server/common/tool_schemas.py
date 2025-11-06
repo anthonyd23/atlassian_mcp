@@ -754,5 +754,23 @@ TOOL_SCHEMAS = {
         "type": "object",
         "properties": {},
         "description": "Expose raw team members and their currently assigned issues. AI should: 1) Count len(member.issues) per member, 2) Analyze status distribution (Open/In Progress/Blocked), 3) Check ticket ages and priorities, 4) Identify capacity (low count + mostly Open = available). Returns: primary_team/secondary_team (members with their raw issues)."
+    },
+    "get_expertise_jql": {
+        "type": "object",
+        "properties": {
+            "issue_key": {"type": "string", "description": "Jira issue key (e.g., PROJ-123)"},
+            "member_account_id": {"type": "string", "description": "Team member account_id"},
+            "is_alert": {"type": "boolean", "description": "True for alert tickets, False for other tickets"}
+        },
+        "required": ["issue_key", "member_account_id", "is_alert"],
+        "description": "Construct expertise JQL query. Extracts ticket fields (issue_type, custom_field_value, summary_prefix) from configured custom field and builds JQL with proper formatting. Returns ready-to-use JQL string."
+    },
+    "check_troubleshooting": {
+        "type": "object",
+        "properties": {
+            "issue_key": {"type": "string", "description": "Jira issue key for alert ticket (e.g., PROJ-123)"}
+        },
+        "required": ["issue_key"],
+        "description": "Get troubleshooting info for alert. Returns: ticket (summary, description), bitbucket_url, repo_slug, file_path, branch (auto-detected default branch), troubleshooting_docs list. Use repo_slug/file_path/branch with get_file_content() to read code/SQL, use get_page(page_id) for docs."
     }
 }

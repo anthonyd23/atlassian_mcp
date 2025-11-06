@@ -8,12 +8,12 @@
 
 Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and Bitbucket).
 
-> **Enterprise-grade MCP server providing 98 production-ready tools for Jira, Confluence, and Bitbucket**
+> **Enterprise-grade MCP server providing 99 production-ready tools for Jira, Confluence, and Bitbucket**
 > 
 > - ✨ Works with Amazon Q Developer, Claude, Cursor, and more
 > - 🚀 Deploy locally or to AWS Lambda
 > - 🔒 Enterprise security built-in
-> - 🎫 Ticket Support Agent with 4 specialized tools
+> - 🎫 Ticket Support Agent with 6 specialized tools
 
 ## Quick Links
 
@@ -46,7 +46,7 @@ python deploy.py
 - **Jira** (31 tools): Issues, comments, transitions, attachments, attachment upload, users, worklogs, labels, issue linking, advanced search, priority management, agile boards, sprints, user permissions
 - **Confluence** (30 tools): Pages, spaces, comments, attachments, search, users, labels, page history, permissions, page copying, user content, recent content, version restore, search by author/label, page hierarchy (move, children, descendants, ancestors), CQL search
 - **Bitbucket** (33 tools): Repositories, pull requests, commits, branches, diffs, reviewers, branch management, PR activity, default reviewers, author filtering, change requests, branch restrictions, build status, webhooks
-- **Ticket Support Agent** (4 tools): Open ticket triage, template validation, assignee suggestions, team workload analysis
+- **Ticket Support Agent** (6 tools): Open ticket triage, template validation, assignee suggestions, team workload analysis, expertise JQL construction, troubleshooting doc lookup
 - **Flexible Credentials**: Configure only the services you need
 - **Dual Platform**: Supports both Cloud and Data Center deployments
 - **AWS Ready**: Deploy as Lambda function with API Gateway

@@ -84,6 +84,112 @@ class TicketSupportAgent:
         
         return context
 
+    async def get_troubleshooting_context(self, issue_data: Dict, troubleshooting_parent: str) -> Dict:
+        """Expose troubleshooting docs for AI to provide guidance"""
+        import re
+        import html
+        from urllib.parse import unquote
+        
+        fields = issue_data.get('fields', {})
+        description = fields.get('description', '')
+        
+        # Extract Bitbucket URL from description and parse it
+        bitbucket_url = None
+        repo_slug = None
+        file_path = None
+        
+        if description:
+            # Decode HTML entities first
+            description = html.unescape(description)
+            
+            # Match Bitbucket/Git URLs (handle both plain text and HTML, Cloud and Data Center)
+            bitbucket_patterns = [
+                r'https?://(?:[^\s<>"]*(?:bitbucket|git)[^\s<>"]+)',  # Domain contains bitbucket/git
+                r'href=["\']([^"\'>]+(?:bitbucket|git)[^"\'>]+)["\']',  # HTML href
+            ]
+            
+            for pattern in bitbucket_patterns:
+                matches = re.findall(pattern, description, re.IGNORECASE)
+                if matches:
+                    bitbucket_url = matches[0]
+                    break
+            
+            if bitbucket_url:
+                # Decode URL encoding
+                bitbucket_url = unquote(bitbucket_url)
+                # Parse URL to extract repo_slug and file_path (handles both Cloud and Data Center formats)
+                # Data Center: /projects/PROJECT/repos/REPO/browse/path
+                # Cloud: /repos/REPO/browse/path
+                browse_match = re.search(r'/repos/([^/]+)/browse/(.+?)(?:\?|#|$|<)', bitbucket_url)
+                if browse_match:
+                    repo_slug = browse_match.group(1)
+                    file_path = browse_match.group(2).rstrip()
+                else:
+                    # Try Data Center format with project
+                    dc_match = re.search(r'/projects/[^/]+/repos/([^/]+)/browse/(.+?)(?:\?|#|$|<)', bitbucket_url)
+                    if dc_match:
+                        repo_slug = dc_match.group(1)
+                        file_path = dc_match.group(2).rstrip()
+        
+        context = {
+            'ticket': {
+                'key': issue_data.get('key'),
+                'summary': fields.get('summary', ''),
+                'description': description
+            },
+            'bitbucket_url': bitbucket_url,
+            'repo_slug': repo_slug,
+            'file_path': file_path,
+            'branch': None,  # Will be populated by wrapper if bitbucket provider available
+            'troubleshooting_docs': []
+        }
+        
+        # Get troubleshooting docs from configured parent page
+        if self.confluence_provider and troubleshooting_parent:
+            try:
+                # Try as page ID first
+                if troubleshooting_parent.isdigit():
+                    parent = await self.confluence_provider.get_page(troubleshooting_parent)
+                else:
+                    # Search by title using CQL
+                    search_result = await self.confluence_provider.cql_search(f'title = "{troubleshooting_parent}" AND type = page', limit=1)
+                    results = search_result.get('results', [])
+                    parent = results[0].get('content') if results else None
+                
+                if parent and 'error' not in parent:
+                    parent_id = parent.get('id')
+                    context['troubleshooting_parent'] = {
+                        'id': parent_id,
+                        'title': parent.get('title')
+                    }
+                    
+                    # Try get_descendants first (works in Cloud), fall back to recursive (Data Center)
+                    descendants = await self.confluence_provider.get_descendants(parent_id)
+                    if 'error' not in descendants and descendants.get('results'):
+                        for child in descendants['results']:
+                            context['troubleshooting_docs'].append({
+                                'id': child.get('id'),
+                                'title': child.get('title')
+                            })
+                    else:
+                        # Recursive approach for Data Center
+                        async def get_all_children(page_id, docs_list):
+                            children = await self.confluence_provider.get_child_pages(page_id)
+                            for child in children.get('results', []):
+                                docs_list.append({
+                                    'id': child.get('id'),
+                                    'title': child.get('title')
+                                })
+                                await get_all_children(child.get('id'), docs_list)
+                        
+                        await get_all_children(parent_id, context['troubleshooting_docs'])
+                    
+                    context['doc_count'] = len(context['troubleshooting_docs'])
+            except Exception as e:
+                context['error'] = str(e)
+        
+        return context
+    
     async def get_team_context(self, search_by_assignee_func, jira_search_func=None) -> Dict:
         """Expose raw team workload data for AI to analyze"""
         team_data = []

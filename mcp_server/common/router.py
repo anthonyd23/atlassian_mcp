@@ -211,6 +211,12 @@ async def route_tool_call(name: str, arguments: Dict[str, Any], jira, confluence
     elif name == "get_team_workload":
         from mcp_server.common.ticket_support_tools import get_team_workload
         return await get_team_workload(jira)
+    elif name == "get_expertise_jql":
+        from mcp_server.common.ticket_support_tools import get_expertise_jql
+        return await get_expertise_jql(arguments["issue_key"], arguments["member_account_id"], arguments["is_alert"], jira)
+    elif name == "check_troubleshooting":
+        from mcp_server.common.ticket_support_tools import check_troubleshooting
+        return await check_troubleshooting(arguments["issue_key"], jira, bitbucket)
     
     else:
         raise ValueError(f"Unknown tool: {name}")

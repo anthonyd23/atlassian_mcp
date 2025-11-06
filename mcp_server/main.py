@@ -61,7 +61,7 @@ def load_ticket_support_config():
     """Load ticket support agent configuration from config.yaml"""
     config_path = Path(__file__).parent.parent / 'config.yaml'
     if not config_path.exists():
-        return None, None, None, None, None
+        return None, None, None, None, None, None, None, None, None
     
     try:
         with open(config_path, 'r') as f:
@@ -74,11 +74,14 @@ def load_ticket_support_config():
         excluded_issue_types = agent_config.get('excluded_issue_types', [])
         workload_statuses = agent_config.get('workload_statuses')
         support_jql = agent_config.get('support_jql', 'assignee is EMPTY AND status = Open ORDER BY created DESC')
+        troubleshooting_parent = agent_config.get('troubleshooting_parent')
+        alert_expertise_jql = agent_config.get('alert_expertise_jql')
+        other_expertise_jql = agent_config.get('other_expertise_jql')
         
-        return primary_team_members, secondary_team_members, template_mapping, excluded_issue_types, workload_statuses, support_jql
+        return primary_team_members, secondary_team_members, template_mapping, excluded_issue_types, workload_statuses, support_jql, troubleshooting_parent, alert_expertise_jql, other_expertise_jql
     except Exception as e:
         print(f"Warning: Could not load ticket support agent config: {e}")
-        return None, None, None, None, None, None
+        return None, None, None, None, None, None, None, None, None
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
@@ -123,13 +126,19 @@ else:
     bitbucket = BitbucketProvider()
 
 # Initialize ticket support agent if configured
-primary_team_members, secondary_team_members, template_mapping, excluded_issue_types, workload_statuses, support_jql = load_ticket_support_config()
+primary_team_members, secondary_team_members, template_mapping, excluded_issue_types, workload_statuses, support_jql, troubleshooting_parent, alert_expertise_jql, other_expertise_jql = load_ticket_support_config()
 if primary_team_members and secondary_team_members and 'pytest' not in sys.modules and 'test_' not in sys.argv[0]:
     from mcp_server.common.ticket_support_tools import initialize_agent
-    initialize_agent(primary_team_members, secondary_team_members, template_mapping, confluence, excluded_issue_types, workload_statuses, support_jql)
+    initialize_agent(primary_team_members, secondary_team_members, template_mapping, confluence, excluded_issue_types, workload_statuses, support_jql, troubleshooting_parent, alert_expertise_jql, other_expertise_jql)
     print(f"Ticket support agent initialized with {len(primary_team_members)} primary + {len(secondary_team_members)} secondary team members")
     if template_mapping:
         print(f"Template mapping configured for {len(template_mapping)} issue types")
+    if troubleshooting_parent:
+        print(f"Troubleshooting docs parent page: {troubleshooting_parent}")
+    if alert_expertise_jql:
+        print(f"Alert expertise JQL configured")
+    if other_expertise_jql:
+        print(f"Other expertise JQL configured")
 
 @server.list_resources()
 async def list_resources() -> list[Resource]:
