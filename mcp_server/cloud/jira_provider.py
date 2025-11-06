@@ -378,6 +378,20 @@ class JiraProvider:
         except Exception as e:
             return {'error': str(e)}
     
+    async def get_fields(self) -> Dict[str, Any]:
+        """Get all field metadata including custom fields."""
+        check = self._check_available()
+        if check:
+            return check
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.auth.get_base_url()}/rest/api/2/field"
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
     async def add_label(self, issue_key: str, label: str) -> Dict[str, Any]:
         """Add a label to an issue."""
         check = self._check_available()
@@ -399,7 +413,7 @@ class JiraProvider:
         except Exception as e:
             return {'error': str(e)}
     
-    async def search_by_assignee(self, assignee: str, project_key: str = "") -> Dict[str, Any]:
+    async def search_by_assignee(self, assignee: str, project_key: str = "", excluded_issue_types: list = None) -> Dict[str, Any]:
         """Find issues assigned to a specific user."""
         check = self._check_available()
         if check:
@@ -410,9 +424,15 @@ class JiraProvider:
         try:
             # Don't quote JQL functions like currentUser()
             if assignee.endswith('()'):
-                jql = f"assignee = {assignee}"
+                jql = f"assignee = {assignee} AND resolution = Unresolved"
             else:
-                jql = f"assignee = '{assignee}'"
+                jql = f"assignee = '{assignee}' AND resolution = Unresolved"
+            
+            # Add excluded issue types if provided
+            if excluded_issue_types:
+                for issue_type in excluded_issue_types:
+                    jql += f" AND issuetype != '{issue_type}'"
+            
             if project_key:
                 jql += f" AND project = '{project_key}'"
             return await self.search(jql)

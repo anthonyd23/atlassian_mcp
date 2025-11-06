@@ -178,12 +178,17 @@ pytest tests/unit/
 
 Cloud (tests with real credentials):
 ```bash
-python tests/cloud/test_all_tools.py
+python tests/cloud/test_all_cloud_tools.py
 ```
 
 Data Center (tests with real credentials):
 ```bash
 python tests/datacenter/test_all_dc_tools.py
+```
+
+Common/Agent tools (tests with real credentials):
+```bash
+python tests/common/test_all_common_tools.py
 ```
 
 **Test Features:**
@@ -206,6 +211,8 @@ See [MONITORING.md](docs/MONITORING.md) for setup and configuration.
 - [MCP_OVERVIEW.md](docs/MCP_OVERVIEW.md) - Understanding MCP and how this server works
 - [AGENT_INTEGRATION.md](docs/AGENT_INTEGRATION.md) - AI agent integration (Claude, Cursor, Cline, etc.)
 - [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) - AWS deployment and configuration
+- [TESTING.md](docs/TESTING.md) - Comprehensive testing guide
+- [TICKET_SUPPORT_AGENT.md](docs/TICKET_SUPPORT_AGENT.md) - Ticket support agent tools
 - [MONITORING.md](docs/MONITORING.md) - CloudWatch setup and alerts
 - [ARCHITECTURE.md](docs/ARCHITECTURE.md) - System architecture and design
 

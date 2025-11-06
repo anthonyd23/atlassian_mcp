@@ -73,6 +73,21 @@ class ConfluenceDCProvider:
         except Exception as e:
             return {'error': str(e)}
     
+    async def get_page_by_title_or_id(self, identifier: str, space_key: str = None) -> Optional[Dict[str, Any]]:
+        """Get page by title or ID. Tries ID first, then title if space_key provided."""
+        if identifier.isdigit():
+            result = await self.get_page(identifier)
+            if 'error' not in result:
+                return result
+        
+        if space_key:
+            result = await self.get_page_by_title(space_key, identifier)
+            results = result.get('results', [])
+            if results:
+                return results[0]
+        
+        return None
+    
     async def create_page(self, space_key: str, title: str, content: str, parent_id: Optional[str] = None) -> Dict[str, Any]:
         """Create a new Confluence page."""
         check = self._check_available()
@@ -229,7 +244,7 @@ class ConfluenceDCProvider:
             return {'error': str(e)}
     
     async def get_user(self, account_id: str) -> Dict[str, Any]:
-        """Get user details by account ID."""
+        """Get user details by username (DC uses username, not accountId)."""
         check = self._check_available()
         if check:
             return check
@@ -238,7 +253,8 @@ class ConfluenceDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/rest/api/user?accountId={sanitize_url_path(account_id)}"
+            # DC uses 'username' or 'key' parameter, not 'accountId'
+            url = f"{self.base_url}/rest/api/user?username={sanitize_url_path(account_id)}"
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -418,16 +434,24 @@ class ConfluenceDCProvider:
         if not valid:
             return {'error': error}
         try:
-            # Get the specific version
+            # Get page history to find the version
             headers = self.auth.get_auth_headers()
-            url = f"{self.base_url}/rest/api/content/{sanitize_url_path(page_id)}?version={version}&expand=body.storage"
-            response = self.session.get(url, headers=headers, timeout=self.timeout)
-            response.raise_for_status()
-            old_version = response.json()
+            history_url = f"{self.base_url}/rest/api/content/{sanitize_url_path(page_id)}/history"
+            history_response = self.session.get(history_url, headers=headers, timeout=self.timeout)
+            history_response.raise_for_status()
+            history = history_response.json()
+            
+            # Get the specific version content
+            version_url = f"{self.base_url}/rest/api/content/{sanitize_url_path(page_id)}?version={version}&expand=body.storage"
+            version_response = self.session.get(version_url, headers=headers, timeout=self.timeout)
+            version_response.raise_for_status()
+            old_version = version_response.json()
+            
             # Get current version
             current = await self.get_page(page_id)
             if 'error' in current:
                 return current
+            
             # Update with old content
             return await self.update_page(
                 page_id,
@@ -470,7 +494,7 @@ class ConfluenceDCProvider:
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.base_url}/rest/api/content/search"
-            cql = f'label = {label}'
+            cql = f'label = "{label}"'
             if space_key:
                 cql += f' AND space = {space_key}'
             params = {'cql': cql, 'limit': DEFAULT_PAGE_SIZE}

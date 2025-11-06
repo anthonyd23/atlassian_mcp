@@ -71,6 +71,32 @@ Parameters:
     Type: String
     Description: "Email address for CloudWatch alerts (optional)"
     Default: ""
+  
+  # Ticket Support Agent (optional)
+  AgentPrimaryTeam:
+    Type: String
+    Description: "JSON array of primary team member usernames"
+    Default: ""
+  AgentSecondaryTeam:
+    Type: String
+    Description: "JSON array of secondary team member usernames"
+    Default: ""
+  AgentTemplateMapping:
+    Type: String
+    Description: "JSON object mapping issue types to templates"
+    Default: ""
+  AgentExcludedTypes:
+    Type: String
+    Description: "JSON array of excluded issue types"
+    Default: ""
+  AgentWorkloadStatuses:
+    Type: String
+    Description: "JSON array of statuses to count in workload"
+    Default: ""
+  AgentSupportJql:
+    Type: String
+    Description: "JQL query to find unassigned support tickets"
+    Default: ""
 
 Globals:
   Function:
@@ -102,6 +128,12 @@ Resources:
           BITBUCKET_API_TOKEN: !Ref BitbucketApiToken
           BITBUCKET_PROJECT: !Ref BitbucketProject
           BITBUCKET_PAT_TOKEN: !Ref BitbucketPatToken
+          AGENT_PRIMARY_TEAM: !Ref AgentPrimaryTeam
+          AGENT_SECONDARY_TEAM: !Ref AgentSecondaryTeam
+          AGENT_TEMPLATE_MAPPING: !Ref AgentTemplateMapping
+          AGENT_EXCLUDED_TYPES: !Ref AgentExcludedTypes
+          AGENT_WORKLOAD_STATUSES: !Ref AgentWorkloadStatuses
+          AGENT_SUPPORT_JQL: !Ref AgentSupportJql
       Policies:
         - CloudWatchPutMetricPolicy: {}
       Events:

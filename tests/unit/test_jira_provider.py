@@ -227,3 +227,175 @@ async def test_add_attachment_success(jira_provider, mock_response):
     
     assert result[0]["filename"] == "test.txt"
     jira_provider.session.post.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_project_success(jira_provider, mock_response):
+    mock_response.json = Mock(return_value={"key": "TEST", "name": "Test Project"})
+    jira_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await jira_provider.get_project("TEST")
+    
+    assert result["key"] == "TEST"
+    jira_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_update_issue_success(jira_provider, mock_response):
+    jira_provider.session.put = Mock(return_value=mock_response)
+    
+    result = await jira_provider.update_issue("TEST-123", {"summary": "Updated"})
+    
+    assert result["success"] == True
+    assert result["issue_key"] == "TEST-123"
+    jira_provider.session.put.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_delete_issue_success(jira_provider, mock_response):
+    jira_provider.session.delete = Mock(return_value=mock_response)
+    
+    result = await jira_provider.delete_issue("TEST-123")
+    
+    assert result["success"] == True
+    jira_provider.session.delete.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_add_comment_success(jira_provider, mock_response):
+    mock_response.json = Mock(return_value={"id": "10001", "body": "Test comment"})
+    jira_provider.session.post = Mock(return_value=mock_response)
+    
+    result = await jira_provider.add_comment("TEST-123", "Test comment")
+    
+    assert result["id"] == "10001"
+    jira_provider.session.post.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_issue_comments_success(jira_provider, mock_response):
+    mock_response.json = Mock(return_value={"comments": [{"id": "10001", "body": "Comment"}]})
+    jira_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await jira_provider.get_issue_comments("TEST-123")
+    
+    assert "comments" in result
+    jira_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_transition_issue_success(jira_provider, mock_response):
+    jira_provider.session.post = Mock(return_value=mock_response)
+    
+    result = await jira_provider.transition_issue("TEST-123", "31")
+    
+    assert result["success"] == True
+    jira_provider.session.post.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_issue_transitions_success(jira_provider, mock_response):
+    mock_response.json = Mock(return_value={"transitions": [{"id": "31", "name": "Done"}]})
+    jira_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await jira_provider.get_issue_transitions("TEST-123")
+    
+    assert "transitions" in result
+    jira_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_assign_issue_success(jira_provider, mock_response):
+    jira_provider.session.put = Mock(return_value=mock_response)
+    
+    result = await jira_provider.assign_issue("TEST-123", "account123")
+    
+    assert result["success"] == True
+    jira_provider.session.put.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_issue_attachments_success(jira_provider, mock_response):
+    mock_response.json = Mock(return_value=[{"id": "10001", "filename": "file.pdf"}])
+    jira_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await jira_provider.get_issue_attachments("TEST-123")
+    
+    assert len(result) == 1
+    jira_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_issue_watchers_success(jira_provider, mock_response):
+    mock_response.json = Mock(return_value={"watchers": [{"accountId": "123"}]})
+    jira_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await jira_provider.get_issue_watchers("TEST-123")
+    
+    assert "watchers" in result
+    jira_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_user_success(jira_provider, mock_response):
+    mock_response.json = Mock(return_value={"accountId": "123", "displayName": "Test User"})
+    jira_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await jira_provider.get_user("123")
+    
+    assert result["accountId"] == "123"
+    jira_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_worklogs_success(jira_provider, mock_response):
+    mock_response.json = Mock(return_value={"worklogs": [{"id": "10001", "timeSpent": "2h"}]})
+    jira_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await jira_provider.get_worklogs("TEST-123")
+    
+    assert "worklogs" in result
+    jira_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_add_label_success(jira_provider, mock_response):
+    jira_provider.session.put = Mock(return_value=mock_response)
+    
+    result = await jira_provider.add_label("TEST-123", "test-label")
+    
+    assert result["success"] == True
+    jira_provider.session.put.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_search_by_assignee_success(jira_provider, mock_response):
+    mock_response.json = Mock(return_value={"total": 1, "issues": [{"key": "TEST-123"}]})
+    jira_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await jira_provider.search_by_assignee("currentUser()")
+    
+    assert result["total"] == 1
+    jira_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_search_by_reporter_success(jira_provider, mock_response):
+    mock_response.json = Mock(return_value={"total": 1, "issues": [{"key": "TEST-123"}]})
+    jira_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await jira_provider.search_by_reporter("currentUser()")
+    
+    assert result["total"] == 1
+    jira_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_recent_issues_success(jira_provider, mock_response):
+    mock_response.json = Mock(return_value={"total": 1, "issues": [{"key": "TEST-123"}]})
+    jira_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await jira_provider.get_recent_issues(7)
+    
+    assert result["total"] == 1
+    jira_provider.session.get.assert_called_once()

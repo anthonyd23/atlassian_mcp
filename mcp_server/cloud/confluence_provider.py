@@ -80,6 +80,21 @@ class ConfluenceProvider:
         except Exception as e:
             return {'error': str(e)}
     
+    async def get_page_by_title_or_id(self, identifier: str, space_key: str = None) -> Optional[Dict[str, Any]]:
+        """Get page by title or ID. Tries ID first, then title if space_key provided."""
+        if identifier.isdigit():
+            result = await self.get_page(identifier)
+            if 'error' not in result:
+                return result
+        
+        if space_key:
+            result = await self.get_page_by_title(space_key, identifier)
+            results = result.get('results', [])
+            if results:
+                return results[0]
+        
+        return None
+    
     async def create_page(self, space_key: str, title: str, content: str, parent_id: Optional[str] = None) -> Dict[str, Any]:
         """Create a new Confluence page."""
         check = self._check_available()
@@ -114,12 +129,18 @@ class ConfluenceProvider:
         if check:
             return check
         try:
+            # Get current page to retrieve space key
+            page = await self.get_page(page_id)
+            if 'error' in page:
+                return page
+            
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}"
             payload = {
                 "version": {"number": version + 1},
                 "title": title,
                 "type": "page",
+                "space": {"key": page.get('space', {}).get('key')},
                 "body": {"storage": {"value": content, "representation": "storage"}}
             }
             response = self.session.put(url, headers=headers, json=payload, timeout=self.timeout)
@@ -262,8 +283,9 @@ class ConfluenceProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/wiki/rest/api/search/user?cql=user.fullname~\"{sanitize_url_path(query)}\""
-            response = self.session.get(url, headers=headers, timeout=self.timeout)
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/search"
+            params = {'cql': f'type=user AND user.fullname~"{query}"'}
+            response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
             return {'users': response.json().get('results', [])}
         except Exception as e:
@@ -351,8 +373,14 @@ class ConfluenceProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
+            # Extract restrictions array if full response object provided
+            restrictions_array = restrictions
+            if isinstance(restrictions, dict) and 'restrictions' in restrictions:
+                restrictions_array = restrictions['restrictions']
+            
             url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}/restriction"
-            response = self.session.put(url, headers=headers, json=restrictions, timeout=self.timeout)
+            payload = restrictions_array if isinstance(restrictions_array, list) else []
+            response = self.session.put(url, headers=headers, json=payload, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
         except Exception as e:
@@ -392,7 +420,7 @@ class ConfluenceProvider:
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/wiki/rest/api/content/search"
-            params = {'cql': f'creator = {account_id}', 'limit': DEFAULT_PAGE_SIZE}
+            params = {'cql': f'creator = "{account_id}"', 'limit': DEFAULT_PAGE_SIZE}
             response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -425,10 +453,11 @@ class ConfluenceProvider:
         if not valid:
             return {'error': error}
         try:
-            # Get the specific version
+            # Get the specific version from history
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}?version={version}&expand=body.storage"
-            response = self.session.get(url, headers=headers, timeout=self.timeout)
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}/version/{version}"
+            params = {'expand': 'content.body.storage'}
+            response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
             old_version = response.json()
             # Get current version
@@ -438,8 +467,8 @@ class ConfluenceProvider:
             # Update with old content
             return await self.update_page(
                 page_id,
-                old_version.get('title'),
-                old_version.get('body', {}).get('storage', {}).get('value', ''),
+                old_version.get('content', {}).get('title'),
+                old_version.get('content', {}).get('body', {}).get('storage', {}).get('value', ''),
                 current.get('version', {}).get('number', 1)
             )
         except Exception as e:
@@ -456,9 +485,9 @@ class ConfluenceProvider:
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/wiki/rest/api/content/search"
-            cql = f'creator = {account_id}'
+            cql = f'creator = "{account_id}"'
             if space_key:
-                cql += f' AND space = {space_key}'
+                cql += f' AND space = "{space_key}"'
             params = {'cql': cql, 'limit': DEFAULT_PAGE_SIZE}
             response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
@@ -477,7 +506,7 @@ class ConfluenceProvider:
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.auth.get_base_url()}/wiki/rest/api/content/search"
-            cql = f'label = {label}'
+            cql = f'label = "{label}"'
             if space_key:
                 cql += f' AND space = {space_key}'
             params = {'cql': cql, 'limit': DEFAULT_PAGE_SIZE}
@@ -495,28 +524,11 @@ class ConfluenceProvider:
         try:
             logger.info(f"Searching Confluence: {query}")
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/wiki/rest/api/search"
-            
-            params = {
-                'cql': f'text ~ "{query}"',
-                'limit': DEFAULT_PAGE_SIZE
-            }
-            
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/search"
+            params = {'cql': query, 'limit': DEFAULT_PAGE_SIZE}
             response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
-            
-            results = response.json().get('results', [])
-            formatted_results = []
-            
-            for result in results:
-                formatted_results.append({
-                    'type': result.get('content', {}).get('type'),
-                    'title': result.get('content', {}).get('title'),
-                    'space': result.get('content', {}).get('space', {}).get('name'),
-                    'url': result.get('url')
-                })
-            
-            return {'results': formatted_results}
+            return response.json()
         except Exception as e:
             return {'error': str(e)}
     
@@ -612,7 +624,7 @@ class ConfluenceProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            url = f"{self.auth.get_base_url()}/wiki/rest/api/search"
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/search"
             params = {'cql': cql, 'limit': limit}
             response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()

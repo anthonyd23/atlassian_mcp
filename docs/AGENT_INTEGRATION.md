@@ -379,7 +379,7 @@ Configure different servers for different Atlassian instances:
 3. Ensure base URL includes `https://`
 4. Test credentials with integration tests:
    ```bash
-   python tests/cloud/test_all_tools.py
+   python tests/cloud/test_all_cloud_tools.py
    ```
 
 ### Tools Not Appearing

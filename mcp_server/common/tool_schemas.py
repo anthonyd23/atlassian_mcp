@@ -726,5 +726,33 @@ TOOL_SCHEMAS = {
             "events": {"type": "array", "items": {"type": "string"}}
         },
         "required": ["repo_slug", "url", "events"]
+    },
+    
+    # Ticket support tools - (expose raw data for AI reasoning)
+    "get_open_support_tickets": {
+        "type": "object",
+        "properties": {},
+        "description": "Get list of open support tickets, separated by type. Returns: alert_tickets (list of tickets with Alert in custom field), other_tickets (list of non-alert tickets), total counts."
+    },
+    "check_ticket_template": {
+        "type": "object",
+        "properties": {
+            "issue_key": {"type": "string", "description": "Jira issue key (e.g., PROJ-123)"}
+        },
+        "required": ["issue_key"],
+        "description": "Validate single ticket against template. Automatically skips validation for Alert tickets. Returns: ticket.fields (all Jira fields), template_config, template_pages (list of available templates), or {skipped: true, reason: ...} if Alert ticket."
+    },
+    "suggest_assignee": {
+        "type": "object",
+        "properties": {
+            "issue_key": {"type": "string", "description": "Jira issue key (e.g., PROJ-123)"}
+        },
+        "required": ["issue_key"],
+        "description": "Suggest assignee for single ticket based on workload. Returns: ticket (full Jira issue with comments), team.primary_team/secondary_team (members with their current ticket counts and issues)."
+    },
+    "get_team_workload": {
+        "type": "object",
+        "properties": {},
+        "description": "Expose raw team members and their currently assigned issues. AI should: 1) Count len(member.issues) per member, 2) Analyze status distribution (Open/In Progress/Blocked), 3) Check ticket ages and priorities, 4) Identify capacity (low count + mostly Open = available). Returns: primary_team/secondary_team (members with their raw issues)."
     }
 }

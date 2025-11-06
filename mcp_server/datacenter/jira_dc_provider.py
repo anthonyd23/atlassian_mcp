@@ -37,7 +37,7 @@ class JiraDCProvider:
         session.mount('https://', adapter)
         return session
     
-    async def search_by_assignee(self, assignee: str, project_key: str = "") -> Dict[str, Any]:
+    async def search_by_assignee(self, assignee: str, project_key: str = "", excluded_issue_types: list = None) -> Dict[str, Any]:
         """Find issues assigned to a specific user."""
         check = self._check_available()
         if check:
@@ -48,9 +48,15 @@ class JiraDCProvider:
         try:
             # Don't quote if it's a JQL function like currentUser()
             if '(' in assignee and ')' in assignee:
-                jql = f"assignee = {assignee}"
+                jql = f"assignee = {assignee} AND resolution = Unresolved"
             else:
-                jql = f"assignee = '{assignee}'"
+                jql = f"assignee = '{assignee}' AND resolution = Unresolved"
+            
+            # Add excluded issue types if provided
+            if excluded_issue_types:
+                for issue_type in excluded_issue_types:
+                    jql += f" AND issuetype != '{issue_type}'"
+            
             if project_key:
                 jql += f" AND project = '{project_key}'"
             return await self.search(jql)
@@ -352,7 +358,7 @@ class JiraDCProvider:
             return check
         try:
             url = f"{self.base_url}/rest/api/2/issue/{sanitize_url_path(issue_key)}/assignee"
-            payload = {"accountId": account_id}
+            payload = {"name": account_id}
             response = self.session.put(url, headers=self.auth.get_auth_headers(), timeout=self.timeout, json=payload)
             response.raise_for_status()
             return {'success': True}
@@ -428,7 +434,7 @@ class JiraDCProvider:
             return {'error': str(e)}
     
     async def get_user(self, account_id: str) -> Dict[str, Any]:
-        """Get user details by account ID."""
+        """Get user details by username (Data Center uses username, not accountId)."""
         check = self._check_available()
         if check:
             return check
@@ -436,7 +442,7 @@ class JiraDCProvider:
         if not valid:
             return {'error': error}
         try:
-            url = f"{self.base_url}/rest/api/2/user?accountId={sanitize_url_path(account_id)}"
+            url = f"{self.base_url}/rest/api/2/user?username={sanitize_url_path(account_id)}"
             response = self.session.get(url, headers=self.auth.get_auth_headers(), timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -528,6 +534,19 @@ class JiraDCProvider:
             return {'error': error}
         try:
             url = f"{self.base_url}/rest/api/2/issue/{sanitize_url_path(issue_key)}/worklog"
+            response = self.session.get(url, headers=self.auth.get_auth_headers(), timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def get_fields(self) -> Dict[str, Any]:
+        """Get all field metadata including custom fields."""
+        check = self._check_available()
+        if check:
+            return check
+        try:
+            url = f"{self.base_url}/rest/api/2/field"
             response = self.session.get(url, headers=self.auth.get_auth_headers(), timeout=self.timeout)
             response.raise_for_status()
             return response.json()

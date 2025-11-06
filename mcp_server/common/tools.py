@@ -100,3 +100,10 @@ BITBUCKET_TOOLS = [
     {"name": "get_build_status", "description": "Get CI/CD build status for commit"},
     {"name": "create_webhook", "description": "Create repository webhook"}
 ]
+
+TICKET_SUPPORT_TOOLS = [
+    {"name": "get_open_support_tickets", "description": "Get list of open support tickets needing assignment, separated by type. Returns: alert_tickets (list of tickets with Alert in custom field), other_tickets (list of non-alert tickets), total counts."},
+    {"name": "check_ticket_template", "description": "Check if Jira ticket follows defined template"},
+    {"name": "suggest_assignee", "description": "Suggest who should be assigned to ticket based on team workload"},
+    {"name": "get_team_workload", "description": "Get current workload for all team members"}
+]

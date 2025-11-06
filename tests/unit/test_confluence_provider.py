@@ -146,7 +146,8 @@ async def test_get_recent_content_success(confluence_provider, mock_response):
 @pytest.mark.asyncio
 async def test_restore_page_version_success(confluence_provider, mock_response):
     from unittest.mock import AsyncMock
-    mock_response.json = Mock(return_value={"id": "12345", "title": "Test", "body": {"storage": {"value": "<p>Old</p>"}}, "version": {"number": 2}})
+    # Mock version endpoint response with nested 'content' structure
+    mock_response.json = Mock(return_value={"number": 2, "content": {"id": "12345", "title": "Test", "body": {"storage": {"value": "<p>Old</p>"}}}})
     confluence_provider.session.get = Mock(return_value=mock_response)
     confluence_provider.session.put = Mock(return_value=mock_response)
     confluence_provider.get_page = AsyncMock(return_value={"version": {"number": 3}})

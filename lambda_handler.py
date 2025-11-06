@@ -5,7 +5,7 @@ import time
 import logging
 import boto3
 from datetime import datetime
-from mcp_server.common.tools import JIRA_TOOLS, CONFLUENCE_TOOLS, BITBUCKET_TOOLS
+from mcp_server.common.tools import JIRA_TOOLS, CONFLUENCE_TOOLS, BITBUCKET_TOOLS, TICKET_SUPPORT_TOOLS
 from mcp_server.common.tool_schemas import TOOL_SCHEMAS
 from mcp_server.common.router import route_tool_call
 
@@ -35,9 +35,34 @@ else:
     confluence = ConfluenceProvider()
     bitbucket = BitbucketProvider()
 
+# Initialize ticket support agent if configured
+try:
+    agent_primary = os.getenv('AGENT_PRIMARY_TEAM', '')
+    agent_secondary = os.getenv('AGENT_SECONDARY_TEAM', '')
+    if agent_primary or agent_secondary:
+        from mcp_server.common.ticket_support_tools import initialize_agent
+        primary_team = json.loads(agent_primary) if agent_primary else []
+        secondary_team = json.loads(agent_secondary) if agent_secondary else []
+        template_mapping = json.loads(os.getenv('AGENT_TEMPLATE_MAPPING', '{}'))
+        excluded_types = json.loads(os.getenv('AGENT_EXCLUDED_TYPES', '[]'))
+        workload_statuses = json.loads(os.getenv('AGENT_WORKLOAD_STATUSES', '[]'))
+        support_jql = os.getenv('AGENT_SUPPORT_JQL', '')
+        initialize_agent(
+            primary_team,
+            secondary_team,
+            template_mapping,
+            confluence if confluence.available else None,
+            excluded_types,
+            workload_statuses,
+            support_jql
+        )
+        logger.info(f"Ticket support agent initialized with {len(primary_team)} primary and {len(secondary_team)} secondary team members")
+except Exception as e:
+    logger.warning(f"Failed to initialize ticket support agent: {e}")
+
 # Merge tools with their schemas
 ALL_TOOLS = []
-for tool in (JIRA_TOOLS + CONFLUENCE_TOOLS + BITBUCKET_TOOLS):
+for tool in (JIRA_TOOLS + CONFLUENCE_TOOLS + BITBUCKET_TOOLS + TICKET_SUPPORT_TOOLS):
     tool_with_schema = tool.copy()
     if tool['name'] in TOOL_SCHEMAS:
         tool_with_schema['inputSchema'] = TOOL_SCHEMAS[tool['name']]

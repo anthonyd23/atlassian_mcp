@@ -5,9 +5,10 @@
 stack_name: atlassian-mcp-stack
 
 # Deployment type: 'cloud' or 'datacenter'
+# If not specified, will auto-detect based on which credentials are configured
 deployment_type: cloud
 
-# Atlassian Cloud Configuration (if deployment_type: cloud)
+# Atlassian Cloud Configuration
 cloud:
   atlassian_base_url: https://yourcompany.atlassian.net
   atlassian_username: your-email@company.com
@@ -17,7 +18,7 @@ cloud:
   bitbucket_workspace: your-workspace
   bitbucket_api_token: your-bitbucket-api-token
 
-# Atlassian Data Center Configuration (if deployment_type: datacenter)
+# Atlassian Data Center Configuration
 datacenter:
   # Jira Data Center
   jira_base_url: https://jira.company.com
@@ -31,6 +32,34 @@ datacenter:
   bitbucket_base_url: https://git.company.com
   bitbucket_pat_token: your-bitbucket-pat-token
   bitbucket_project: YOUR_PROJECT
+
+# Ticket Support Agent Configuration (optional - only needed for ticket support tools)
+# Enables 3 tools: check_ticket_template, suggest_assignee, get_team_workload
+# For Cloud: Use long account IDs (e.g., 712020:xxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+# For Data Center: Use usernames (e.g., jdoe)
+ticket_support_agent:
+  primary_team_members:
+    - account_id: "712020:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+      name: "John Doe"
+    - account_id: "712020:yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy"
+      name: "Jane Smith"
+  secondary_team_members:
+    - account_id: "712020:zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz"
+      name: "Bob Wilson"
+  excluded_issue_types:
+    - "Example Issue Type"
+  workload_statuses:
+    - "Open"
+    - "Ticket Review"
+    - "In Progress"
+  template_mapping:
+    # Map issue types to Confluence template pages
+    # AI will use parent_page to find templates and custom_field to match ticket type
+    "Your Issue Type":
+      parent_page: "Your Template Parent Page"  # Confluence page title or ID
+      custom_field: "customfield_xxxxx"  # Custom field containing ticket type
+  # JQL query to find unassigned support tickets (optional)
+  support_jql: 'assignee is EMPTY AND status = Open ORDER BY created DESC'
 
 # Monitoring (optional)
 monitoring:

@@ -198,5 +198,19 @@ async def route_tool_call(name: str, arguments: Dict[str, Any], jira, confluence
     elif name == "create_webhook":
         return await bitbucket.create_webhook(arguments["repo_slug"], arguments["url"], arguments.get("events", []))
     
+    # Ticket support tools
+    elif name == "get_open_support_tickets":
+        from mcp_server.common.ticket_support_tools import get_open_support_tickets
+        return await get_open_support_tickets(jira)
+    elif name == "check_ticket_template":
+        from mcp_server.common.ticket_support_tools import check_ticket_template
+        return await check_ticket_template(arguments["issue_key"], jira)
+    elif name == "suggest_assignee":
+        from mcp_server.common.ticket_support_tools import suggest_assignee
+        return await suggest_assignee(arguments["issue_key"], jira)
+    elif name == "get_team_workload":
+        from mcp_server.common.ticket_support_tools import get_team_workload
+        return await get_team_workload(jira)
+    
     else:
         raise ValueError(f"Unknown tool: {name}")

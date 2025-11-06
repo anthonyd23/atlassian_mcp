@@ -285,8 +285,101 @@ datacenter:
 
 ## Platform Detection
 
-Both local and AWS modes detect platform based on available credentials:
-- **Cloud mode:** Uses `ATLASSIAN_API_TOKEN` + `ATLASSIAN_USERNAME`
-- **Data Center mode:** Uses service-specific PAT tokens (`JIRA_PAT_TOKEN`, etc.)
+Both local and AWS modes detect platform based on configuration priority:
 
-Detection happens at runtime based on environment variables.
+1. **DEPLOYMENT_TYPE environment variable** (highest priority)
+2. **deployment_type in config.yaml**
+3. **Data Center credentials detection** (presence of PAT tokens)
+4. **Default to Cloud** (lowest priority)
+
+**Cloud mode:** Uses `ATLASSIAN_API_TOKEN` + `ATLASSIAN_USERNAME`
+**Data Center mode:** Uses service-specific PAT tokens (`JIRA_PAT_TOKEN`, etc.)
+
+## Ticket Support Agent Configuration (Optional)
+
+The ticket support agent provides 4 specialized tools for intelligent ticket management. Configuration is optional - if not provided, the agent tools will be listed but return errors when called.
+
+### Configuration Structure
+
+```yaml
+ticket_support_agent:
+  # Team members (Cloud: account IDs, DC: usernames)
+  primary_team_members:
+    - account_id: "712020:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+      name: "Alice Smith"
+    - account_id: "712020:yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy"
+      name: "Bob Jones"
+  
+  secondary_team_members:
+    - account_id: "712020:zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz"
+      name: "Charlie Brown"
+  
+  # Issue types to exclude from workload calculation
+  excluded_issue_types:
+    - "Epic"
+    - "Initiative"
+  
+  # Statuses to count in workload (optional)
+  workload_statuses:
+    - "Open"
+    - "In Progress"
+    - "Blocked"
+  
+  # Template mapping for ticket validation
+  template_mapping:
+    "Support Request":
+      parent_page: "Support Request Templates"  # Confluence page title or ID
+      custom_field: "customfield_10001"  # Custom field with ticket type
+  
+  # JQL query to find unassigned tickets
+  support_jql: 'assignee is EMPTY AND status = Open ORDER BY created DESC'
+```
+
+### Platform-Specific Team Configuration
+
+**Cloud (Account IDs):**
+```yaml
+primary_team_members:
+  - account_id: "712020:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    name: "Alice"
+```
+
+**Data Center (Usernames):**
+```yaml
+primary_team_members:
+  - account_id: "asmith"
+    name: "Alice"
+```
+
+### Agent Tools
+
+1. **get_open_support_tickets**: Retrieve and categorize unassigned tickets
+2. **check_ticket_template**: Validate ticket completeness against templates
+3. **suggest_assignee**: Recommend optimal assignee based on workload
+4. **get_team_workload**: Get current workload for all team members
+
+See [TICKET_SUPPORT_AGENT.md](TICKET_SUPPORT_AGENT.md) for detailed documentation.
+
+### AWS Deployment with Agent
+
+The agent configuration is automatically deployed to Lambda:
+
+```bash
+# 1. Configure in config.yaml
+ticket_support_agent:
+  primary_team_members: [...]
+  # ... rest of config
+
+# 2. Deploy
+python deploy.py
+
+# 3. Agent automatically initialized in Lambda
+```
+
+Configuration is passed as JSON-encoded environment variables:
+- `AGENT_PRIMARY_TEAM`
+- `AGENT_SECONDARY_TEAM`
+- `AGENT_TEMPLATE_MAPPING`
+- `AGENT_EXCLUDED_TYPES`
+- `AGENT_WORKLOAD_STATUSES`
+- `AGENT_SUPPORT_JQL`

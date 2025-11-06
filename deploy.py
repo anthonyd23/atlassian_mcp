@@ -72,6 +72,16 @@ def build_parameter_overrides(config):
     alert_email = config.get('monitoring', {}).get('alert_email', '')
     params.append(f'AlertEmail="{alert_email}"')
     
+    # Ticket Support Agent
+    agent = config.get('ticket_support_agent', {})
+    import json
+    params.append(f'AgentPrimaryTeam="{json.dumps(agent.get("primary_team_members", []))}"')
+    params.append(f'AgentSecondaryTeam="{json.dumps(agent.get("secondary_team_members", []))}"')
+    params.append(f'AgentTemplateMapping="{json.dumps(agent.get("template_mapping", {}))}"')
+    params.append(f'AgentExcludedTypes="{json.dumps(agent.get("excluded_issue_types", []))}"')
+    params.append(f'AgentWorkloadStatuses="{json.dumps(agent.get("workload_statuses", []))}"')
+    params.append(f'AgentSupportJql="{agent.get("support_jql", "")}"')
+    
     return ' '.join(params)
 
 def main():

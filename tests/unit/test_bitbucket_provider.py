@@ -226,3 +226,165 @@ async def test_create_webhook_success(bitbucket_provider, mock_response):
     
     assert result["url"] == "https://example.com/hook"
     bitbucket_provider.session.post.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_list_pull_requests_success(bitbucket_provider, mock_response):
+    mock_response.json = Mock(return_value={"values": [{"id": 1, "title": "Test PR"}]})
+    bitbucket_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.list_pull_requests("test-repo")
+    
+    assert "values" in result
+    bitbucket_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_list_branches_success(bitbucket_provider, mock_response):
+    mock_response.json = Mock(return_value={"values": [{"name": "main"}]})
+    bitbucket_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.list_branches("test-repo")
+    
+    assert "values" in result
+    bitbucket_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_list_tags_success(bitbucket_provider, mock_response):
+    mock_response.json = Mock(return_value={"values": [{"name": "v1.0"}]})
+    bitbucket_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.list_tags("test-repo")
+    
+    assert "values" in result
+    bitbucket_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_list_commits_success(bitbucket_provider, mock_response):
+    mock_response.json = Mock(return_value={"values": [{"hash": "abc123"}]})
+    bitbucket_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.list_commits("test-repo")
+    
+    assert "values" in result
+    bitbucket_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_commit_success(bitbucket_provider, mock_response):
+    mock_response.json = Mock(return_value={"hash": "abc1234", "message": "Test commit"})
+    bitbucket_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.get_commit("test-repo", "abc1234")
+    
+    assert result["hash"] == "abc1234"
+    bitbucket_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_commit_diff_success(bitbucket_provider, mock_response):
+    mock_response.text = "diff --git a/file.txt b/file.txt"
+    bitbucket_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.get_commit_diff("test-repo", "abc1234")
+    
+    assert "diff" in result
+    bitbucket_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_pull_request_diff_success(bitbucket_provider, mock_response):
+    mock_response.text = "diff --git a/file.txt b/file.txt"
+    bitbucket_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.get_pull_request_diff("test-repo", 1)
+    
+    assert "diff" in result
+    bitbucket_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_pull_request_comments_success(bitbucket_provider, mock_response):
+    mock_response.json = Mock(return_value={"values": [{"id": 1, "content": {"raw": "Comment"}}]})
+    bitbucket_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.get_pull_request_comments("test-repo", 1)
+    
+    assert "values" in result
+    bitbucket_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_add_pr_comment_success(bitbucket_provider, mock_response):
+    mock_response.json = Mock(return_value={"id": 1, "content": {"raw": "Test comment"}})
+    bitbucket_provider.session.post = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.add_pr_comment("test-repo", 1, "Test comment")
+    
+    assert result["id"] == 1
+    bitbucket_provider.session.post.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_approve_pull_request_success(bitbucket_provider, mock_response):
+    bitbucket_provider.session.post = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.approve_pull_request("test-repo", 1)
+    
+    assert result["success"] == True
+    bitbucket_provider.session.post.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_merge_pull_request_success(bitbucket_provider, mock_response):
+    bitbucket_provider.session.post = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.merge_pull_request("test-repo", 1)
+    
+    assert result == {"slug": "test-repo", "name": "Test Repo"}
+    bitbucket_provider.session.post.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_update_pull_request_success(bitbucket_provider, mock_response):
+    bitbucket_provider.session.put = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.update_pull_request("test-repo", 1, "Updated Title")
+    
+    assert result == {"slug": "test-repo", "name": "Test Repo"}
+    bitbucket_provider.session.put.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_compare_commits_success(bitbucket_provider, mock_response):
+    mock_response.text = "diff --git a/file.txt b/file.txt"
+    bitbucket_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.compare_commits("test-repo", "abc1234", "def5678")
+    
+    assert "diff" in result
+    bitbucket_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_file_content_success(bitbucket_provider, mock_response):
+    mock_response.text = "file content"
+    bitbucket_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.get_file_content("test-repo", "README.md")
+    
+    assert result["content"] == "file content"
+    bitbucket_provider.session.get.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_list_directory_success(bitbucket_provider, mock_response):
+    mock_response.json = Mock(return_value={"values": [{"path": "file.txt", "type": "commit_file"}]})
+    bitbucket_provider.session.get = Mock(return_value=mock_response)
+    
+    result = await bitbucket_provider.list_directory("test-repo")
+    
+    assert "values" in result
+    bitbucket_provider.session.get.assert_called_once()
