@@ -153,14 +153,19 @@ class BitbucketDCProvider:
             return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
-            # Encode file_path but preserve forward slashes
             encoded_path = quote(file_path, safe='/')
             url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{sanitize_url_path(repo_slug)}/browse/{encoded_path}"
-            params = {'at': branch}
-            response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
-            response.raise_for_status()
-            lines = response.json().get('lines', [])
-            content = '\n'.join([line.get('text', '') for line in lines])
+            params = {'at': branch, 'limit': 10000}
+            all_lines = []
+            while True:
+                response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
+                response.raise_for_status()
+                data = response.json()
+                all_lines.extend(data.get('lines', []))
+                if data.get('isLastPage', True):
+                    break
+                params['start'] = data.get('nextPageStart')
+            content = '\n'.join([line.get('text', '') for line in all_lines])
             return {'content': content, 'path': file_path}
         except Exception as e:
             return {'error': str(e)}
