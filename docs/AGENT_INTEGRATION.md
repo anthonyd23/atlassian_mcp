@@ -14,16 +14,11 @@ This guide shows how to integrate the Atlassian MCP Server with popular AI agent
 
 ---
 
-## Amazon Q Developer
+## Standard Configuration Format
 
-**Location:** Amazon Q Developer Settings → MCP Servers
+Most AI agents (Amazon Q, Claude Desktop, Cline, Cursor) use the same JSON format:
 
-**Configuration File:**
-- **Windows:** `%APPDATA%\Amazon Q\mcp_config.json`
-- **Mac/Linux:** `~/.config/amazonq/mcp_config.json`
-
-**Setup:**
-
+**Cloud:**
 ```json
 {
   "mcpServers": {
@@ -33,12 +28,45 @@ This guide shows how to integrate the Atlassian MCP Server with popular AI agent
       "env": {
         "ATLASSIAN_BASE_URL": "https://yourcompany.atlassian.net",
         "ATLASSIAN_USERNAME": "your-email@company.com",
-        "ATLASSIAN_API_TOKEN": "your-token"
+        "ATLASSIAN_API_TOKEN": "your-token",
+        "BITBUCKET_WORKSPACE": "your-workspace",
+        "BITBUCKET_API_TOKEN": "your-bb-token"
       }
     }
   }
 }
 ```
+
+**Data Center:**
+```json
+{
+  "mcpServers": {
+    "atlassian-mcp": {
+      "command": "python",
+      "args": ["/absolute/path/to/mcp_server/main.py"],
+      "env": {
+        "JIRA_BASE_URL": "https://jira.company.com",
+        "JIRA_PAT_TOKEN": "your-jira-token",
+        "CONFLUENCE_BASE_URL": "https://wiki.company.com",
+        "CONFLUENCE_PAT_TOKEN": "your-confluence-token",
+        "BITBUCKET_BASE_URL": "https://git.company.com",
+        "BITBUCKET_PAT_TOKEN": "your-bitbucket-token",
+        "BITBUCKET_PROJECT": "PROJECT_KEY"
+      }
+    }
+  }
+}
+```
+
+---
+
+## Amazon Q Developer
+
+**Configuration File:**
+- **Windows:** `%APPDATA%\Amazon Q\mcp_config.json`
+- **Mac/Linux:** `~/.config/amazonq/mcp_config.json`
+
+**Setup:** Use standard format above
 
 **Example Prompts:**
 - "Search Jira for issues assigned to me"
@@ -50,32 +78,12 @@ This guide shows how to integrate the Atlassian MCP Server with popular AI agent
 
 ## Claude Desktop
 
-**Location:** Claude Desktop Settings → Developer → Edit Config
-
 **Configuration File:**
 - **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
 - **Mac:** `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Linux:** `~/.config/Claude/claude_desktop_config.json`
 
-**Setup:**
-
-```json
-{
-  "mcpServers": {
-    "atlassian": {
-      "command": "python",
-      "args": ["/absolute/path/to/mcp_server/main.py"],
-      "env": {
-        "ATLASSIAN_BASE_URL": "https://yourcompany.atlassian.net",
-        "ATLASSIAN_USERNAME": "your-email@company.com",
-        "ATLASSIAN_API_TOKEN": "your-api-token",
-        "BITBUCKET_WORKSPACE": "your-workspace",
-        "BITBUCKET_API_TOKEN": "your-bb-token"
-      }
-    }
-  }
-}
-```
+**Setup:** Use standard format above
 
 **Restart Required:** Yes, restart Claude Desktop after configuration changes.
 
@@ -83,30 +91,12 @@ This guide shows how to integrate the Atlassian MCP Server with popular AI agent
 
 ## Cline (VS Code)
 
-**Location:** VS Code → Cline Extension Settings → MCP Servers
-
 **Configuration File:**
 - **Windows:** `%APPDATA%\Code\User\globalStorage\saoudrizwan.claude-dev\settings\cline_mcp_settings.json`
 - **Mac:** `~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json`
 - **Linux:** `~/.config/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json`
 
-**Setup:**
-
-```json
-{
-  "mcpServers": {
-    "atlassian-mcp": {
-      "command": "python",
-      "args": ["/absolute/path/to/mcp_server/main.py"],
-      "env": {
-        "ATLASSIAN_BASE_URL": "https://yourcompany.atlassian.net",
-        "ATLASSIAN_USERNAME": "your-email@company.com",
-        "ATLASSIAN_API_TOKEN": "your-token"
-      }
-    }
-  }
-}
-```
+**Setup:** Use standard format above
 
 **Alternative:** Use VS Code settings UI:
 1. Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
@@ -117,30 +107,12 @@ This guide shows how to integrate the Atlassian MCP Server with popular AI agent
 
 ## Cursor
 
-**Location:** Cursor Settings → Features → Model Context Protocol
-
 **Configuration File:**
 - **Windows:** `%APPDATA%\Cursor\User\globalStorage\mcp\mcp_config.json`
 - **Mac:** `~/Library/Application Support/Cursor/User/globalStorage/mcp/mcp_config.json`
 - **Linux:** `~/.config/Cursor/User/globalStorage/mcp/mcp_config.json`
 
-**Setup:**
-
-```json
-{
-  "mcpServers": {
-    "atlassian": {
-      "command": "python",
-      "args": ["/absolute/path/to/mcp_server/main.py"],
-      "env": {
-        "ATLASSIAN_BASE_URL": "https://yourcompany.atlassian.net",
-        "ATLASSIAN_USERNAME": "your-email@company.com",
-        "ATLASSIAN_API_TOKEN": "your-token"
-      }
-    }
-  }
-}
-```
+**Setup:** Use standard format above
 
 **Usage:** Use `@atlassian` in Cursor chat to invoke MCP tools.
 
@@ -180,31 +152,11 @@ This guide shows how to integrate the Atlassian MCP Server with popular AI agent
 
 ## Zed Editor
 
-**Location:** Zed Settings → Extensions → MCP
-
 **Configuration File:**
 - **Mac:** `~/Library/Application Support/Zed/settings.json`
 - **Linux:** `~/.config/zed/settings.json`
 
-**Setup:**
-
-```json
-{
-  "mcp": {
-    "servers": {
-      "atlassian": {
-        "command": "python",
-        "args": ["/absolute/path/to/mcp_server/main.py"],
-        "env": {
-          "ATLASSIAN_BASE_URL": "https://yourcompany.atlassian.net",
-          "ATLASSIAN_USERNAME": "your-email@company.com",
-          "ATLASSIAN_API_TOKEN": "your-token"
-        }
-      }
-    }
-  }
-}
-```
+**Setup:** Use standard format, but nested under `"mcp": { "servers": { ... } }`
 
 ---
 
@@ -305,15 +257,30 @@ Use the correct Python command for your system:
 ### 3. Configuration Options
 
 **Option A: Environment Variables**
+
+Cloud:
 ```bash
-# Set once in your shell profile
 export ATLASSIAN_BASE_URL="https://yourcompany.atlassian.net"
 export ATLASSIAN_USERNAME="your-email@company.com"
 export ATLASSIAN_API_TOKEN="your-token"
+export BITBUCKET_WORKSPACE="your-workspace"
+export BITBUCKET_API_TOKEN="your-bb-token"
+```
+
+Data Center:
+```bash
+export JIRA_BASE_URL="https://jira.company.com"
+export JIRA_PAT_TOKEN="your-jira-token"
+export CONFLUENCE_BASE_URL="https://wiki.company.com"
+export CONFLUENCE_PAT_TOKEN="your-confluence-token"
+export BITBUCKET_BASE_URL="https://git.company.com"
+export BITBUCKET_PAT_TOKEN="your-bitbucket-token"
+export BITBUCKET_PROJECT="PROJECT_KEY"
 ```
 
 **Option B: config.yaml File**
-Create `config.yaml` in the project root:
+
+Cloud:
 ```yaml
 deployment_type: cloud
 cloud:
@@ -322,6 +289,19 @@ cloud:
   atlassian_api_token: your-token
   bitbucket_workspace: your-workspace
   bitbucket_api_token: your-bb-token
+```
+
+Data Center:
+```yaml
+deployment_type: datacenter
+datacenter:
+  jira_base_url: https://jira.company.com
+  jira_pat_token: your-jira-token
+  confluence_base_url: https://wiki.company.com
+  confluence_pat_token: your-confluence-token
+  bitbucket_base_url: https://git.company.com
+  bitbucket_pat_token: your-bitbucket-token
+  bitbucket_project: PROJECT_KEY
 ```
 
 With either option, simplify agent config:
@@ -337,26 +317,25 @@ With either option, simplify agent config:
 ```
 
 ### 4. Multiple Environments
-Configure different servers for different Atlassian instances:
+Configure different servers for different Atlassian instances (Cloud and Data Center):
 ```json
 {
   "mcpServers": {
-    "atlassian-prod": {
+    "atlassian-cloud": {
       "command": "python",
       "args": ["/path/to/mcp_server/main.py"],
       "env": {
-        "ATLASSIAN_BASE_URL": "https://prod.atlassian.net",
+        "ATLASSIAN_BASE_URL": "https://company.atlassian.net",
         "ATLASSIAN_USERNAME": "user@company.com",
-        "ATLASSIAN_API_TOKEN": "prod-token"
+        "ATLASSIAN_API_TOKEN": "cloud-token"
       }
     },
-    "atlassian-staging": {
+    "atlassian-datacenter": {
       "command": "python",
       "args": ["/path/to/mcp_server/main.py"],
       "env": {
-        "ATLASSIAN_BASE_URL": "https://staging.atlassian.net",
-        "ATLASSIAN_USERNAME": "user@company.com",
-        "ATLASSIAN_API_TOKEN": "staging-token"
+        "JIRA_BASE_URL": "https://jira.company.com",
+        "JIRA_PAT_TOKEN": "dc-token"
       }
     }
   }

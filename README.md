@@ -8,7 +8,7 @@
 
 Model Context Protocol (MCP) server for Atlassian tools (Jira, Confluence, and Bitbucket).
 
-> **Enterprise-grade MCP server providing 100 production-ready tools for Jira, Confluence, and Bitbucket**
+> **Enterprise-grade MCP server providing 101 production-ready tools for Jira, Confluence, and Bitbucket**
 > 
 > - ✨ Works with Amazon Q Developer, Claude, Cursor, and more
 > - 🚀 Deploy locally or to AWS Lambda
@@ -34,6 +34,32 @@ cp config.template.yaml config.yaml
 python mcp_server/main.py
 ```
 
+**Configuration Examples:**
+
+Cloud:
+```yaml
+deployment_type: cloud
+cloud:
+  atlassian_base_url: https://yourcompany.atlassian.net
+  atlassian_username: your-email@company.com
+  atlassian_api_token: your-token
+  bitbucket_workspace: your-workspace
+  bitbucket_api_token: your-token
+```
+
+Data Center:
+```yaml
+deployment_type: datacenter
+datacenter:
+  jira_base_url: https://jira.company.com
+  jira_pat_token: your-token
+  confluence_base_url: https://wiki.company.com
+  confluence_pat_token: your-token
+  bitbucket_base_url: https://git.company.com
+  bitbucket_pat_token: your-token
+  bitbucket_project: PROJECT_KEY
+```
+
 **AWS Deployment:**
 ```bash
 cp config.template.yaml config.yaml
@@ -45,7 +71,7 @@ python deploy.py
 
 - **Jira** (31 tools): Issues, comments, transitions, attachments, attachment upload, users, worklogs, labels, issue linking, advanced search, priority management, agile boards, sprints, user permissions
 - **Confluence** (30 tools): Pages, spaces, comments, attachments, search, users, labels, page history, permissions, page copying, user content, recent content, version restore, search by author/label, page hierarchy (move, children, descendants, ancestors), CQL search
-- **Bitbucket** (33 tools): Repositories, pull requests, commits, branches, diffs, reviewers, branch management, PR activity, default reviewers, author filtering, change requests, branch restrictions, build status, webhooks
+- **Bitbucket** (34 tools): Repositories, pull requests, commits, branches, diffs, file search, reviewers, branch management, PR activity, default reviewers, author filtering, change requests, branch restrictions, build status, webhooks
 - **Ticket Support Agent** (6 tools): Open ticket triage, template validation, assignee suggestions, team workload analysis, expertise JQL construction, troubleshooting doc lookup
 - **Flexible Credentials**: Configure only the services you need
 - **Dual Platform**: Supports both Cloud and Data Center deployments

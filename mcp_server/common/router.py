@@ -133,6 +133,8 @@ async def route_tool_call(name: str, arguments: Dict[str, Any], jira, confluence
     # Bitbucket tools
     elif name == "search_bitbucket":
         return await bitbucket.search(arguments["query"])
+    elif name == "search_files":
+        return await bitbucket.search_files(arguments["repo_slug"], arguments["query"], arguments.get("branch", "master"))
     elif name == "get_repository":
         return await bitbucket.get_repository(arguments["repo_slug"])
     elif name == "list_repositories":

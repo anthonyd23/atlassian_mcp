@@ -257,6 +257,15 @@ TOOL_SCHEMAS = {
         },
         "required": ["query"]
     },
+    "search_files": {
+        "type": "object",
+        "properties": {
+            "repo_slug": {"type": "string"},
+            "query": {"type": "string", "description": "Filename or partial filename to search for"},
+            "branch": {"type": "string", "description": "Branch to search in (default: master)"}
+        },
+        "required": ["repo_slug", "query"]
+    },
     "get_repository": {
         "type": "object",
         "properties": {
@@ -308,7 +317,8 @@ TOOL_SCHEMAS = {
         "type": "object",
         "properties": {
             "repo_slug": {"type": "string"},
-            "branch": {"type": "string"}
+            "branch": {"type": "string"},
+            "path": {"type": "string", "description": "Optional file path to filter commits that modified this file"}
         },
         "required": ["repo_slug"]
     },

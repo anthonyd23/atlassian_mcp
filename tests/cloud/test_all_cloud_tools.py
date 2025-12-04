@@ -513,10 +513,10 @@ async def test_all_confluence_tools():
     return passed, failed, exceptions, skipped
 
 async def test_all_bitbucket_tools(test_repo_slug=None, test_branch_name=None):
-    """Test all 33 Bitbucket tools"""
+    """Test all 34 Bitbucket tools"""
     bitbucket = BitbucketProvider()
     if not bitbucket.available:
-        return 0, 0, 0, 33
+        return 0, 0, 0, 34
     
     passed = failed = exceptions = skipped = 0
     
@@ -581,6 +581,19 @@ async def test_all_bitbucket_tools(test_repo_slug=None, test_branch_name=None):
         if branches.get('values'):
             branch_name = branches['values'][0]['name']
             commit_hash = branches['values'][0]['target']['hash']
+            
+            # 3: search_files (needs branch name)
+            result = await bitbucket.search_files(repo_slug, "README", branch_name)
+            if 'error' in result:
+                if '404' in str(result['error']):
+                    print(f"  [EXCEPT] search_files: No files in repo")
+                    exceptions += 1
+                else:
+                    print(f"  [FAIL] search_files: {result['error']}")
+                    failed += 1
+            else:
+                print(f"  [PASS] search_files")
+                passed += 1
             
             # 11-15: Commit operations
             for name, func in [
@@ -834,10 +847,10 @@ if __name__ == "__main__":
         
         if args.service in ['bitbucket', 'all']:
             print("\n" + "=" * 60)
-            print("BITBUCKET CLOUD (33 tools available)")
+            print("BITBUCKET CLOUD (34 tools available)")
             print("=" * 60)
             bb_p, bb_f, bb_e, bb_s = await test_all_bitbucket_tools(args.bitbucket_repo, args.bitbucket_branch)
-            print(f"  Tested: {bb_p + bb_f + bb_e} of 33 Bitbucket tools")
+            print(f"  Tested: {bb_p + bb_f + bb_e} of 34 Bitbucket tools")
         
         total_p = jira_p + conf_p + bb_p
         total_f = jira_f + conf_f + bb_f
@@ -851,7 +864,7 @@ if __name__ == "__main__":
         if args.service in ['confluence', 'all']:
             total_available += 30
         if args.service in ['bitbucket', 'all']:
-            total_available += 33
+            total_available += 34
         
         print("\n" + "=" * 60)
         print("SUMMARY")

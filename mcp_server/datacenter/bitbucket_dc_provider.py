@@ -32,7 +32,7 @@ class BitbucketDCProvider:
     
     def _create_session(self) -> requests.Session:
         session = requests.Session()
-        retry = Retry(total=3, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504], allowed_methods=["GET", "POST", "PUT", "DELETE"])
+        retry = Retry(total=3, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504], allowed_methods=["GET", "POST", "PUT", "DELETE"], raise_on_status=False)
         adapter = HTTPAdapter(max_retries=retry)
         session.mount('http://', adapter)
         session.mount('https://', adapter)
@@ -170,18 +170,24 @@ class BitbucketDCProvider:
         except Exception as e:
             return {'error': str(e)}
     
-    async def list_commits(self, repo_slug: str, branch: str = "main") -> Dict[str, Any]:
-        """List commits in a branch."""
+    async def list_commits(self, repo_slug: str, branch: str = "main", path: Optional[str] = None) -> Dict[str, Any]:
+        """List commits in a branch, optionally filtered by file path."""
         check = self._check_available()
         if check:
             return check
         valid, error = validate_branch_name(branch)
         if not valid:
             return {'error': error}
+        if path:
+            valid, error = validate_path(path, "path")
+            if not valid:
+                return {'error': error}
         try:
             headers = self.auth.get_auth_headers()
             url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{sanitize_url_path(repo_slug)}/commits"
             params = {'until': branch, 'limit': LIST_PAGE_SIZE}
+            if path:
+                params['path'] = path
             response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
@@ -641,6 +647,32 @@ class BitbucketDCProvider:
             response.raise_for_status()
             return response.json()
         except Exception as e:
+            return {'error': str(e)}
+    
+    async def search_files(self, repo_slug: str, query: str, branch: str = "master") -> Dict[str, Any]:
+        """Search for files in a repository by filename."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_repo_slug(repo_slug)
+        if not valid:
+            return {'error': error}
+        valid, error = validate_non_empty(query, "query")
+        if not valid:
+            return {'error': error}
+        try:
+            logger.info(f"Searching files in {repo_slug}: {query}")
+            headers = self.auth.get_auth_headers()
+            url = f"{self.base_url}/rest/api/1.0/projects/{self.project}/repos/{sanitize_url_path(repo_slug)}/files"
+            params = {'at': branch, 'limit': 10000}
+            response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
+            response.raise_for_status()
+            all_files = response.json().get('values', [])
+            # Filter files matching query
+            matching_files = [f for f in all_files if query.lower() in f.lower()]
+            return {'files': matching_files, 'count': len(matching_files)}
+        except Exception as e:
+            logger.error(f"Error searching files in {repo_slug}: {e}")
             return {'error': str(e)}
     
     async def search(self, query: str) -> Dict[str, Any]:

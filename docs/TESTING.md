@@ -52,7 +52,7 @@ Integration tests connect to real Atlassian instances and require valid credenti
 
 #### Cloud Integration Tests
 
-Tests all 94 Atlassian Cloud tools (31 Jira + 30 Confluence + 33 Bitbucket):
+Tests all 95 Atlassian Cloud tools (31 Jira + 30 Confluence + 34 Bitbucket):
 
 ```bash
 python tests/cloud/test_all_cloud_tools.py
@@ -73,7 +73,7 @@ python tests/cloud/test_all_cloud_tools.py
 
 #### Data Center Integration Tests
 
-Tests all 94 Atlassian Data Center tools (31 Jira + 30 Confluence + 33 Bitbucket):
+Tests all 95 Atlassian Data Center tools (31 Jira + 30 Confluence + 34 Bitbucket):
 
 ```bash
 python tests/datacenter/test_all_dc_tools.py
@@ -355,7 +355,7 @@ cp config.template.yaml config.yaml
 
 ### Coverage Goals
 - Unit tests: >80% code coverage
-- Integration tests: All 98 tools tested
+- Integration tests: All 95 tools tested (31 Jira + 30 Confluence + 34 Bitbucket)
 - Platform tests: Both Cloud and Data Center validated
 
 ### Performance Benchmarks

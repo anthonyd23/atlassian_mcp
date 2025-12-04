@@ -67,6 +67,7 @@ CONFLUENCE_TOOLS = [
 
 BITBUCKET_TOOLS = [
     {"name": "search_bitbucket", "description": "Search Bitbucket repositories"},
+    {"name": "search_files", "description": "Search for files in a repository by filename"},
     {"name": "get_repository", "description": "Get Bitbucket repository details"},
     {"name": "list_repositories", "description": "List all Bitbucket repositories"},
     {"name": "list_pull_requests", "description": "List pull requests in repository"},

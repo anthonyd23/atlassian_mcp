@@ -164,17 +164,24 @@ class BitbucketProvider:
         except Exception as e:
             return {'error': str(e)}
     
-    async def list_commits(self, repo_slug: str, branch: str = "main") -> Dict[str, Any]:
-        """List commits in a branch."""
+    async def list_commits(self, repo_slug: str, branch: str = "main", path: Optional[str] = None) -> Dict[str, Any]:
+        """List commits in a branch, optionally filtered by file path."""
         check = self._check_available()
         if check:
             return check
         valid, error = validate_branch_name(branch)
         if not valid:
             return {'error': error}
+        if path:
+            valid, error = validate_path(path, "path")
+            if not valid:
+                return {'error': error}
         try:
             url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{sanitize_url_path(repo_slug)}/commits/{sanitize_url_path(branch)}"
-            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout, params={'pagelen': LIST_PAGE_SIZE})
+            params = {'pagelen': LIST_PAGE_SIZE}
+            if path:
+                params['path'] = path
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout, params=params)
             response.raise_for_status()
             return response.json()
         except Exception as e:
@@ -591,6 +598,38 @@ class BitbucketProvider:
             response.raise_for_status()
             return response.json()
         except Exception as e:
+            return {'error': str(e)}
+    
+    async def search_files(self, repo_slug: str, query: str, branch: str = "master") -> Dict[str, Any]:
+        """Search for files in a repository by filename."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_repo_slug(repo_slug)
+        if not valid:
+            return {'error': error}
+        valid, error = validate_non_empty(query, "query")
+        if not valid:
+            return {'error': error}
+        try:
+            logger.info(f"Searching files in {repo_slug}: {query}")
+            url = f"https://api.bitbucket.org/2.0/repositories/{self.workspace}/{sanitize_url_path(repo_slug)}/src/{sanitize_url_path(branch)}"
+            params = {'pagelen': 100, 'max_depth': 100}
+            response = self.session.get(url, auth=(self.auth.username, self.bitbucket_token), timeout=self.timeout, params=params)
+            response.raise_for_status()
+            all_files = []
+            data = response.json()
+            # Recursively collect all files
+            def collect_files(items):
+                for item in items:
+                    if item.get('type') == 'commit_file':
+                        all_files.append(item.get('path'))
+            collect_files(data.get('values', []))
+            # Filter files matching query
+            matching_files = [f for f in all_files if query.lower() in f.lower()]
+            return {'files': matching_files, 'count': len(matching_files)}
+        except Exception as e:
+            logger.error(f"Error searching files in {repo_slug}: {e}")
             return {'error': str(e)}
     
     async def search(self, query: str) -> Dict[str, Any]:

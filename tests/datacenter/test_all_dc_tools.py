@@ -576,10 +576,10 @@ async def test_all_confluence_dc_tools(test_space_key=None, test_page_id=None):
     return passed, failed, exceptions, skipped
 
 async def test_all_bitbucket_dc_tools(test_repo_slug=None, test_branch_name=None):
-    """Test all 33 Bitbucket DC tools"""
+    """Test all 34 Bitbucket DC tools"""
     bitbucket = BitbucketDCProvider()
     if not bitbucket.available:
-        return 0, 0, 0, 33
+        return 0, 0, 0, 34
     
     passed = failed = exceptions = skipped = 0
     
@@ -591,10 +591,11 @@ async def test_all_bitbucket_dc_tools(test_repo_slug=None, test_branch_name=None
         repos = await bitbucket.list_repositories()
         repo_slug = repos.get('values', [{}])[0].get('slug') if repos.get('values') else None
     
-    # 1-2: Repository operations
+    # 1-3: Repository operations
     for name, func in [
         ("list_repositories", lambda: bitbucket.list_repositories()),
         ("search_bitbucket", lambda: bitbucket.search("test")),
+        ("search_files", lambda: bitbucket.search_files(repo_slug, "README") if repo_slug else {'error': 'No repo'}),
     ]:
         result = await func()
         if 'error' in result:
@@ -900,11 +901,11 @@ async def main(service='all', jira_project=None, jira_issue=None, confluence_spa
         services_to_test = ['jira', 'confluence', 'bitbucket']
         print("=" * 60)
         print("ATLASSIAN DATA CENTER INTEGRATION TEST")
-        print("Testing 94 available tools (31 Jira + 30 Confluence + 33 Bitbucket)")
+        print("Testing 95 available tools (31 Jira + 30 Confluence + 34 Bitbucket)")
         print("=" * 60)
     else:
         services_to_test = [service]
-        tool_counts = {'jira': 31, 'confluence': 30, 'bitbucket': 33}
+        tool_counts = {'jira': 31, 'confluence': 30, 'bitbucket': 34}
         print("=" * 60)
         print(f"ATLASSIAN DATA CENTER INTEGRATION TEST - {service.upper().replace('_', ' ')} ONLY")
         print(f"Testing {tool_counts[service]} {service.replace('_', ' ').title()} tools")
@@ -930,10 +931,10 @@ async def main(service='all', jira_project=None, jira_issue=None, confluence_spa
     
     if 'bitbucket' in services_to_test:
         print("\n" + "=" * 60)
-        print("BITBUCKET DATA CENTER (33 tools available)")
+        print("BITBUCKET DATA CENTER (34 tools available)")
         print("=" * 60)
         bb_p, bb_f, bb_e, bb_s = await test_all_bitbucket_dc_tools(bitbucket_repo, bitbucket_branch)
-        print(f"  Tested: {bb_p + bb_f + bb_e} of 33 Bitbucket tools")
+        print(f"  Tested: {bb_p + bb_f + bb_e} of 34 Bitbucket tools")
     
     total_p = jira_p + conf_p + bb_p
     total_f = jira_f + conf_f + bb_f
@@ -946,7 +947,7 @@ async def main(service='all', jira_project=None, jira_issue=None, confluence_spa
     if 'confluence' in services_to_test:
         total_available += 30
     if 'bitbucket' in services_to_test:
-        total_available += 33
+        total_available += 34
     
     print("\n" + "=" * 60)
     print("SUMMARY")
