@@ -95,6 +95,8 @@ async def route_tool_call(name: str, arguments: Dict[str, Any], jira, confluence
         return await confluence.get_page_attachments(arguments["page_id"])
     elif name == "get_confluence_user":
         return await confluence.get_user(arguments["account_id"])
+    elif name == "get_confluence_user_by_key":
+        return await confluence.get_user_by_key(arguments["userkey"])
     elif name == "search_confluence_users":
         return await confluence.search_users(arguments["query"])
     elif name == "add_page_label":

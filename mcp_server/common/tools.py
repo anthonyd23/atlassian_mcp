@@ -46,6 +46,7 @@ CONFLUENCE_TOOLS = [
     {"name": "add_page_comment", "description": "Add comment to Confluence page"},
     {"name": "get_page_attachments", "description": "Get attachments on Confluence page"},
     {"name": "get_confluence_user", "description": "Get Confluence user details by account ID"},
+    {"name": "get_confluence_user_by_key", "description": "Get Confluence user details by userkey (from @mentions in page content)"},
     {"name": "search_confluence_users", "description": "Search Confluence users by name or email"},
     {"name": "add_page_label", "description": "Add a label to a Confluence page"},
     {"name": "get_page_labels", "description": "Get all labels on a Confluence page"},

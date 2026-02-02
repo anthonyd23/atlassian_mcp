@@ -539,6 +539,13 @@ TOOL_SCHEMAS = {
         },
         "required": ["account_id"]
     },
+    "get_confluence_user_by_key": {
+        "type": "object",
+        "properties": {
+            "userkey": {"type": "string", "description": "Userkey from @mentions in page content (e.g., JIRAUSER12345)"}
+        },
+        "required": ["userkey"]
+    },
     "search_confluence_users": {
         "type": "object",
         "properties": {

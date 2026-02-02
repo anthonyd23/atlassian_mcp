@@ -93,7 +93,7 @@ When an AI assistant connects to an MCP server, it goes through a discovery proc
 
 ### Comprehensive Business Tool Integration
 
-The Atlassian MCP Server provides 100 distinct tools across three major platforms plus specialized agent tools:
+The Atlassian MCP Server provides 102 distinct tools across three major platforms plus specialized agent tools:
 
 **Jira Integration (31 tools)**
 - Issue lifecycle management (create, update, transition, close)
@@ -103,11 +103,12 @@ The Atlassian MCP Server provides 100 distinct tools across three major platform
 - Agile board and sprint management
 - Time tracking and worklog management
 
-**Confluence Integration (30 tools)**
+**Confluence Integration (31 tools)**
 - Content creation and management
 - Space administration and organization
 - Collaborative editing and commenting
 - Advanced search and content discovery
+- User lookup by account ID or userkey (for @mentions)
 - Permission and access control
 - Version history and content restoration
 
@@ -413,7 +414,7 @@ BaseAuth (abstract)
 
 | Aspect | Typical MCP Example | Atlassian MCP Server |
 |--------|-------------------|---------------------|
-| **Tools** | 5-10 simple tools | 94 production-ready tools |
+| **Tools** | 5-10 simple tools | 102 production-ready tools |
 | **Architecture** | Monolithic | Layered with providers |
 | **Deployment** | Local only | Local + AWS Lambda |
 | **Validation** | Minimal | Comprehensive security validation |

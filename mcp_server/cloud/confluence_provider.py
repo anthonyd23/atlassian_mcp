@@ -273,6 +273,23 @@ class ConfluenceProvider:
         except Exception as e:
             return {'error': str(e)}
     
+    async def get_user_by_key(self, userkey: str) -> Dict[str, Any]:
+        """Get user details by userkey (from @mentions in page content)."""
+        check = self._check_available()
+        if check:
+            return check
+        valid, error = validate_non_empty(userkey, "userkey")
+        if not valid:
+            return {'error': error}
+        try:
+            headers = self.auth.get_auth_headers()
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/user?key={sanitize_url_path(userkey)}"
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {'error': str(e)}
+    
     async def search_users(self, query: str) -> Dict[str, Any]:
         """Search for users by name or email."""
         check = self._check_available()
