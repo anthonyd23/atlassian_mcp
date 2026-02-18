@@ -16,7 +16,7 @@ def confluence_provider():
 def mock_response():
     response = Mock()
     response.raise_for_status = Mock()
-    response.json = Mock(return_value={"id": "12345", "title": "Test Page"})
+    response.json = Mock(return_value={"id": "12345", "title": "Test Page", "body": {"storage": {"value": ""}}})
     return response
 
 
@@ -26,7 +26,8 @@ async def test_get_page_success(confluence_provider, mock_response):
     
     result = await confluence_provider.get_page("12345")
     
-    assert result == {"id": "12345", "title": "Test Page"}
+    assert result["id"] == "12345"
+    assert result["title"] == "Test Page"
     confluence_provider.session.get.assert_called_once()
 
 

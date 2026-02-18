@@ -16,7 +16,7 @@ def confluence_dc_provider():
 def mock_response():
     response = Mock()
     response.raise_for_status = Mock()
-    response.json = Mock(return_value={"id": "12345", "title": "Test Page"})
+    response.json = Mock(return_value={"id": "12345", "title": "Test Page", "body": {"storage": {"value": ""}}})
     return response
 
 
@@ -26,7 +26,8 @@ async def test_get_page_success(confluence_dc_provider, mock_response):
     
     result = await confluence_dc_provider.get_page("12345")
     
-    assert result == {"id": "12345", "title": "Test Page"}
+    assert result["id"] == "12345"
+    assert result["title"] == "Test Page"
     confluence_dc_provider.session.get.assert_called_once()
 
 
@@ -238,7 +239,7 @@ async def test_cql_search_success(confluence_dc_provider, mock_response):
 
 @pytest.mark.asyncio
 async def test_get_page_by_title_success(confluence_dc_provider, mock_response):
-    mock_response.json = Mock(return_value={"results": [{"id": "123", "title": "Test Page"}]})
+    mock_response.json = Mock(return_value={"results": [{"id": "123", "title": "Test Page", "body": {"storage": {"value": ""}}}]})
     confluence_dc_provider.session.get = Mock(return_value=mock_response)
     
     result = await confluence_dc_provider.get_page_by_title("TEST", "Test Page")

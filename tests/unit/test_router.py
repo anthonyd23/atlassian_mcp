@@ -81,7 +81,7 @@ async def test_route_confluence_get_page(mock_providers):
     result = await route_tool_call("get_page", {"page_id": "123"}, jira, confluence, bitbucket)
     
     assert result == {"success": True}
-    confluence.get_page.assert_called_once_with("123")
+    confluence.get_page.assert_called_once_with("123", 0, 80000)
 
 
 @pytest.mark.asyncio
