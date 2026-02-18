@@ -72,9 +72,9 @@ async def route_tool_call(name: str, arguments: Dict[str, Any], jira, confluence
     elif name == "search_confluence":
         return await confluence.search(arguments["query"])
     elif name == "get_page":
-        return await confluence.get_page(arguments["page_id"])
+        return await confluence.get_page(arguments["page_id"], arguments.get("offset", 0), arguments.get("chunk_size", 80000))
     elif name == "get_page_by_title":
-        return await confluence.get_page_by_title(arguments["space_key"], arguments["title"])
+        return await confluence.get_page_by_title(arguments["space_key"], arguments["title"], arguments.get("offset", 0), arguments.get("chunk_size", 80000))
     elif name == "create_page":
         return await confluence.create_page(arguments["space_key"], arguments["title"], arguments["content"], arguments.get("parent_id"))
     elif name == "update_page":

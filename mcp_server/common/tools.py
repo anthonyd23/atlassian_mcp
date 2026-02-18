@@ -34,8 +34,8 @@ JIRA_TOOLS = [
 
 CONFLUENCE_TOOLS = [
     {"name": "search_confluence", "description": "Search Confluence pages"},
-    {"name": "get_page", "description": "Get Confluence page by ID"},
-    {"name": "get_page_by_title", "description": "Get Confluence page by title"},
+    {"name": "get_page", "description": "Get Confluence page by ID. Large pages are chunked - check has_more in body.storage and call again with offset=<previous offset + chunk_size> to read subsequent chunks."},
+    {"name": "get_page_by_title", "description": "Get Confluence page by title. Large pages are chunked - check has_more in body.storage and call again with offset=<previous offset + chunk_size> to read subsequent chunks."},
     {"name": "create_page", "description": "Create new Confluence page"},
     {"name": "update_page", "description": "Update Confluence page"},
     {"name": "delete_page", "description": "Delete Confluence page"},

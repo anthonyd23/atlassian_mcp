@@ -132,7 +132,9 @@ TOOL_SCHEMAS = {
     "get_page": {
         "type": "object",
         "properties": {
-            "page_id": {"type": "string"}
+            "page_id": {"type": "string"},
+            "offset": {"type": "integer", "description": "Character offset to start reading from (default: 0)"},
+            "chunk_size": {"type": "integer", "description": "Number of characters to return (default: 80000). Check has_more in response to read next chunk."}
         },
         "required": ["page_id"]
     },
@@ -140,7 +142,9 @@ TOOL_SCHEMAS = {
         "type": "object",
         "properties": {
             "space_key": {"type": "string"},
-            "title": {"type": "string"}
+            "title": {"type": "string"},
+            "offset": {"type": "integer", "description": "Character offset to start reading from (default: 0)"},
+            "chunk_size": {"type": "integer", "description": "Number of characters to return (default: 80000). Check has_more in response to read next chunk."}
         },
         "required": ["space_key", "title"]
     },

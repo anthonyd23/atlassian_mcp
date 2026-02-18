@@ -45,7 +45,7 @@ class ConfluenceProvider:
         else:
             raise ValueError(f"Unknown Confluence resource: {uri}")
     
-    async def get_page(self, page_id: str) -> Dict[str, Any]:
+    async def get_page(self, page_id: str, offset: int = 0, chunk_size: int = 80000) -> Dict[str, Any]:
         """Get Confluence page content and metadata."""
         check = self._check_available()
         if check:
@@ -60,12 +60,21 @@ class ConfluenceProvider:
             url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}?expand=body.storage,version"
             response = self.session.get(url, headers=headers, timeout=self.timeout)
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+            body_value = data.get('body', {}).get('storage', {}).get('value', '')
+            total_length = len(body_value)
+            chunk = body_value[offset:offset + chunk_size]
+            data['body']['storage']['value'] = chunk
+            data['body']['storage']['offset'] = offset
+            data['body']['storage']['chunk_size'] = len(chunk)
+            data['body']['storage']['total_length'] = total_length
+            data['body']['storage']['has_more'] = (offset + chunk_size) < total_length
+            return data
         except Exception as e:
             logger.error(f"Error fetching page {page_id}: {e}")
             return {'error': str(e)}
     
-    async def get_page_by_title(self, space_key: str, title: str) -> Dict[str, Any]:
+    async def get_page_by_title(self, space_key: str, title: str, offset: int = 0, chunk_size: int = 80000) -> Dict[str, Any]:
         """Find and retrieve a page by title and space."""
         check = self._check_available()
         if check:
@@ -76,7 +85,17 @@ class ConfluenceProvider:
             params = {'spaceKey': space_key, 'title': title, 'expand': 'body.storage,version'}
             response = self.session.get(url, headers=headers, params=params, timeout=self.timeout)
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+            for result in data.get('results', []):
+                body_value = result.get('body', {}).get('storage', {}).get('value', '')
+                total_length = len(body_value)
+                chunk = body_value[offset:offset + chunk_size]
+                result['body']['storage']['value'] = chunk
+                result['body']['storage']['offset'] = offset
+                result['body']['storage']['chunk_size'] = len(chunk)
+                result['body']['storage']['total_length'] = total_length
+                result['body']['storage']['has_more'] = (offset + chunk_size) < total_length
+            return data
         except Exception as e:
             return {'error': str(e)}
     
@@ -415,11 +434,11 @@ class ConfluenceProvider:
         if not valid:
             return {'error': error}
         try:
-            # Get original page
-            page = await self.get_page(page_id)
-            if 'error' in page:
-                return page
-            # Create copy
+            headers = self.auth.get_auth_headers()
+            url = f"{self.auth.get_base_url()}/wiki/rest/api/content/{sanitize_url_path(page_id)}?expand=body.storage,version,space"
+            response = self.session.get(url, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            page = response.json()
             target_space = space_key if space_key else page.get('space', {}).get('key')
             content = page.get('body', {}).get('storage', {}).get('value', '')
             return await self.create_page(target_space, new_title, content)
