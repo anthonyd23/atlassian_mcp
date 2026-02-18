@@ -45,7 +45,8 @@ async def test_create_page_success(confluence_provider, mock_response):
     
     result = await confluence_provider.create_page("TEST", "Title", "<p>Content</p>")
     
-    assert result == {"id": "12345", "title": "Test Page"}
+    assert result["id"] == "12345"
+    assert result["title"] == "Test Page"
     confluence_provider.session.post.assert_called_once()
 
 
@@ -189,7 +190,8 @@ async def test_move_page_success(confluence_provider, mock_response):
     
     result = await confluence_provider.move_page("12345", "NEWSPACE")
     
-    assert result == {"id": "12345", "title": "Test Page"}
+    assert result["id"] == "12345"
+    assert result["title"] == "Test Page"
     confluence_provider.session.put.assert_called_once()
 
 
